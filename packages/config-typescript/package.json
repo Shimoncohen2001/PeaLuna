@@ -1,0 +1,7 @@
+{
+  "name": "@velure/config-typescript",
+  "version": "0.1.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "files": ["base.json", "node.json", "nextjs.json", "library.json"]
+}

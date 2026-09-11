@@ -1,0 +1,55 @@
+@import 'tailwindcss';
+
+@theme {
+  /* PeaLuna luxury palette */
+  --color-ink: #0a0a0a;
+  --color-warm-white: #faf8f5;
+  --color-champagne: #c9a962;
+  --color-champagne-light: #e8d5a3;
+  --color-beige: #e8e0d5;
+  --color-blush: #f5e6e0;
+  --color-muted: #6b6560;
+
+  --font-display: var(--font-cormorant), Georgia, serif;
+  --font-body: var(--font-dm-sans), system-ui, sans-serif;
+
+  --radius-card: 1rem;
+  --shadow-soft: 0 4px 24px -4px rgb(10 10 10 / 0.08);
+  --shadow-elevated: 0 12px 40px -8px rgb(10 10 10 / 0.12);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-warm-white text-ink antialiased;
+    font-family: var(--font-body);
+  }
+
+  html[dir='rtl'] body {
+    font-family: var(--font-hebrew), system-ui, sans-serif;
+  }
+
+  html[dir='rtl'] h1,
+  html[dir='rtl'] h2,
+  html[dir='rtl'] h3,
+  html[dir='rtl'] h4 {
+    font-family: var(--font-hebrew), system-ui, sans-serif;
+    letter-spacing: 0;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-champagne;
+  }
+}

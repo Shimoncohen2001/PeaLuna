@@ -1,0 +1,877 @@
+// PeaLuna — PostgreSQL schema (EU-primary, multi-region ready)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum UserStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum TechnicianStatus {
+  PENDING_APPLICATION
+  UNDER_REVIEW
+  APPROVED
+  SUSPENDED
+  REJECTED
+}
+
+enum OrderStatus {
+  DRAFT
+  SUBMITTED
+  WAITING_FOR_TECHNICIAN
+  ACCEPTED
+  PICKUP_SCHEDULED
+  RECEIVED
+  IN_DIAGNOSIS
+  WAITING_CUSTOMER_APPROVAL
+  IN_REPAIR
+  QUALITY_CONTROL
+  READY
+  DELIVERY_SCHEDULED
+  COMPLETED
+  CANCELLED
+  ARCHIVED
+}
+
+enum OrderAction {
+  SUBMIT
+  ASSIGN_TECHNICIAN
+  ACCEPT
+  DECLINE
+  SCHEDULE_PICKUP
+  CONFIRM_RECEIVED
+  START_DIAGNOSIS
+  REQUEST_CUSTOMER_APPROVAL
+  APPROVE_ESTIMATE
+  START_REPAIR
+  SUBMIT_FOR_QC
+  PASS_QC
+  MARK_READY
+  SCHEDULE_DELIVERY
+  COMPLETE
+  CANCEL
+  ARCHIVE
+}
+
+enum AttachmentPurpose {
+  INTAKE
+  PROGRESS
+  QC
+  DELIVERY
+  BEFORE_CARE
+  AFTER_CARE
+  OTHER
+}
+
+enum WigCondition {
+  EXCELLENT
+  GOOD
+  FAIR
+  DAMAGED
+  VERY_DAMAGED
+}
+
+enum WearLevel {
+  LOW
+  MEDIUM
+  HIGH
+  VERY_HIGH
+}
+
+enum TangleLevel {
+  NONE
+  LIGHT
+  MODERATE
+  SEVERE
+}
+
+enum WigKind {
+  LACE_FRONT
+  FULL_LACE
+  CLOSURE
+  GLUELESS
+  CLASSIC
+  OTHER
+}
+
+enum HairKind {
+  HUMAN
+  SYNTHETIC
+  MIXED
+  OTHER
+}
+
+enum CareReportStatus {
+  DRAFT
+  SUBMITTED
+}
+
+enum CarePhotoPhase {
+  BEFORE
+  AFTER
+}
+
+enum CarePhotoAngle {
+  FRONT
+  BACK
+  LEFT
+  RIGHT
+  LACE
+  EXTRA
+}
+
+enum CareOperationCode {
+  WASH
+  DEEP_TREATMENT
+  DETANGLE
+  DRY
+  BLOW_DRY
+  STYLE
+  CUT
+  COLOR
+  BLEACH
+  TONER
+  LACE_REPAIR
+  LACE_REPLACE
+  BASE_REPAIR
+  HAIR_ADD
+  HAIR_REPLACE
+  RECONSTRUCTION
+  TRANSFORMATION
+  BABY_HAIR
+  KNOT_REPAIR
+  OTHER
+}
+
+enum AiAnalysisStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  SKIPPED
+}
+
+enum TransactionType {
+  CHARGE
+  REFUND
+  TRANSFER
+  PAYOUT
+  PLATFORM_FEE
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
+/// Escrow lifecycle for marketplace bookings
+enum PaymentStatus {
+  UNPAID
+  AUTHORIZED
+  CAPTURING
+  CAPTURED
+  REFUNDED
+  FAILED
+  VOIDED
+}
+
+enum PickupDeliveryType {
+  PICKUP
+  DELIVERY
+}
+
+/// Appointment venue for marketplace bookings (maquette: domicile vs salon)
+enum ServiceVenue {
+  HOME
+  SALON
+}
+
+enum PickupDeliveryStatus {
+  SCHEDULED
+  IN_TRANSIT
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  PUSH
+  SMS
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  READ
+}
+
+enum OutboxEventStatus {
+  PENDING
+  PUBLISHED
+  FAILED
+}
+
+// ─── Identity & RBAC ─────────────────────────────────────────────────────────
+
+model User {
+  id           String     @id @default(uuid()) @db.Uuid
+  email        String     @unique @db.VarChar(255)
+  passwordHash String     @map("password_hash") @db.VarChar(255)
+  firstName    String     @map("first_name") @db.VarChar(100)
+  lastName     String     @map("last_name") @db.VarChar(100)
+  status       UserStatus @default(PENDING_VERIFICATION)
+  emailVerifiedAt DateTime? @map("email_verified_at") @db.Timestamptz
+  /// ISO 3166-1 alpha-2 — GDPR & regional compliance
+  countryCode  String     @default("IL") @map("country_code") @db.Char(2)
+  locale       String     @default("he-IL") @db.VarChar(10)
+  timezone     String     @default("Asia/Jerusalem") @db.VarChar(64)
+  /// Data residency / home region for future multi-region routing
+  homeRegion   String     @default("eu-central-1") @map("home_region") @db.VarChar(32)
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz
+
+  roles            UserRole[]
+  refreshTokens    RefreshToken[]
+  emailVerificationTokens EmailVerificationToken[]
+  customerProfile  CustomerProfile?
+  technicianProfile TechnicianProfile?
+  sentMessages     Message[]          @relation("MessageSender")
+  notifications    Notification[]
+  auditLogs        AuditLog[]         @relation("AuditActor")
+
+  @@index([status])
+  @@index([homeRegion])
+  @@map("users")
+}
+
+model IdempotencyKey {
+  key         String   @id @db.VarChar(128)
+  userId      String   @map("user_id") @db.Uuid
+  method      String   @db.VarChar(16)
+  path        String   @db.VarChar(255)
+  requestHash String   @map("request_hash") @db.VarChar(64)
+  statusCode  Int      @map("status_code")
+  response    Json
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  expiresAt   DateTime @map("expires_at") @db.Timestamptz
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("idempotency_keys")
+}
+
+model Role {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique @db.VarChar(50)
+  description String?  @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  users       UserRole[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique @db.VarChar(100)
+  description String?  @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model UserRole {
+  userId    String   @map("user_id") @db.Uuid
+  roleId    String   @map("role_id") @db.Uuid
+  assignedAt DateTime @default(now()) @map("assigned_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  roleId       String @map("role_id") @db.Uuid
+  permissionId String @map("permission_id") @db.Uuid
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model RefreshToken {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  tokenHash  String    @unique @map("token_hash") @db.VarChar(64)
+  familyId   String    @map("family_id") @db.VarChar(32)
+  sessionId  String    @map("session_id") @db.VarChar(32)
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz
+  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz
+  userAgent  String?   @map("user_agent") @db.VarChar(512)
+  ipAddress  String?   @map("ip_address") @db.VarChar(45)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([familyId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model EmailVerificationToken {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  tokenHash  String    @unique @map("token_hash") @db.VarChar(64)
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz
+  consumedAt DateTime? @map("consumed_at") @db.Timestamptz
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("email_verification_tokens")
+}
+
+// ─── Profiles ────────────────────────────────────────────────────────────────
+
+model CustomerProfile {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @map("user_id") @db.Uuid
+  phone     String?  @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  user  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wigs  WigProfile[]
+  orders RepairOrder[]
+
+  @@map("customer_profiles")
+}
+
+model TechnicianProfile {
+  id                   String           @id @default(uuid()) @db.Uuid
+  userId               String           @unique @map("user_id") @db.Uuid
+  status               TechnicianStatus @default(PENDING_APPLICATION)
+  displayName          String?          @map("display_name") @db.VarChar(120)
+  headline             String?          @db.VarChar(200)
+  bio                  String?          @db.Text
+  yearsExperience      Int?             @map("years_experience")
+  stripeConnectAccountId String?        @unique @map("stripe_connect_account_id") @db.VarChar(255)
+  stripeOnboardingComplete Boolean      @default(false) @map("stripe_onboarding_complete")
+  serviceCity          String?          @map("service_city") @db.VarChar(100)
+  servicePostalCode    String?          @map("service_postal_code") @db.VarChar(12)
+  serviceCountryCode   String?          @map("service_country_code") @db.Char(2)
+  salonAddress         String?          @map("salon_address") @db.VarChar(255)
+  offersHomeService    Boolean          @default(true) @map("offers_home_service")
+  offersSalonService   Boolean          @default(true) @map("offers_salon_service")
+  latitude             Float?
+  longitude            Float?
+  ratingAvg            Float            @default(0) @map("rating_avg")
+  reviewCount          Int              @default(0) @map("review_count")
+  approvedAt           DateTime?        @map("approved_at") @db.Timestamptz
+  createdAt            DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime         @updatedAt @map("updated_at") @db.Timestamptz
+
+  user         User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  availability TechnicianAvailability[]
+  services     TechnicianService[]
+  orders       RepairOrder[]
+  careReports  CareReport[]
+
+  @@index([status])
+  @@index([serviceCity, serviceCountryCode])
+  @@index([servicePostalCode])
+  @@index([latitude, longitude])
+  @@map("technician_profiles")
+}
+
+model TechnicianService {
+  id             String   @id @default(uuid()) @db.Uuid
+  technicianId   String   @map("technician_id") @db.Uuid
+  serviceTypeId  String   @map("service_type_id") @db.Uuid
+  customPriceCents Int?   @map("custom_price_cents")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  technician  TechnicianProfile @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+  serviceType ServiceType       @relation(fields: [serviceTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([technicianId, serviceTypeId])
+  @@index([serviceTypeId])
+  @@map("technician_services")
+}
+
+model TechnicianAvailability {
+  id           String   @id @default(uuid()) @db.Uuid
+  technicianId String   @map("technician_id") @db.Uuid
+  dayOfWeek    Int      @map("day_of_week") // 0 = Sunday
+  startTime    String   @map("start_time") @db.VarChar(5) // HH:mm
+  endTime      String   @map("end_time") @db.VarChar(5)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  technician TechnicianProfile @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+
+  @@index([technicianId, dayOfWeek])
+  @@map("technician_availability")
+}
+
+// ─── Wigs & catalog ──────────────────────────────────────────────────────────
+
+model WigProfile {
+  id           String   @id @default(uuid()) @db.Uuid
+  customerId   String   @map("customer_id") @db.Uuid
+  reference    String   @unique @db.VarChar(20)
+  name         String   @db.VarChar(150)
+  brand        String?  @db.VarChar(100)
+  capSize      String?  @map("cap_size") @db.VarChar(50)
+  fiberType    String?  @map("fiber_type") @db.VarChar(50)
+  color        String?  @db.VarChar(100)
+  lengthCm     Int?     @map("length_cm")
+  conditionNotes String? @map("condition_notes") @db.Text
+  currentCondition   WigCondition? @map("current_condition")
+  currentWeightGrams Int?          @map("current_weight_grams")
+  lastCareAt         DateTime?     @map("last_care_at") @db.Timestamptz
+  lastTechnicianName String?       @map("last_technician_name") @db.VarChar(120)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  archivedAt   DateTime? @map("archived_at") @db.Timestamptz
+
+  customer    CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  attachments WigAttachment[]
+  orders      RepairOrder[]
+  careReports CareReport[]
+
+  @@index([customerId])
+  @@map("wig_profiles")
+}
+
+model WigAttachment {
+  id               String            @id @default(uuid()) @db.Uuid
+  wigId            String            @map("wig_id") @db.Uuid
+  orderId          String?           @map("order_id") @db.Uuid
+  careReportId     String?           @map("care_report_id") @db.Uuid
+  storageKey       String            @map("storage_key") @db.VarChar(512)
+  mimeType         String            @map("mime_type") @db.VarChar(100)
+  fileSizeBytes    Int               @map("file_size_bytes")
+  purpose          AttachmentPurpose @default(INTAKE)
+  photoPhase       CarePhotoPhase?   @map("photo_phase")
+  photoAngle       CarePhotoAngle?   @map("photo_angle")
+  aiAnalysisStatus AiAnalysisStatus? @map("ai_analysis_status")
+  aiAnalysisPayload Json?            @map("ai_analysis_payload")
+  embeddingRef     String?           @map("embedding_ref") @db.VarChar(255)
+  uploadedById     String?           @map("uploaded_by_id") @db.Uuid
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz
+
+  wig        WigProfile   @relation(fields: [wigId], references: [id], onDelete: Cascade)
+  order      RepairOrder? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  careReport CareReport?  @relation(fields: [careReportId], references: [id], onDelete: SetNull)
+
+  @@index([wigId])
+  @@index([orderId])
+  @@index([careReportId])
+  @@map("wig_attachments")
+}
+
+model ServiceType {
+  id              String   @id @default(uuid()) @db.Uuid
+  slug            String   @unique @db.VarChar(100)
+  name            String   @db.VarChar(150)
+  description     String?  @db.Text
+  category        String?  @db.VarChar(80)
+  basePriceCents  Int      @map("base_price_cents")
+  currency        String   @default("ILS") @db.Char(3)
+  estimatedDays   Int      @default(7) @map("estimated_days")
+  estimatedMinutes Int     @default(60) @map("estimated_minutes")
+  isActive        Boolean  @default(true) @map("is_active")
+  sortOrder       Int      @default(0) @map("sort_order")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  lineItems          OrderLineItem[]
+  technicianServices TechnicianService[]
+
+  @@map("service_types")
+}
+
+// ─── Orders ──────────────────────────────────────────────────────────────────
+
+model RepairOrder {
+  id                    String      @id @default(uuid()) @db.Uuid
+  orderNumber           String      @unique @map("order_number") @db.VarChar(20)
+  customerId            String      @map("customer_id") @db.Uuid
+  wigId                 String      @map("wig_id") @db.Uuid
+  technicianId          String?     @map("technician_id") @db.Uuid
+  status                OrderStatus @default(DRAFT)
+  version               Int         @default(1) // optimistic locking
+  currency              String      @default("ILS") @db.Char(3)
+  subtotalCents         Int         @default(0) @map("subtotal_cents")
+  platformCommissionBps Int         @default(2000) @map("platform_commission_bps")
+  platformFeeCents      Int         @default(0) @map("platform_fee_cents")
+  totalCents            Int         @default(0) @map("total_cents")
+  customerNotes         String?     @map("customer_notes") @db.Text
+  internalNotes         String?     @map("internal_notes") @db.Text
+  /// Region where order is fulfilled (future multi-region)
+  fulfillmentRegion   String      @default("eu-central-1") @map("fulfillment_region") @db.VarChar(32)
+  /// Marketplace appointment (maquette)
+  venueType             ServiceVenue? @map("venue_type")
+  scheduledAt           DateTime?   @map("scheduled_at") @db.Timestamptz
+  serviceAddressLine    String?     @map("service_address_line") @db.VarChar(255)
+  serviceCity           String?     @map("service_city") @db.VarChar(100)
+  servicePostalCode     String?     @map("service_postal_code") @db.VarChar(12)
+  paymentStatus         PaymentStatus @default(UNPAID) @map("payment_status")
+  submittedAt           DateTime?   @map("submitted_at") @db.Timestamptz
+  completedAt           DateTime?   @map("completed_at") @db.Timestamptz
+  archivedAt            DateTime?   @map("archived_at") @db.Timestamptz
+  createdAt             DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime    @updatedAt @map("updated_at") @db.Timestamptz
+
+  customer     CustomerProfile    @relation(fields: [customerId], references: [id])
+  wig          WigProfile         @relation(fields: [wigId], references: [id])
+  technician   TechnicianProfile? @relation(fields: [technicianId], references: [id])
+  lineItems    OrderLineItem[]
+  statusHistory OrderStatusHistory[]
+  milestones   OrderMilestone[]
+  attachments  WigAttachment[]
+  logistics    PickupDelivery[]
+  transactions Transaction[]
+  commission   PlatformCommission?
+  messageThread MessageThread?
+  review       Review?
+  careReport   CareReport?
+
+  @@index([customerId])
+  @@index([technicianId])
+  @@index([status])
+  @@index([fulfillmentRegion, status])
+  @@index([createdAt])
+  @@map("repair_orders")
+}
+
+model OrderLineItem {
+  id             String   @id @default(uuid()) @db.Uuid
+  orderId        String   @map("order_id") @db.Uuid
+  serviceTypeId  String   @map("service_type_id") @db.Uuid
+  quantity       Int      @default(1)
+  unitPriceCents Int      @map("unit_price_cents")
+  totalCents     Int      @map("total_cents")
+  description    String?  @db.VarChar(255)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  order       RepairOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  serviceType ServiceType @relation(fields: [serviceTypeId], references: [id])
+
+  @@index([orderId])
+  @@map("order_line_items")
+}
+
+model OrderStatusHistory {
+  id         String      @id @default(uuid()) @db.Uuid
+  orderId    String      @map("order_id") @db.Uuid
+  fromStatus OrderStatus? @map("from_status")
+  toStatus   OrderStatus @map("to_status")
+  action     OrderAction @map("action")
+  actorId    String?     @map("actor_id") @db.Uuid
+  actorRole  String?     @map("actor_role") @db.VarChar(50)
+  reason     String?     @db.Text
+  metadata   Json?
+  createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz
+
+  order RepairOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+  @@map("order_status_history")
+}
+
+model OrderMilestone {
+  id          String   @id @default(uuid()) @db.Uuid
+  orderId     String   @map("order_id") @db.Uuid
+  title       String   @db.VarChar(150)
+  description String?  @db.Text
+  completedAt DateTime? @map("completed_at") @db.Timestamptz
+  createdById String?  @map("created_by_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  order RepairOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("order_milestones")
+}
+
+model CareReport {
+  id            String           @id @default(uuid()) @db.Uuid
+  wigId         String           @map("wig_id") @db.Uuid
+  orderId       String           @unique @map("order_id") @db.Uuid
+  technicianId  String           @map("technician_id") @db.Uuid
+  status        CareReportStatus @default(DRAFT)
+  submittedAt   DateTime?        @map("submitted_at") @db.Timestamptz
+
+  beforeGeneralCondition WigCondition? @map("before_general_condition")
+  beforeWeightGrams      Int?          @map("before_weight_grams")
+  wigAgeYears            Int?          @map("wig_age_years")
+  wigKind                WigKind?      @map("wig_kind")
+  hairKind               HairKind?     @map("hair_kind")
+  lengthCm               Int?          @map("length_cm")
+  color                  String?       @db.VarChar(100)
+  laceCondition          WigCondition? @map("lace_condition")
+  baseCondition          WigCondition? @map("base_condition")
+  hairCondition          WigCondition? @map("hair_condition")
+  wearLevel              WearLevel?    @map("wear_level")
+  tangleLevel            TangleLevel?  @map("tangle_level")
+  hairLossObserved       Boolean?      @map("hair_loss_observed")
+  visibleDamage          String?       @map("visible_damage") @db.Text
+  repairsNeeded          String?       @map("repairs_needed") @db.Text
+  beforeInternalNotes    String?       @map("before_internal_notes") @db.Text
+
+  hairAdded           Boolean @default(false) @map("hair_added")
+  addedHairKind       HairKind? @map("added_hair_kind")
+  addedHairGrams      Int?      @map("added_hair_grams")
+  addedHairLengthCm   Int?      @map("added_hair_length_cm")
+  addedHairColor      String?   @map("added_hair_color") @db.VarChar(100)
+  addedHairTexture    String?   @map("added_hair_texture") @db.VarChar(100)
+  addedHairOrigin     String?   @map("added_hair_origin") @db.VarChar(120)
+  addedHairZone       String?   @map("added_hair_zone") @db.VarChar(150)
+  addedHairComment    String?   @map("added_hair_comment") @db.Text
+
+  afterWeightGrams       Int?          @map("after_weight_grams")
+  afterGeneralCondition  WigCondition? @map("after_general_condition")
+  afterHairCondition     WigCondition? @map("after_hair_condition")
+  afterLaceCondition     WigCondition? @map("after_lace_condition")
+  afterBaseCondition     WigCondition? @map("after_base_condition")
+  afterWearLevel         WearLevel?    @map("after_wear_level")
+  resultNotes            String?       @map("result_notes") @db.Text
+  remainingIssues        String?       @map("remaining_issues") @db.Text
+  afterInternalNotes     String?       @map("after_internal_notes") @db.Text
+
+  washFrequency          String?   @map("wash_frequency") @db.VarChar(120)
+  recommendedProducts    String?   @map("recommended_products") @db.Text
+  productsToAvoid        String?   @map("products_to_avoid") @db.Text
+  stylingAdvice          String?   @map("styling_advice") @db.Text
+  storageAdvice          String?   @map("storage_advice") @db.Text
+  heatAdvice             String?   @map("heat_advice") @db.Text
+  laceAdvice             String?   @map("lace_advice") @db.Text
+  nextCareAt             DateTime? @map("next_care_at") @db.Timestamptz
+  otherAdvice            String?   @map("other_advice") @db.Text
+
+  technicianDisplayName  String    @map("technician_display_name") @db.VarChar(120)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  wig         WigProfile         @relation(fields: [wigId], references: [id])
+  order       RepairOrder        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  technician  TechnicianProfile  @relation(fields: [technicianId], references: [id])
+  operations  CareOperation[]
+  photos      WigAttachment[]
+
+  @@index([wigId, submittedAt])
+  @@index([technicianId])
+  @@map("care_reports")
+}
+
+model CareOperation {
+  id        String             @id @default(uuid()) @db.Uuid
+  reportId  String             @map("report_id") @db.Uuid
+  code      CareOperationCode
+  note      String?            @db.VarChar(500)
+  createdAt DateTime           @default(now()) @map("created_at") @db.Timestamptz
+
+  report CareReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@unique([reportId, code])
+  @@index([reportId])
+  @@map("care_operations")
+}
+
+// ─── Logistics ───────────────────────────────────────────────────────────────
+
+model PickupDelivery {
+  id            String               @id @default(uuid()) @db.Uuid
+  orderId       String               @map("order_id") @db.Uuid
+  type          PickupDeliveryType
+  status        PickupDeliveryStatus @default(SCHEDULED)
+  scheduledAt   DateTime             @map("scheduled_at") @db.Timestamptz
+  completedAt   DateTime?            @map("completed_at") @db.Timestamptz
+  addressLine1  String               @map("address_line1") @db.VarChar(255)
+  addressLine2  String?              @map("address_line2") @db.VarChar(255)
+  city          String               @db.VarChar(100)
+  postalCode    String               @map("postal_code") @db.VarChar(20)
+  countryCode   String               @map("country_code") @db.Char(2)
+  contactPhone  String?              @map("contact_phone") @db.VarChar(20)
+  trackingCode  String?              @map("tracking_code") @db.VarChar(100)
+  notes         String?              @db.Text
+  createdAt     DateTime             @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime             @updatedAt @map("updated_at") @db.Timestamptz
+
+  order RepairOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("pickup_deliveries")
+}
+
+// ─── Payments ────────────────────────────────────────────────────────────────
+
+model Transaction {
+  id              String            @id @default(uuid()) @db.Uuid
+  orderId         String            @map("order_id") @db.Uuid
+  type            TransactionType
+  status          TransactionStatus @default(PENDING)
+  amountCents     Int               @map("amount_cents")
+  currency        String            @default("ILS") @db.Char(3)
+  stripePaymentIntentId String?     @unique @map("stripe_payment_intent_id") @db.VarChar(255)
+  stripeTransferId      String?     @unique @map("stripe_transfer_id") @db.VarChar(255)
+  stripeEventId         String?     @unique @map("stripe_event_id") @db.VarChar(255)
+  metadata        Json?
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime          @updatedAt @map("updated_at") @db.Timestamptz
+
+  order RepairOrder @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@index([status])
+  @@map("transactions")
+}
+
+model StripeEvent {
+  id          String   @id @db.VarChar(255)
+  type        String   @db.VarChar(100)
+  processedAt DateTime @default(now()) @map("processed_at") @db.Timestamptz
+
+  @@map("stripe_events")
+}
+
+model PlatformCommission {
+  id              String   @id @default(uuid()) @db.Uuid
+  orderId         String   @unique @map("order_id") @db.Uuid
+  grossCents      Int      @map("gross_cents")
+  commissionBps   Int      @map("commission_bps")
+  commissionCents Int      @map("commission_cents")
+  technicianCents Int      @map("technician_cents")
+  currency        String   @default("ILS") @db.Char(3)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  order RepairOrder @relation(fields: [orderId], references: [id])
+
+  @@map("platform_commissions")
+}
+
+// ─── Messaging & notifications ───────────────────────────────────────────────
+
+model MessageThread {
+  id        String   @id @default(uuid()) @db.Uuid
+  orderId   String   @unique @map("order_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  order    RepairOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@map("message_threads")
+}
+
+model Message {
+  id        String   @id @default(uuid()) @db.Uuid
+  threadId  String   @map("thread_id") @db.Uuid
+  senderId  String   @map("sender_id") @db.Uuid
+  body      String   @db.Text
+  readAt    DateTime? @map("read_at") @db.Timestamptz
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender User          @relation("MessageSender", fields: [senderId], references: [id])
+
+  @@index([threadId, createdAt])
+  @@map("messages")
+}
+
+model Notification {
+  id        String              @id @default(uuid()) @db.Uuid
+  userId    String              @map("user_id") @db.Uuid
+  channel   NotificationChannel
+  status    NotificationStatus  @default(PENDING)
+  title     String              @db.VarChar(255)
+  body      String              @db.Text
+  payload   Json?
+  readAt    DateTime?           @map("read_at") @db.Timestamptz
+  sentAt    DateTime?           @map("sent_at") @db.Timestamptz
+  createdAt DateTime            @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@map("notifications")
+}
+
+// ─── Reviews & audit ─────────────────────────────────────────────────────────
+
+model Review {
+  id         String   @id @default(uuid()) @db.Uuid
+  orderId    String   @unique @map("order_id") @db.Uuid
+  rating     Int      // 1-5
+  comment    String?  @db.Text
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  order RepairOrder @relation(fields: [orderId], references: [id])
+
+  @@map("reviews")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String?  @map("actor_id") @db.Uuid
+  action     String   @db.VarChar(100)
+  entityType String   @map("entity_type") @db.VarChar(50)
+  entityId   String?  @map("entity_id") @db.Uuid
+  metadata   Json?
+  ipAddress  String?  @map("ip_address") @db.VarChar(45)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  actor User? @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([actorId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ─── Event outbox (future event-driven / multi-region sync) ──────────────────
+
+model OutboxEvent {
+  id            String            @id @default(uuid()) @db.Uuid
+  aggregateType String            @map("aggregate_type") @db.VarChar(50)
+  aggregateId   String            @map("aggregate_id") @db.Uuid
+  eventType     String            @map("event_type") @db.VarChar(100)
+  payload       Json
+  status        OutboxEventStatus @default(PENDING)
+  publishedAt   DateTime?         @map("published_at") @db.Timestamptz
+  retryCount    Int               @default(0) @map("retry_count")
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([status, createdAt])
+  @@map("outbox_events")
+}
