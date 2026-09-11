@@ -4,27 +4,29 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> | { path: string[] } }) {
-  const apiUrl = (process.env.API_URL ?? '').trim().replace(/\/$/, '');
-  if (!apiUrl) {
-    return Response.json(
-      { error: { code: 'API_URL_MISSING', message: 'API_URL is not set on the web service' } },
-      { status: 502 },
-    );
-  }
-
-  const rawParams = await Promise.resolve(context.params);
-  const dest = `${apiUrl}/api/${rawParams.path.join('/')}${request.nextUrl.search}`;
-
-  const headers = new Headers();
-  const contentType = request.headers.get('content-type');
-  if (contentType) headers.set('content-type', contentType);
-  const cookie = request.headers.get('cookie');
-  if (cookie) headers.set('cookie', cookie);
-  const authorization = request.headers.get('authorization');
-  if (authorization) headers.set('authorization', authorization);
-  headers.set('x-request-id', request.headers.get('x-request-id') ?? crypto.randomUUID());
-
+  let dest = 'unknown';
   try {
+    const apiUrl = (process.env.API_URL ?? '').trim().replace(/\/$/, '');
+    if (!apiUrl) {
+      return Response.json(
+        { error: { code: 'API_URL_MISSING', message: 'API_URL is not set on the web service' } },
+        { status: 502 },
+      );
+    }
+
+    const rawParams = await Promise.resolve(context.params);
+    const segments = rawParams?.path ?? [];
+    dest = `${apiUrl}/api/${segments.join('/')}${request.nextUrl.search}`;
+
+    const headers = new Headers();
+    const contentType = request.headers.get('content-type');
+    if (contentType) headers.set('content-type', contentType);
+    const cookie = request.headers.get('cookie');
+    if (cookie) headers.set('cookie', cookie);
+    const authorization = request.headers.get('authorization');
+    if (authorization) headers.set('authorization', authorization);
+    headers.set('x-request-id', request.headers.get('x-request-id') ?? crypto.randomUUID());
+
     const body =
       request.method === 'GET' || request.method === 'HEAD' ? undefined : await request.arrayBuffer();
 
