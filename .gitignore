@@ -35,9 +35,6 @@ pnpm-debug.log*
 coverage/
 .nyc_output/
 
-# Prisma
-packages/database/prisma/migrations/**/migration_lock.toml
-
 # Docker volumes (local)
 .docker-data/
 
