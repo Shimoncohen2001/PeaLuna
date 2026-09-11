@@ -34,7 +34,7 @@
     "@velure/config-eslint": "workspace:*",
     "@velure/config-typescript": "workspace:*",
     "eslint": "^9.28.0",
-    "prisma": "^6.8.2",
+    "prisma": "^7.10.0",
     "rimraf": "^6.0.1",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
