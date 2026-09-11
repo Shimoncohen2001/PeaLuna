@@ -12,6 +12,18 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    const apiUrl = (process.env.API_URL ?? 'https://pealuna-api-production.up.railway.app').replace(
+      /\/$/,
+      '',
+    );
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${apiUrl}/api/:path*`,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
