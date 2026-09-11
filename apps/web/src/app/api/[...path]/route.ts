@@ -3,50 +3,57 @@ import { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const HOP_BY_HOP = new Set([
-  'connection',
-  'keep-alive',
-  'proxy-authenticate',
-  'proxy-authorization',
-  'te',
-  'trailers',
-  'transfer-encoding',
-  'upgrade',
-  'content-encoding',
-  'content-length',
-]);
+async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> | { path: string[] } }) {
+  const apiUrl = (process.env.API_URL ?? '').trim().replace(/\/$/, '');
+  if (!apiUrl) {
+    return Response.json(
+      { error: { code: 'API_URL_MISSING', message: 'API_URL is not set on the web service' } },
+      { status: 502 },
+    );
+  }
 
-async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
-  const apiUrl = process.env.API_URL ?? 'http://localhost:4000';
-  const { path } = await context.params;
-  const dest = `${apiUrl.replace(/\/$/, '')}/api/${path.join('/')}${request.nextUrl.search}`;
+  const rawParams = await Promise.resolve(context.params);
+  const dest = `${apiUrl}/api/${rawParams.path.join('/')}${request.nextUrl.search}`;
 
-  const headers = new Headers(request.headers);
-  headers.delete('host');
-  headers.delete('content-length');
+  const headers = new Headers();
+  const contentType = request.headers.get('content-type');
+  if (contentType) headers.set('content-type', contentType);
+  const cookie = request.headers.get('cookie');
+  if (cookie) headers.set('cookie', cookie);
+  const authorization = request.headers.get('authorization');
+  if (authorization) headers.set('authorization', authorization);
+  headers.set('x-request-id', request.headers.get('x-request-id') ?? crypto.randomUUID());
 
-  const body =
-    request.method === 'GET' || request.method === 'HEAD' ? undefined : await request.arrayBuffer();
+  try {
+    const body =
+      request.method === 'GET' || request.method === 'HEAD' ? undefined : await request.arrayBuffer();
 
-  const upstream = await fetch(dest, {
-    method: request.method,
-    headers,
-    body,
-    redirect: 'manual',
-  });
+    const upstream = await fetch(dest, {
+      method: request.method,
+      headers,
+      body,
+      redirect: 'manual',
+    });
 
-  const out = new Headers();
-  upstream.headers.forEach((value, key) => {
-    if (!HOP_BY_HOP.has(key.toLowerCase())) {
+    const out = new Headers();
+    upstream.headers.forEach((value, key) => {
+      const lower = key.toLowerCase();
+      if (lower === 'transfer-encoding' || lower === 'content-encoding') return;
       out.append(key, value);
-    }
-  });
+    });
 
-  return new Response(await upstream.arrayBuffer(), {
-    status: upstream.status,
-    statusText: upstream.statusText,
-    headers: out,
-  });
+    return new Response(await upstream.arrayBuffer(), {
+      status: upstream.status,
+      headers: out,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'API unreachable';
+    console.error('API proxy failed', { dest, message });
+    return Response.json(
+      { error: { code: 'API_UNREACHABLE', message: `${message} (${dest})` } },
+      { status: 502 },
+    );
+  }
 }
 
 export const GET = proxy;
