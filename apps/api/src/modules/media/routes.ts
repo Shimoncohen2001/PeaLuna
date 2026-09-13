@@ -182,69 +182,82 @@ export async function mediaRoutes(app: AppInstance, env: Env): Promise<void> {
       schema: { body: directUploadSchema },
     },
     async (request, reply) => {
-      const user = requireUser(request);
-      const body = request.body;
-      const wig = await assertWigMediaAccess({
-        userId: user.sub,
-        roles: user.roles as Role[],
-        wigId: body.wigId,
-        orderId: body.orderId,
-        careReportId: body.careReportId,
-      });
-
-      const bytes = Buffer.from(body.contentBase64, 'base64');
-      if (bytes.length === 0) {
-        throw Object.assign(new Error('Uploaded object is empty'), {
-          statusCode: 400,
-          code: 'EMPTY_OBJECT',
-        });
-      }
-
-      const ext = extensionForMime(body.mimeType);
-      const storageKey = `wigs/${wig.id}/${randomUUID()}.${ext}`;
-
-      if (s3 && env.S3_BUCKET) {
-        await putObject(s3, env.S3_BUCKET, storageKey, bytes, body.mimeType);
-      } else if (previewEnabled) {
-        await writePreviewFile(storageKey, bytes);
-      } else {
-        throw Object.assign(new Error('Media storage is not configured'), {
-          statusCode: 503,
-          code: 'STORAGE_UNAVAILABLE',
-        });
-      }
-
-      const attachment = await prisma.wigAttachment.create({
-        data: {
+      try {
+        const user = requireUser(request);
+        const body = request.body;
+        const wig = await assertWigMediaAccess({
+          userId: user.sub,
+          roles: user.roles as Role[],
           wigId: body.wigId,
           orderId: body.orderId,
           careReportId: body.careReportId,
-          storageKey,
-          mimeType: body.mimeType,
-          fileSizeBytes: bytes.length,
-          purpose: body.purpose,
-          photoPhase: body.photoPhase,
-          photoAngle: body.photoAngle,
-          uploadedById: user.sub,
-          aiAnalysisStatus: 'PENDING',
-        },
-      });
+        });
 
-      return reply.status(201).send(
-        successResponse(
-          {
-            id: attachment.id,
-            storageKey: attachment.storageKey,
-            mimeType: attachment.mimeType,
-            fileSizeBytes: attachment.fileSizeBytes,
-            purpose: attachment.purpose,
-            photoPhase: attachment.photoPhase,
-            photoAngle: attachment.photoAngle,
-            createdAt: attachment.createdAt.toISOString(),
+        const bytes = Buffer.from(body.contentBase64, 'base64');
+        if (bytes.length === 0) {
+          throw Object.assign(new Error('Uploaded object is empty'), {
+            statusCode: 400,
+            code: 'EMPTY_OBJECT',
+          });
+        }
+
+        const ext = extensionForMime(body.mimeType);
+        const storageKey = `wigs/${wig.id}/${randomUUID()}.${ext}`;
+
+        if (s3 && env.S3_BUCKET) {
+          await putObject(s3, env.S3_BUCKET, storageKey, bytes, body.mimeType);
+        } else if (previewEnabled) {
+          await writePreviewFile(storageKey, bytes);
+        } else {
+          throw Object.assign(new Error('Media storage is not configured'), {
+            statusCode: 503,
+            code: 'STORAGE_UNAVAILABLE',
+          });
+        }
+
+        const attachment = await prisma.wigAttachment.create({
+          data: {
+            wigId: body.wigId,
+            orderId: body.orderId,
+            careReportId: body.careReportId,
+            storageKey,
+            mimeType: body.mimeType,
+            fileSizeBytes: bytes.length,
+            purpose: body.purpose,
+            photoPhase: body.photoPhase,
+            photoAngle: body.photoAngle,
+            uploadedById: user.sub,
           },
-          request.requestId,
-        ),
-      );
+        });
+
+        return reply.status(201).send(
+          successResponse(
+            {
+              id: attachment.id,
+              storageKey: attachment.storageKey,
+              mimeType: attachment.mimeType,
+              fileSizeBytes: attachment.fileSizeBytes,
+              purpose: attachment.purpose,
+              photoPhase: attachment.photoPhase,
+              photoAngle: attachment.photoAngle,
+              createdAt: attachment.createdAt.toISOString(),
+            },
+            request.requestId,
+          ),
+        );
+      } catch (err) {
+        const extra = err as { statusCode?: number; code?: string; message?: string };
+        if (extra.statusCode && extra.statusCode < 500) throw err;
+        request.log.error({ err }, 'Direct media upload failed');
+        throw Object.assign(
+          new Error(
+            env.PREVIEW_MODE
+              ? extra.message || 'Photo upload failed'
+              : 'Photo upload failed',
+          ),
+          { statusCode: extra.statusCode && extra.statusCode >= 400 ? extra.statusCode : 500, code: extra.code ?? 'UPLOAD_FAILED' },
+        );
+      }
     },
   );
 

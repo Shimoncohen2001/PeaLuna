@@ -1,4 +1,4 @@
-import { fileToBase64, normalizeMediaMime } from '@/lib/media-file';
+import { fileToBase64, normalizeMediaMime, prepareMediaForUpload } from '@/lib/media-file';
 
 type UploadMeta = {
   wigId: string;
@@ -14,8 +14,9 @@ export async function uploadWigMedia(
   meta: UploadMeta,
   authFetch: <T>(path: string, options?: RequestInit) => Promise<T>,
 ) {
-  const mimeType = normalizeMediaMime(file);
-  const { bytes, contentBase64 } = await fileToBase64(file);
+  const prepared = await prepareMediaForUpload(file);
+  const mimeType = normalizeMediaMime(prepared);
+  const { bytes, contentBase64 } = await fileToBase64(prepared);
   return authFetch<{
     id: string;
     storageKey: string;
