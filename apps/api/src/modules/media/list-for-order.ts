@@ -21,7 +21,12 @@ export async function listMediaForWigOrder(env: Env, wigId: string, orderId: str
       mimeType: row.mimeType,
       purpose: row.purpose,
       kind: row.mimeType.startsWith('video/') ? ('video' as const) : ('image' as const),
-      url: s3 && bucket ? await signedGetUrl(s3, bucket, row.storageKey) : null,
+      url:
+        s3 && bucket
+          ? await signedGetUrl(s3, bucket, row.storageKey)
+          : env.PREVIEW_MODE
+            ? `${env.WEB_ORIGIN.replace(/\/$/, '')}/api/v1/media/preview-file/${encodeURIComponent(row.storageKey)}`
+            : null,
       createdAt: row.createdAt.toISOString(),
     })),
   );

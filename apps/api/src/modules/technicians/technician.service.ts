@@ -94,9 +94,12 @@ export class TechnicianService {
 
     const technicianRole = await prisma.role.findUniqueOrThrow({ where: { name: 'TECHNICIAN' } });
 
-    // Auto-approve in development marketplace MVP; production stays UNDER_REVIEW
-    // until an admin approves — and the TECHNICIAN role is granted only then.
-    const status = process.env.NODE_ENV === 'production' ? 'UNDER_REVIEW' : 'APPROVED';
+    // Production waits for admin approval. Preview/dev auto-approve so the
+    // marketplace is testable without a second operator.
+    const status =
+      process.env.NODE_ENV === 'production' && process.env.PREVIEW_MODE !== 'true'
+        ? 'UNDER_REVIEW'
+        : 'APPROVED';
 
     const profile = await prisma.$transaction(async (tx) => {
       if (status === 'APPROVED') {

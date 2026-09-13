@@ -11,6 +11,13 @@ import type { Env } from '../../config/env.js';
 import { API_PREFIX } from '../../config/constants.js';
 import { requireUser } from '../../lib/access.js';
 import { createS3Client, headObject, signedPutUrl } from './s3.js';
+import {
+  assertPreviewStorageKey,
+  previewFileExists,
+  previewPublicUrl,
+  readPreviewFile,
+  writePreviewFile,
+} from './preview-store.js';
 
 function extensionForMime(mimeType: string): string {
   switch (mimeType) {
@@ -92,6 +99,29 @@ async function assertWigMediaAccess(params: {
 
 export async function mediaRoutes(app: AppInstance, env: Env): Promise<void> {
   const s3 = createS3Client(env);
+  const previewEnabled = Boolean(env.PREVIEW_MODE) && !s3;
+
+  const asBuffer = (_req: unknown, body: Buffer, done: (err: null, data: Buffer) => void) => {
+    done(null, body);
+  };
+  for (const mime of [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/webp',
+    'image/heic',
+    'image/heif',
+    'video/mp4',
+    'video/webm',
+    'video/quicktime',
+    'application/octet-stream',
+  ]) {
+    try {
+      app.addContentTypeParser(mime, { parseAs: 'buffer' }, asBuffer);
+    } catch {
+      // Parser already registered on this Fastify instance.
+    }
+  }
 
   app.post(
     `${API_PREFIX}/media/upload-url`,
@@ -101,10 +131,12 @@ export async function mediaRoutes(app: AppInstance, env: Env): Promise<void> {
     },
     async (request, reply) => {
       if (!s3 || !env.S3_BUCKET) {
-        throw Object.assign(new Error('Media storage is not configured'), {
-          statusCode: 503,
-          code: 'STORAGE_UNAVAILABLE',
-        });
+        if (!previewEnabled) {
+          throw Object.assign(new Error('Media storage is not configured'), {
+            statusCode: 503,
+            code: 'STORAGE_UNAVAILABLE',
+          });
+        }
       }
 
       const user = requireUser(request);
@@ -120,13 +152,13 @@ export async function mediaRoutes(app: AppInstance, env: Env): Promise<void> {
       const ext = extensionForMime(body.mimeType);
       const storageKey = `wigs/${wig.id}/${randomUUID()}.${ext}`;
 
-      const uploadUrl = await signedPutUrl(
-        s3,
-        env.S3_BUCKET,
-        storageKey,
-        body.mimeType,
-        body.fileSizeBytes,
-      );
+      const uploadUrl =
+        s3 && env.S3_BUCKET
+          ? await signedPutUrl(s3, env.S3_BUCKET, storageKey, body.mimeType, body.fileSizeBytes)
+          : previewPublicUrl(env.WEB_ORIGIN, storageKey).replace(
+              '/media/preview-file/',
+              '/media/preview-put/',
+            );
 
       return reply.send(
         successResponse(
@@ -134,7 +166,7 @@ export async function mediaRoutes(app: AppInstance, env: Env): Promise<void> {
             uploadUrl,
             storageKey,
             expiresIn: 600,
-            bucket: env.S3_BUCKET,
+            bucket: env.S3_BUCKET ?? 'preview',
           },
           request.requestId,
         ),
@@ -184,6 +216,14 @@ export async function mediaRoutes(app: AppInstance, env: Env): Promise<void> {
             code: 'OBJECT_NOT_FOUND',
           });
         }
+      } else if (previewEnabled) {
+        const ok = await previewFileExists(body.storageKey);
+        if (!ok) {
+          throw Object.assign(new Error('Upload was not found in storage'), {
+            statusCode: 400,
+            code: 'OBJECT_NOT_FOUND',
+          });
+        }
       }
 
       const attachment = await prisma.wigAttachment.create({
@@ -219,4 +259,52 @@ export async function mediaRoutes(app: AppInstance, env: Env): Promise<void> {
       );
     },
   );
+
+  app.put(`${API_PREFIX}/media/preview-put/:key`, async (request, reply) => {
+    if (!previewEnabled) {
+      throw Object.assign(new Error('Media storage is not configured'), {
+        statusCode: 503,
+        code: 'STORAGE_UNAVAILABLE',
+      });
+    }
+    const key = decodeURIComponent((request.params as { key: string }).key);
+    assertPreviewStorageKey(key);
+    const payload = request.body;
+    if (!Buffer.isBuffer(payload) || payload.length === 0) {
+      throw Object.assign(new Error('Uploaded object is empty'), {
+        statusCode: 400,
+        code: 'EMPTY_OBJECT',
+      });
+    }
+    await writePreviewFile(key, payload);
+    return reply.status(204).send();
+  });
+
+  app.get(`${API_PREFIX}/media/preview-file/:key`, async (request, reply) => {
+    if (!previewEnabled) {
+      throw Object.assign(new Error('Not found'), { statusCode: 404, code: 'NOT_FOUND' });
+    }
+    const key = decodeURIComponent((request.params as { key: string }).key);
+    try {
+      const data = await readPreviewFile(key);
+      const ext = key.split('.').pop()?.toLowerCase();
+      const mime =
+        ext === 'png'
+          ? 'image/png'
+          : ext === 'webp'
+            ? 'image/webp'
+            : ext === 'heic'
+              ? 'image/heic'
+              : ext === 'mp4'
+                ? 'video/mp4'
+                : ext === 'webm'
+                  ? 'video/webm'
+                  : ext === 'mov'
+                    ? 'video/quicktime'
+                    : 'image/jpeg';
+      return reply.header('Cache-Control', 'private, max-age=3600').type(mime).send(data);
+    } catch {
+      throw Object.assign(new Error('Not found'), { statusCode: 404, code: 'NOT_FOUND' });
+    }
+  });
 }

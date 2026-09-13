@@ -32,6 +32,7 @@ export async function buildApp() {
     trustProxy: 1,
     requestIdHeader: 'x-request-id',
     genReqId: () => crypto.randomUUID(),
+    bodyLimit: 52 * 1024 * 1024,
   }).withTypeProvider<ZodTypeProvider>() as AppInstance;
 
   app.setValidatorCompiler(validatorCompiler);
