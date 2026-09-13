@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import {
   confirmUploadSchema,
   createUploadUrlSchema,
+  directUploadSchema,
   successResponse,
 } from '@velure/contracts';
 import { prisma } from '@velure/database';
@@ -10,7 +11,7 @@ import type { AppInstance } from '../../types/app.js';
 import type { Env } from '../../config/env.js';
 import { API_PREFIX } from '../../config/constants.js';
 import { requireUser } from '../../lib/access.js';
-import { createS3Client, headObject, signedPutUrl } from './s3.js';
+import { createS3Client, headObject, putObject, signedPutUrl } from './s3.js';
 import {
   assertPreviewStorageKey,
   previewFileExists,
@@ -167,6 +168,79 @@ export async function mediaRoutes(app: AppInstance, env: Env): Promise<void> {
             storageKey,
             expiresIn: 600,
             bucket: env.S3_BUCKET ?? 'preview',
+          },
+          request.requestId,
+        ),
+      );
+    },
+  );
+
+  app.post(
+    `${API_PREFIX}/media/direct`,
+    {
+      preHandler: [app.authenticate],
+      schema: { body: directUploadSchema },
+    },
+    async (request, reply) => {
+      const user = requireUser(request);
+      const body = request.body;
+      const wig = await assertWigMediaAccess({
+        userId: user.sub,
+        roles: user.roles as Role[],
+        wigId: body.wigId,
+        orderId: body.orderId,
+        careReportId: body.careReportId,
+      });
+
+      const bytes = Buffer.from(body.contentBase64, 'base64');
+      if (bytes.length === 0) {
+        throw Object.assign(new Error('Uploaded object is empty'), {
+          statusCode: 400,
+          code: 'EMPTY_OBJECT',
+        });
+      }
+
+      const ext = extensionForMime(body.mimeType);
+      const storageKey = `wigs/${wig.id}/${randomUUID()}.${ext}`;
+
+      if (s3 && env.S3_BUCKET) {
+        await putObject(s3, env.S3_BUCKET, storageKey, bytes, body.mimeType);
+      } else if (previewEnabled) {
+        await writePreviewFile(storageKey, bytes);
+      } else {
+        throw Object.assign(new Error('Media storage is not configured'), {
+          statusCode: 503,
+          code: 'STORAGE_UNAVAILABLE',
+        });
+      }
+
+      const attachment = await prisma.wigAttachment.create({
+        data: {
+          wigId: body.wigId,
+          orderId: body.orderId,
+          careReportId: body.careReportId,
+          storageKey,
+          mimeType: body.mimeType,
+          fileSizeBytes: bytes.length,
+          purpose: body.purpose,
+          photoPhase: body.photoPhase,
+          photoAngle: body.photoAngle,
+          uploadedById: user.sub,
+          aiAnalysisStatus: 'PENDING',
+        },
+      });
+
+      return reply.status(201).send(
+        successResponse(
+          {
+            id: attachment.id,
+            storageKey: attachment.storageKey,
+            mimeType: attachment.mimeType,
+            fileSizeBytes: attachment.fileSizeBytes,
+            purpose: attachment.purpose,
+            photoPhase: attachment.photoPhase,
+            photoAngle: attachment.photoAngle,
+            createdAt: attachment.createdAt.toISOString(),
           },
           request.requestId,
         ),

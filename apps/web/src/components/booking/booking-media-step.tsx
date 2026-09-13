@@ -7,6 +7,7 @@ import { ApiClientError } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
 import { useLocale } from '@/lib/i18n/locale';
 import { normalizeMediaMime } from '@/lib/media-file';
+import { uploadWigMedia } from '@/lib/upload-media';
 
 type Pending = { id: string; name: string; preview: string; kind: 'image' | 'video' };
 
@@ -24,39 +25,11 @@ export function BookingMediaStep({ wigId, onSkip }: { wigId: string; onSkip: () 
     try {
       for (const file of Array.from(list)) {
         const mimeType = normalizeMediaMime(file);
-        const urlRes = await authFetch<{ uploadUrl: string; storageKey: string }>(
-          '/api/v1/media/upload-url',
-          {
-            method: 'POST',
-            body: JSON.stringify({
-              wigId,
-              mimeType,
-              fileSizeBytes: file.size,
-              purpose: 'INTAKE',
-              filename: file.name,
-            }),
-          },
-        );
-        const put = await fetch(urlRes.uploadUrl, {
-          method: 'PUT',
-          headers: { 'Content-Type': mimeType },
-          body: file,
-        });
-        if (!put.ok) throw new Error('Upload failed');
-        await authFetch('/api/v1/media/confirm', {
-          method: 'POST',
-          body: JSON.stringify({
-            storageKey: urlRes.storageKey,
-            wigId,
-            mimeType,
-            fileSizeBytes: file.size,
-            purpose: 'INTAKE',
-          }),
-        });
+        const uploaded = await uploadWigMedia(file, { wigId, purpose: 'INTAKE' }, authFetch);
         setFiles((prev) => [
           ...prev,
           {
-            id: urlRes.storageKey,
+            id: uploaded.storageKey,
             name: file.name,
             preview: URL.createObjectURL(file),
             kind: mimeType.startsWith('video/') ? 'video' : 'image',

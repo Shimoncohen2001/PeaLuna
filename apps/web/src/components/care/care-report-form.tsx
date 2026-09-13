@@ -19,7 +19,7 @@ import {
   WIG_KIND_OPTIONS,
 } from '@/lib/i18n/care';
 import { useLocale } from '@/lib/i18n/locale';
-import { normalizeMediaMime } from '@/lib/media-file';
+import { uploadWigMedia } from '@/lib/upload-media';
 
 type Photo = {
   id: string;
@@ -229,44 +229,18 @@ export function CareReportForm({ orderId }: { orderId: string }) {
     setBusyUpload(true);
     setError(null);
     try {
-      const mimeType = normalizeMediaMime(file);
-      const urlRes = await authFetch<{ uploadUrl: string; storageKey: string }>(
-        '/api/v1/media/upload-url',
+      await uploadWigMedia(
+        file,
         {
-          method: 'POST',
-          body: JSON.stringify({
-            wigId: report.data.wigId,
-            orderId,
-            careReportId: report.data.id,
-            mimeType,
-            fileSizeBytes: file.size,
-            purpose: phase === 'BEFORE' ? 'BEFORE_CARE' : 'AFTER_CARE',
-            photoPhase: phase,
-            photoAngle: angle,
-            filename: file.name,
-          }),
-        },
-      );
-      const put = await fetch(urlRes.uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': mimeType },
-        body: file,
-      });
-      if (!put.ok) throw new Error(ui.uploadFailed);
-      await authFetch('/api/v1/media/confirm', {
-        method: 'POST',
-        body: JSON.stringify({
-          storageKey: urlRes.storageKey,
           wigId: report.data.wigId,
           orderId,
           careReportId: report.data.id,
-          mimeType,
-          fileSizeBytes: file.size,
           purpose: phase === 'BEFORE' ? 'BEFORE_CARE' : 'AFTER_CARE',
           photoPhase: phase,
-          photoAngle: angle,
-        }),
-      });
+          photoAngle: angle as 'FRONT' | 'BACK' | 'LEFT' | 'RIGHT' | 'LACE' | 'EXTRA',
+        },
+        authFetch,
+      );
       await queryClient.invalidateQueries({ queryKey: ['care-report', orderId] });
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : ui.uploadImpossible);

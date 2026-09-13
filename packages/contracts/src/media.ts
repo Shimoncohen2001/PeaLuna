@@ -11,12 +11,33 @@ const ALLOWED_MIME = [
   'video/quicktime',
 ] as const;
 
+export function normalizeAllowedMime(mimeType: string): (typeof ALLOWED_MIME)[number] | null {
+  const mime = mimeType.trim().toLowerCase();
+  if (mime === 'image/jpg' || mime === 'image/pjpeg') return 'image/jpeg';
+  if (mime === 'image/heic-sequence') return 'image/heic';
+  if (mime === 'image/heif-sequence') return 'image/heif';
+  return (ALLOWED_MIME as readonly string[]).includes(mime)
+    ? (mime as (typeof ALLOWED_MIME)[number])
+    : null;
+}
+
+const mimeTypeSchema = z
+  .string()
+  .transform((value, ctx) => {
+    const mime = normalizeAllowedMime(value);
+    if (!mime) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Unsupported media type' });
+      return z.NEVER;
+    }
+    return mime;
+  });
+
 const MAX_FILE_BYTES = 50 * 1024 * 1024;
 
 export const createUploadUrlSchema = z.object({
   wigId: z.string().uuid(),
   orderId: z.string().uuid().optional(),
-  mimeType: z.enum(ALLOWED_MIME),
+  mimeType: mimeTypeSchema,
   fileSizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
   purpose: z.enum(['INTAKE', 'PROGRESS', 'QC', 'DELIVERY', 'BEFORE_CARE', 'AFTER_CARE', 'OTHER']).default('INTAKE'),
   filename: z.string().min(1).max(255).optional(),
@@ -29,7 +50,7 @@ export const confirmUploadSchema = z.object({
   storageKey: z.string().min(1).max(512),
   wigId: z.string().uuid(),
   orderId: z.string().uuid().optional(),
-  mimeType: z.enum(ALLOWED_MIME),
+  mimeType: mimeTypeSchema,
   fileSizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
   purpose: z.enum(['INTAKE', 'PROGRESS', 'QC', 'DELIVERY', 'BEFORE_CARE', 'AFTER_CARE', 'OTHER']).default('INTAKE'),
   careReportId: z.string().uuid().optional(),
@@ -37,8 +58,13 @@ export const confirmUploadSchema = z.object({
   photoAngle: z.enum(['FRONT', 'BACK', 'LEFT', 'RIGHT', 'LACE', 'EXTRA']).optional(),
 });
 
+export const directUploadSchema = createUploadUrlSchema.extend({
+  contentBase64: z.string().min(32).max(70_000_000),
+});
+
 export type CreateUploadUrlInput = z.infer<typeof createUploadUrlSchema>;
 export type ConfirmUploadInput = z.infer<typeof confirmUploadSchema>;
+export type DirectUploadInput = z.infer<typeof directUploadSchema>;
 
 export const mediaItemSchema = z.object({
   id: z.string().uuid(),

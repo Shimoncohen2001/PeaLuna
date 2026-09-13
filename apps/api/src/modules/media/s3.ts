@@ -45,3 +45,21 @@ export async function headObject(
 export async function signedGetUrl(s3: S3Client, bucket: string, key: string): Promise<string> {
   return getSignedUrl(s3, new GetObjectCommand({ Bucket: bucket, Key: key }), { expiresIn: 3600 });
 }
+
+export async function putObject(
+  s3: S3Client,
+  bucket: string,
+  key: string,
+  body: Buffer,
+  mimeType: string,
+): Promise<void> {
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: body,
+      ContentType: mimeType,
+      ContentLength: body.length,
+    }),
+  );
+}
