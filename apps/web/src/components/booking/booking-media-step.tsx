@@ -37,7 +37,9 @@ export function BookingMediaStep({ wigId, onSkip }: { wigId: string; onSkip: () 
         ]);
       }
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Upload failed');
+      setError(
+        err instanceof ApiClientError || err instanceof Error ? err.message : t.book.mediaFailed,
+      );
     } finally {
       setBusy(false);
     }

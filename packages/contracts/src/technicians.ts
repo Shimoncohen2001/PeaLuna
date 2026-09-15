@@ -54,6 +54,8 @@ export const createBookingSchema = z
     serviceAddressLine: z.string().max(255).trim().optional(),
     serviceCity: z.string().max(100).trim().optional(),
     servicePostalCode: z.string().max(12).trim().optional(),
+    serviceLatitude: z.number().min(-90).max(90).optional(),
+    serviceLongitude: z.number().min(-180).max(180).optional(),
     customerNotes: z.string().max(2000).trim().optional(),
   })
   .superRefine((value, ctx) => {

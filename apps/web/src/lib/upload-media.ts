@@ -33,7 +33,7 @@ export async function uploadWigMedia(
       purpose: meta.purpose,
       photoPhase: meta.photoPhase,
       photoAngle: meta.photoAngle,
-      filename: file.name || 'iphone.jpg',
+      filename: file.name || prepared.name || 'iphone.jpg',
       contentBase64,
     }),
   });

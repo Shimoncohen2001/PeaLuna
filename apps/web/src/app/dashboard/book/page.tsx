@@ -12,6 +12,7 @@ import { useAuth } from '@/lib/auth';
 import { useLocale } from '@/lib/i18n/locale';
 import { formatDistanceKm, formatMoney, intlLocale } from '@/lib/format';
 import { BookingMediaStep } from '@/components/booking/booking-media-step';
+import type { AddressValue } from '@/components/maps/address-picker';
 
 const ExpertsMap = dynamic(
   () => import('@/components/maps/experts-map').then((m) => m.ExpertsMap),
@@ -23,6 +24,11 @@ const ExpertsMap = dynamic(
       </div>
     ),
   },
+);
+
+const AddressPicker = dynamic(
+  () => import('@/components/maps/address-picker').then((m) => m.AddressPicker),
+  { ssr: false },
 );
 
 type TechnicianCard = {
@@ -67,7 +73,13 @@ export default function BookPage() {
   const [technicianId, setTechnicianId] = useState<string | null>(null);
   const [venueType, setVenueType] = useState<'HOME' | 'SALON'>('HOME');
   const [scheduledAt, setScheduledAt] = useState('');
-  const [address, setAddress] = useState('');
+  const [serviceAddress, setServiceAddress] = useState<AddressValue>({
+    label: '',
+    city: '',
+    postalCode: '',
+    lat: null,
+    lng: null,
+  });
   const [error, setError] = useState<string | null>(null);
 
   const services = useQuery({
@@ -163,6 +175,10 @@ export default function BookPage() {
       setError(t.book.needSlot);
       return;
     }
+    if (step === 4 && venueType === 'HOME' && !serviceAddress.label.trim()) {
+      setError(t.book.needAddress);
+      return;
+    }
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
   }
 
@@ -179,9 +195,11 @@ export default function BookPage() {
       serviceTypeIds: selectedServices,
       scheduledAt: new Date(scheduledAt).toISOString(),
       venueType,
-      serviceAddressLine: venueType === 'HOME' ? address || undefined : undefined,
-      servicePostalCode: postalCode || undefined,
-      serviceCity: city || undefined,
+      serviceAddressLine: venueType === 'HOME' ? serviceAddress.label || undefined : undefined,
+      servicePostalCode: serviceAddress.postalCode || postalCode || undefined,
+      serviceCity: serviceAddress.city || city || undefined,
+      serviceLatitude: venueType === 'HOME' ? serviceAddress.lat ?? undefined : undefined,
+      serviceLongitude: venueType === 'HOME' ? serviceAddress.lng ?? undefined : undefined,
     });
   }
 
@@ -396,18 +414,19 @@ export default function BookPage() {
           </div>
           {venueType === 'HOME' ? (
             <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium" htmlFor="address">
-                  {t.job.address}
-                </label>
-                <input
-                  id="address"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder={t.book.addressPlaceholder}
-                  className="mt-1 w-full rounded-lg border border-ink/10 px-3 py-2"
-                />
-              </div>
+              <AddressPicker
+                value={serviceAddress}
+                onChange={setServiceAddress}
+                authFetch={authFetch}
+                labels={{
+                  search: t.geo.searchAddress,
+                  noResults: t.geo.noResults,
+                  pickOnMap: t.geo.pickOnMap,
+                  useLocation: t.geo.useLocation,
+                  denied: t.geo.denied,
+                  unavailable: t.geo.unavailable,
+                }}
+              />
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="text-sm font-medium" htmlFor="city">
@@ -415,8 +434,11 @@ export default function BookPage() {
                   </label>
                   <input
                     id="city"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
+                    value={serviceAddress.city || city}
+                    onChange={(e) => {
+                      setCity(e.target.value);
+                      setServiceAddress((prev) => ({ ...prev, city: e.target.value }));
+                    }}
                     className="mt-1 w-full rounded-lg border border-ink/10 px-3 py-2"
                   />
                 </div>
@@ -426,8 +448,11 @@ export default function BookPage() {
                   </label>
                   <input
                     id="postalCode"
-                    value={postalCode}
-                    onChange={(e) => setPostalCode(e.target.value)}
+                    value={serviceAddress.postalCode || postalCode}
+                    onChange={(e) => {
+                      setPostalCode(e.target.value);
+                      setServiceAddress((prev) => ({ ...prev, postalCode: e.target.value }));
+                    }}
                     className="mt-1 w-full rounded-lg border border-ink/10 px-3 py-2"
                   />
                 </div>

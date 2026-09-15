@@ -14,6 +14,7 @@ import { requireUser } from '../../lib/access.js';
 import { createS3Client, headObject, putObject, signedPutUrl } from './s3.js';
 import {
   assertPreviewStorageKey,
+  isDiskMediaEnabled,
   previewFileExists,
   previewPublicUrl,
   readPreviewFile,
@@ -100,7 +101,7 @@ async function assertWigMediaAccess(params: {
 
 export async function mediaRoutes(app: AppInstance, env: Env): Promise<void> {
   const s3 = createS3Client(env);
-  const previewEnabled = Boolean(env.PREVIEW_MODE) && !s3;
+  const diskEnabled = isDiskMediaEnabled(env, Boolean(s3));
 
   const asBuffer = (_req: unknown, body: Buffer, done: (err: null, data: Buffer) => void) => {
     done(null, body);
@@ -132,7 +133,7 @@ export async function mediaRoutes(app: AppInstance, env: Env): Promise<void> {
     },
     async (request, reply) => {
       if (!s3 || !env.S3_BUCKET) {
-        if (!previewEnabled) {
+        if (!diskEnabled) {
           throw Object.assign(new Error('Media storage is not configured'), {
             statusCode: 503,
             code: 'STORAGE_UNAVAILABLE',
@@ -206,7 +207,7 @@ export async function mediaRoutes(app: AppInstance, env: Env): Promise<void> {
 
         if (s3 && env.S3_BUCKET) {
           await putObject(s3, env.S3_BUCKET, storageKey, bytes, body.mimeType);
-        } else if (previewEnabled) {
+        } else if (diskEnabled) {
           await writePreviewFile(storageKey, bytes);
         } else {
           throw Object.assign(new Error('Media storage is not configured'), {
@@ -303,7 +304,7 @@ export async function mediaRoutes(app: AppInstance, env: Env): Promise<void> {
             code: 'OBJECT_NOT_FOUND',
           });
         }
-      } else if (previewEnabled) {
+      } else if (diskEnabled) {
         const ok = await previewFileExists(body.storageKey);
         if (!ok) {
           throw Object.assign(new Error('Upload was not found in storage'), {
@@ -311,6 +312,11 @@ export async function mediaRoutes(app: AppInstance, env: Env): Promise<void> {
             code: 'OBJECT_NOT_FOUND',
           });
         }
+      } else {
+        throw Object.assign(new Error('Media storage is not configured'), {
+          statusCode: 503,
+          code: 'STORAGE_UNAVAILABLE',
+        });
       }
 
       const attachment = await prisma.wigAttachment.create({
@@ -348,7 +354,7 @@ export async function mediaRoutes(app: AppInstance, env: Env): Promise<void> {
   );
 
   app.put(`${API_PREFIX}/media/preview-put/:key`, async (request, reply) => {
-    if (!previewEnabled) {
+    if (!diskEnabled) {
       throw Object.assign(new Error('Media storage is not configured'), {
         statusCode: 503,
         code: 'STORAGE_UNAVAILABLE',
@@ -368,7 +374,7 @@ export async function mediaRoutes(app: AppInstance, env: Env): Promise<void> {
   });
 
   app.get(`${API_PREFIX}/media/preview-file/:key`, async (request, reply) => {
-    if (!previewEnabled) {
+    if (!diskEnabled) {
       throw Object.assign(new Error('Not found'), { statusCode: 404, code: 'NOT_FOUND' });
     }
     const key = decodeURIComponent((request.params as { key: string }).key);

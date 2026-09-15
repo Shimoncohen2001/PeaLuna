@@ -1,12 +1,18 @@
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
+import type { Env } from '../../config/env.js';
 
 const KEY_RE =
   /^wigs\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|jpeg|png|webp|heic|mp4|webm|mov)$/i;
 
 function rootDir() {
   return join(tmpdir(), 'pealuna-media');
+}
+
+export function isDiskMediaEnabled(env: Pick<Env, 'NODE_ENV' | 'PREVIEW_MODE'>, hasS3: boolean) {
+  if (hasS3) return false;
+  return Boolean(env.PREVIEW_MODE) || env.NODE_ENV !== 'production';
 }
 
 export function assertPreviewStorageKey(key: string): string {

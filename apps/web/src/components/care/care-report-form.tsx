@@ -243,7 +243,9 @@ export function CareReportForm({ orderId }: { orderId: string }) {
       );
       await queryClient.invalidateQueries({ queryKey: ['care-report', orderId] });
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : ui.uploadImpossible);
+      setError(
+        err instanceof ApiClientError || err instanceof Error ? err.message : ui.uploadImpossible,
+      );
     } finally {
       setBusyUpload(false);
     }

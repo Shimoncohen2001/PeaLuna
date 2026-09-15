@@ -112,6 +112,12 @@ export function generateOrderNumber(): string {
   return `PL-${stamp}-${rand}`;
 }
 
+/** ~1.1 km at the equator — enough for distance, not a home pin. */
+export function roundPublicCoord(value: number | null | undefined): number | null {
+  if (value == null || Number.isNaN(value)) return null;
+  return Math.round(value * 100) / 100;
+}
+
 /** Approximate distance in km (Haversine). */
 export function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const toRad = (d: number) => (d * Math.PI) / 180;

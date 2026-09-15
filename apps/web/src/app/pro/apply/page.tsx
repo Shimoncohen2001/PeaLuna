@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ServiceTypeDto } from '@velure/contracts';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,12 @@ import { ApiClientError } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
 import { useLocale } from '@/lib/i18n/locale';
 import { formatStatus } from '@/lib/format';
+import type { AddressValue } from '@/components/maps/address-picker';
+
+const AddressPicker = dynamic(
+  () => import('@/components/maps/address-picker').then((m) => m.AddressPicker),
+  { ssr: false },
+);
 
 type TechProfile = {
   id: string;
@@ -33,6 +40,13 @@ export default function ProApplyPage() {
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [address, setAddress] = useState<AddressValue>({
+    label: '',
+    city: 'Tel Aviv',
+    postalCode: '6100000',
+    lat: 32.0853,
+    lng: 34.7818,
+  });
   const isTech = user?.roles?.includes('TECHNICIAN');
 
   const services = useQuery({
@@ -52,20 +66,27 @@ export default function ProApplyPage() {
     }
   }, [mine.data]);
 
+  useEffect(() => {
+    if (!mine.data) return;
+    setAddress({
+      label: mine.data.salonAddress || [mine.data.serviceCity, mine.data.servicePostalCode].filter(Boolean).join(', '),
+      city: mine.data.serviceCity ?? 'Tel Aviv',
+      postalCode: mine.data.servicePostalCode ?? '6100000',
+      lat: mine.data.latitude,
+      lng: mine.data.longitude,
+    });
+  }, [mine.data]);
+
   const apply = useMutation({
     mutationFn: (body: Record<string, unknown>) =>
       authFetch<TechProfile>('/api/v1/technicians/apply', {
         method: 'POST',
         body: JSON.stringify(body),
       }),
-    onSuccess: async (profile) => {
+    onSuccess: async () => {
       await refreshSession();
       await queryClient.invalidateQueries({ queryKey: ['tech-me'] });
-      if (profile.status === 'APPROVED') {
-        window.location.href = '/pro';
-        return;
-      }
-      setOk(t.pro.applyHintEdit);
+      setOk(t.pro.applyPending);
     },
     onError: (err) => {
       setError(err instanceof ApiClientError ? err.message : t.pro.applyFailed);
@@ -89,20 +110,22 @@ export default function ProApplyPage() {
     },
   });
 
+  const profile = mine.data;
+
   function buildBody(form: FormData) {
     return {
       displayName: String(form.get('displayName')),
       headline: String(form.get('headline') || '') || undefined,
       bio: String(form.get('bio') || '') || undefined,
-      serviceCity: String(form.get('serviceCity')),
-      servicePostalCode: String(form.get('servicePostalCode')),
+      serviceCity: address.city || String(form.get('serviceCity')),
+      servicePostalCode: address.postalCode || String(form.get('servicePostalCode')),
       serviceCountryCode: 'IL',
-      salonAddress: String(form.get('salonAddress') || '') || undefined,
+      salonAddress: String(form.get('salonAddress') || address.label || '') || undefined,
       offersHomeService: form.get('offersHome') === 'on',
       offersSalonService: form.get('offersSalon') === 'on',
       serviceTypeIds: selectedServices,
-      latitude: Number(form.get('latitude') || mine.data?.latitude || 32.0853),
-      longitude: Number(form.get('longitude') || mine.data?.longitude || 34.7818),
+      latitude: address.lat ?? 32.0853,
+      longitude: address.lng ?? 34.7818,
       yearsExperience: Number(form.get('yearsExperience') || 1),
     };
   }
@@ -117,15 +140,17 @@ export default function ProApplyPage() {
     }
     const form = new FormData(e.currentTarget);
     const body = buildBody(form);
-    if (mine.data) {
-      update.mutate(body);
-    } else {
+    if (!profile || profile.status === 'REJECTED') {
       apply.mutate(body);
+    } else {
+      update.mutate(body);
     }
   }
 
-  const profile = mine.data;
   const pending = apply.isPending || update.isPending;
+  const awaitingReview =
+    profile?.status === 'UNDER_REVIEW' || profile?.status === 'PENDING_APPLICATION';
+  const rejected = profile?.status === 'REJECTED';
 
   return (
     <div className="space-y-6">
@@ -134,9 +159,13 @@ export default function ProApplyPage() {
           {profile ? t.pro.applyEdit : t.pro.applyTitle}
         </h1>
         <p className="mt-2 text-white/60">
-          {profile
-            ? format(t.pro.applyHintEdit, { status: formatStatus(profile.status, t.status) })
-            : t.pro.applyHint}
+          {rejected
+            ? t.pro.applyRejected
+            : awaitingReview
+              ? t.pro.pendingReview
+              : profile
+                ? format(t.pro.applyHintEdit, { status: formatStatus(profile.status, t.status) })
+                : t.pro.applyHint}
         </p>
       </div>
 
@@ -168,13 +197,31 @@ export default function ProApplyPage() {
                 className="mt-1 w-full rounded-lg border border-white/10 bg-transparent px-3 py-2"
               />
             </div>
+          </div>
+
+          <AddressPicker
+            value={address}
+            onChange={setAddress}
+            authFetch={authFetch}
+            tone="dark"
+            labels={{
+              search: t.geo.searchAddress,
+              noResults: t.geo.noResults,
+              pickOnMap: t.geo.pickOnMap,
+              useLocation: t.geo.useLocation,
+              denied: t.geo.denied,
+              unavailable: t.geo.unavailable,
+            }}
+          />
+
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="text-sm text-white/70">{t.pro.city}</label>
               <input
                 name="serviceCity"
                 required
-                key={`city-${profile?.id ?? 'new'}`}
-                defaultValue={profile?.serviceCity ?? 'Tel Aviv'}
+                value={address.city}
+                onChange={(e) => setAddress((prev) => ({ ...prev, city: e.target.value }))}
                 className="mt-1 w-full rounded-lg border border-white/10 bg-transparent px-3 py-2"
               />
             </div>
@@ -183,8 +230,8 @@ export default function ProApplyPage() {
               <input
                 name="servicePostalCode"
                 required
-                key={`postal-${profile?.id ?? 'new'}`}
-                defaultValue={profile?.servicePostalCode ?? '6100000'}
+                value={address.postalCode}
+                onChange={(e) => setAddress((prev) => ({ ...prev, postalCode: e.target.value }))}
                 className="mt-1 w-full rounded-lg border border-white/10 bg-transparent px-3 py-2"
               />
             </div>
@@ -269,9 +316,11 @@ export default function ProApplyPage() {
           <Button type="submit" variant="gold" disabled={pending}>
             {pending
               ? t.job.completing
-              : profile
-                ? t.pro.applyUpdate
-                : t.pro.applySubmit}
+              : rejected
+                ? t.pro.resubmit
+                : profile
+                  ? t.pro.applyUpdate
+                  : t.pro.applySubmit}
           </Button>
         </form>
       ) : null}

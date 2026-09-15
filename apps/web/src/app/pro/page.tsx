@@ -36,6 +36,13 @@ export default function ProDashboardPage() {
   const { t, locale } = useLocale();
   const isTech = user?.roles?.includes('TECHNICIAN');
 
+  const application = useQuery({
+    queryKey: ['tech-me'],
+    enabled: !isTech,
+    queryFn: () => authFetch<{ status: string }>('/api/v1/technicians/me'),
+    retry: false,
+  });
+
   const dashboard = useQuery({
     queryKey: ['pro-dashboard'],
     enabled: Boolean(isTech),
@@ -62,12 +69,17 @@ export default function ProDashboardPage() {
   );
 
   if (!isTech) {
+    const status = application.data?.status;
+    const pending = status === 'UNDER_REVIEW' || status === 'PENDING_APPLICATION';
+    const rejected = status === 'REJECTED';
     return (
       <div className="space-y-4">
         <h1 className="font-display text-4xl text-[#e8b4a2]">{t.pro.reserved}</h1>
-        <p className="text-white/70">{t.pro.reservedHint}</p>
+        <p className="text-white/70">
+          {rejected ? t.pro.applyRejected : pending ? t.pro.pendingReview : t.pro.reservedHint}
+        </p>
         <Link href="/pro/apply">
-          <Button variant="gold">{t.pro.createProfile}</Button>
+          <Button variant="gold">{rejected ? t.pro.resubmit : pending ? t.pro.applyEdit : t.pro.createProfile}</Button>
         </Link>
       </div>
     );

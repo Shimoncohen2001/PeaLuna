@@ -1,5 +1,6 @@
 import { prisma } from '@velure/database';
 import type { Env } from '../../config/env.js';
+import { isDiskMediaEnabled, previewPublicUrl } from './preview-store.js';
 import { createS3Client, signedGetUrl } from './s3.js';
 
 export async function listMediaForWigOrder(env: Env, wigId: string, orderId: string) {
@@ -14,6 +15,7 @@ export async function listMediaForWigOrder(env: Env, wigId: string, orderId: str
   const unique = [...new Map(rows.map((row) => [row.id, row])).values()];
   const s3 = createS3Client(env);
   const bucket = env.S3_BUCKET;
+  const diskEnabled = isDiskMediaEnabled(env, Boolean(s3));
 
   return Promise.all(
     unique.map(async (row) => ({
@@ -24,8 +26,8 @@ export async function listMediaForWigOrder(env: Env, wigId: string, orderId: str
       url:
         s3 && bucket
           ? await signedGetUrl(s3, bucket, row.storageKey)
-          : env.PREVIEW_MODE
-            ? `${env.WEB_ORIGIN.replace(/\/$/, '')}/api/v1/media/preview-file/${encodeURIComponent(row.storageKey)}`
+          : diskEnabled
+            ? previewPublicUrl(env.WEB_ORIGIN, row.storageKey)
             : null,
       createdAt: row.createdAt.toISOString(),
     })),

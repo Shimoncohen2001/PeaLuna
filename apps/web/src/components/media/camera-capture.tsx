@@ -48,6 +48,7 @@ export function CameraCapture({
       <input
         id={`${id}-camera`}
         ref={cameraRef}
+        name="camera"
         type="file"
         accept={CAMERA_ACCEPT}
         capture="environment"
@@ -58,6 +59,7 @@ export function CameraCapture({
       <input
         id={`${id}-library`}
         ref={libraryRef}
+        name="library"
         type="file"
         accept={allowVideo ? LIBRARY_WITH_VIDEO : LIBRARY_IMAGES}
         multiple={multiple}

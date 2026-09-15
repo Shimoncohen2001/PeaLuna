@@ -15,6 +15,9 @@ type AdminTechnician = {
   status: TechnicianStatusDto;
   displayName: string;
   email: string;
+  headline: string | null;
+  bio: string | null;
+  salonAddress: string | null;
   serviceCity: string | null;
   servicePostalCode: string | null;
   yearsExperience: number | null;
@@ -99,8 +102,10 @@ export default function AdminTechniciansPage() {
             <div>
               <p className="font-medium text-ink">{expert.displayName}</p>
               <p className="text-sm text-muted">{expert.email}</p>
+              {expert.headline ? <p className="mt-1 text-sm text-ink">{expert.headline}</p> : null}
+              {expert.bio ? <p className="mt-1 text-sm text-muted">{expert.bio}</p> : null}
               <p className="mt-1 text-sm text-muted">
-                {[expert.serviceCity, expert.servicePostalCode].filter(Boolean).join(' · ') || '—'}
+                {[expert.salonAddress, expert.serviceCity, expert.servicePostalCode].filter(Boolean).join(' · ') || '—'}
                 {expert.yearsExperience != null ? ` · ${expert.yearsExperience}y` : ''}
               </p>
               <p className="mt-1 text-xs text-muted">

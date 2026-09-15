@@ -44,7 +44,11 @@ describe.skipIf(!hasDb)('marketplace integration', () => {
       offersHomeService: true,
       offersSalonService: true,
       serviceTypeIds: [serviceId],
+      latitude: 32.0853,
+      longitude: 34.7818,
     });
+    expect(profile.status).toBe('UNDER_REVIEW');
+    await technicians.setAdminStatus(profile.id, 'APPROVED');
     techProfileId = profile.id;
   });
 
@@ -247,5 +251,32 @@ describe.skipIf(!hasDb)('marketplace integration', () => {
       if (previous === undefined) delete process.env.REQUIRE_EMAIL_VERIFICATION;
       else process.env.REQUIRE_EMAIL_VERIFICATION = previous;
     }
+  });
+
+  it('stores optional home service coordinates', async () => {
+    const customer = await registerVerifiedCustomer('homegeo');
+    userIds.push(customer.userId);
+    const wig = await createWig(customer.userId);
+    const when = new Date(Date.now() + 216 * 60 * 60 * 1000);
+    const booking = await technicians.createBooking({
+      userId: customer.userId,
+      roles: ['CUSTOMER'],
+      homeRegion: 'eu-central-1',
+      input: {
+        technicianId: techProfileId,
+        wigId: wig.id,
+        serviceTypeIds: [serviceId],
+        scheduledAt: when.toISOString(),
+        venueType: 'HOME',
+        serviceAddressLine: 'Rothschild Blvd 1',
+        serviceCity: 'Tel Aviv',
+        servicePostalCode: '66881',
+        serviceLatitude: 32.06,
+        serviceLongitude: 34.77,
+      },
+    });
+    const row = await prisma.repairOrder.findUniqueOrThrow({ where: { id: booking.id } });
+    expect(row.serviceLatitude).toBe(32.06);
+    expect(row.serviceLongitude).toBe(34.77);
   });
 });

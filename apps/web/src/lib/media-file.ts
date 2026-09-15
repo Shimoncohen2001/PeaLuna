@@ -30,8 +30,28 @@ function blobToBase64(blob: Blob): Promise<string> {
   });
 }
 
+function canvasToJpeg(canvas: HTMLCanvasElement, quality: number): Promise<Blob | null> {
+  return new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+}
+
+async function decodeImage(file: File): Promise<ImageBitmap> {
+  try {
+    return await createImageBitmap(file, { imageOrientation: 'from-image' });
+  } catch {
+    return createImageBitmap(file);
+  }
+}
+
+const MAX_EDGE = 1600;
+const MAX_JPEG_BYTES = 1_500_000;
+const MAX_FALLBACK_BYTES = 8 * 1024 * 1024;
+
 /** Shrink iPhone photos to a JPEG the API can accept. */
 export async function prepareMediaForUpload(file: File): Promise<File> {
+  if (file.size <= 0) {
+    throw new Error('This photo is empty. Try the gallery instead.');
+  }
+
   const mime = normalizeMediaMime(file);
   if (mime.startsWith('video/')) {
     if (file.size > 4 * 1024 * 1024) {
@@ -41,22 +61,35 @@ export async function prepareMediaForUpload(file: File): Promise<File> {
   }
 
   try {
-    const bitmap = await createImageBitmap(file);
-    const max = 1600;
-    const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
+    const bitmap = await decodeImage(file);
+    const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
     const canvas = document.createElement('canvas');
     canvas.width = Math.max(1, Math.round(bitmap.width * scale));
     canvas.height = Math.max(1, Math.round(bitmap.height * scale));
     const ctx = canvas.getContext('2d');
-    if (!ctx) return file;
+    if (!ctx) {
+      bitmap.close();
+      return file;
+    }
     ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
     bitmap.close();
-    const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, 'image/jpeg', 0.8),
-    );
-    if (!blob || blob.size === 0) return file;
+
+    let blob: Blob | null = null;
+    for (const quality of [0.82, 0.7, 0.55, 0.4]) {
+      const next = await canvasToJpeg(canvas, quality);
+      if (!next || next.size === 0) continue;
+      blob = next;
+      if (next.size <= MAX_JPEG_BYTES) break;
+    }
+    if (!blob) {
+      throw new Error('Could not process this photo. Try another one.');
+    }
     return new File([blob], 'photo.jpg', { type: 'image/jpeg' });
-  } catch {
+  } catch (err) {
+    if (err instanceof Error && err.message.startsWith('Could not')) throw err;
+    if (file.size > MAX_FALLBACK_BYTES) {
+      throw new Error('This photo is too large. Choose a smaller picture.');
+    }
     return file;
   }
 }

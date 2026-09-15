@@ -174,6 +174,8 @@ export type Messages = {
     needExpert: string;
     needSlot: string;
     bookFailed: string;
+    needAddress: string;
+    mediaFailed: string;
     addressPlaceholder: string;
     choosePlaceholder: string;
     city: string;
@@ -332,6 +334,10 @@ export type Messages = {
     applyEdit: string;
     applyHint: string;
     applyHintEdit: string;
+    applyPending: string;
+    applyRejected: string;
+    pendingReview: string;
+    resubmit: string;
     displayName: string;
     headline: string;
     headlinePlaceholder: string;
@@ -367,6 +373,10 @@ export type Messages = {
     denied: string;
     unavailable: string;
     emptyExperts: string;
+    searchAddress: string;
+    noResults: string;
+    pickOnMap: string;
+    useLocation: string;
   };
   orders: {
     title: string;
@@ -543,6 +553,8 @@ export const en: Messages = {
     needExpert: 'Choose an expert.',
     needSlot: 'Choose a date and time.',
     bookFailed: 'Booking could not be completed.',
+    needAddress: 'Add a home address to continue.',
+    mediaFailed: 'Photo upload failed. Try the gallery, or a smaller picture.',
     addressPlaceholder: 'Street, city',
     choosePlaceholder: 'Choose…',
     city: 'City',
@@ -701,6 +713,10 @@ export const en: Messages = {
     applyEdit: 'My profile',
     applyHint: 'Create your expert profile to appear on the map.',
     applyHintEdit: 'Status: {status}. Keep your details up to date so clients find you on the map.',
+    applyPending: 'Application received. An admin will review it before you appear to clients.',
+    applyRejected: 'This application was not approved. You can update your details and send it again.',
+    pendingReview: 'Your application is under review. You will appear to clients after an admin approves it.',
+    resubmit: 'Send application again',
     displayName: 'Display name',
     headline: 'Specialty',
     headlinePlaceholder: 'Lace & baby hair specialist',
@@ -736,6 +752,10 @@ export const en: Messages = {
     denied: 'Location was not shared. You can still pick an expert from the list.',
     unavailable: 'Location is not available on this device.',
     emptyExperts: 'No experts found for these filters.',
+    searchAddress: 'Address',
+    noResults: 'No matching address in Israel.',
+    pickOnMap: 'Or drop a pin on the map.',
+    useLocation: 'Use my location',
   },
   orders: {
     title: 'Appointments',
@@ -915,6 +935,8 @@ export const fr: Messages = {
     needExpert: 'Choisis une experte.',
     needSlot: 'Choisis une date et une heure.',
     bookFailed: 'Réservation impossible.',
+    needAddress: 'Ajoute une adresse pour le soin à domicile.',
+    mediaFailed: 'Échec de l’envoi de la photo. Essaie la galerie, ou une photo plus légère.',
     addressPlaceholder: 'Rue, ville',
     choosePlaceholder: 'Choisir…',
     city: 'Ville',
@@ -1073,6 +1095,10 @@ export const fr: Messages = {
     applyEdit: 'Mon profil',
     applyHint: 'Crée ton profil prestataire pour apparaître sur la carte.',
     applyHintEdit: 'Statut : {status}. Mets à jour tes infos pour apparaître correctement sur la carte.',
+    applyPending: 'Demande reçue. Une admin la validera avant que tu n’apparaisse aux clientes.',
+    applyRejected: 'Cette demande n’a pas été acceptée. Tu peux corriger tes infos et renvoyer.',
+    pendingReview: 'Ta demande est en cours de revue. Tu apparaîtras aux clientes après validation.',
+    resubmit: 'Renvoyer la demande',
     displayName: 'Nom affiché',
     headline: 'Spécialité',
     headlinePlaceholder: 'Spécialiste lace & baby hair',
@@ -1108,6 +1134,10 @@ export const fr: Messages = {
     denied: 'Position non partagée. Tu peux quand même choisir une experte dans la liste.',
     unavailable: 'La géolocalisation n’est pas disponible sur cet appareil.',
     emptyExperts: 'Aucune experte pour ces filtres.',
+    searchAddress: 'Adresse',
+    noResults: 'Aucune adresse correspondante en Israël.',
+    pickOnMap: 'Ou place un pin sur la carte.',
+    useLocation: 'Utiliser ma position',
   },
   orders: {
     title: 'Rendez-vous',
@@ -1283,6 +1313,8 @@ export const he: Messages = {
     needExpert: 'בחרי מומחית.',
     needSlot: 'בחרי תאריך ושעה.',
     bookFailed: 'לא ניתן להשלים את ההזמנה.',
+    needAddress: 'יש להוסיף כתובת לטיפול בבית.',
+    mediaFailed: 'העלאת התמונה נכשלה. נסי את הגלריה, או תמונה קטנה יותר.',
     addressPlaceholder: 'רחוב, עיר',
     choosePlaceholder: 'בחירה…',
     city: 'עיר',
@@ -1441,6 +1473,10 @@ export const he: Messages = {
     applyEdit: 'הפרופיל שלי',
     applyHint: 'צרי פרופיל מומחית כדי להופיע על המפה.',
     applyHintEdit: 'סטטוס: {status}. עדכני את הפרטים כדי להופיע נכון על המפה.',
+    applyPending: 'הבקשה התקבלה. אדמין יאשר אותה לפני שתופיעי ללקוחות.',
+    applyRejected: 'הבקשה לא אושרה. אפשר לעדכן פרטים ולשלוח שוב.',
+    pendingReview: 'הבקשה בבדיקה. תופיעי ללקוחות רק אחרי אישור אדמין.',
+    resubmit: 'שליחת הבקשה שוב',
     displayName: 'שם תצוגה',
     headline: 'התמחות',
     headlinePlaceholder: 'מומחית לייס ובייבי הייר',
@@ -1476,6 +1512,10 @@ export const he: Messages = {
     denied: 'המיקום לא שותף. אפשר עדיין לבחור מומחית מהרשימה.',
     unavailable: 'אין מיקום במכשיר הזה.',
     emptyExperts: 'לא נמצאו מומחיות לסינון הזה.',
+    searchAddress: 'כתובת',
+    noResults: 'לא נמצאה כתובת תואמת בישראל.',
+    pickOnMap: 'או שימי סיכה על המפה.',
+    useLocation: 'השתמשי במיקום שלי',
   },
   orders: {
     title: 'תורים',

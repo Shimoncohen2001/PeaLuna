@@ -544,6 +544,8 @@ model RepairOrder {
   serviceAddressLine    String?     @map("service_address_line") @db.VarChar(255)
   serviceCity           String?     @map("service_city") @db.VarChar(100)
   servicePostalCode     String?     @map("service_postal_code") @db.VarChar(12)
+  serviceLatitude       Float?      @map("service_latitude")
+  serviceLongitude      Float?      @map("service_longitude")
   paymentStatus         PaymentStatus @default(UNPAID) @map("payment_status")
   submittedAt           DateTime?   @map("submitted_at") @db.Timestamptz
   completedAt           DateTime?   @map("completed_at") @db.Timestamptz

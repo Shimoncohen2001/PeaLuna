@@ -21,6 +21,7 @@ import { technicianRoutes } from './modules/technicians/routes.js';
 import { paymentRoutes } from './modules/payments/routes.js';
 import { reviewRoutes } from './modules/reviews/routes.js';
 import { careReportRoutes } from './modules/care-reports/routes.js';
+import { geoRoutes } from './modules/geo/routes.js';
 import type { AppInstance } from './types/app.js';
 
 export async function buildApp() {
@@ -54,6 +55,7 @@ export async function buildApp() {
   await paymentRoutes(app, env);
   await reviewRoutes(app);
   await careReportRoutes(app, env);
+  await geoRoutes(app, env);
 
   app.get('/', async (_request, reply) => {
     return reply.send({

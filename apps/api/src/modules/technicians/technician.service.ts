@@ -11,6 +11,7 @@ import {
   requireApprovedTechnicianProfile,
   requireCustomerProfile,
   requireVerifiedUser,
+  roundPublicCoord,
   toOrderActorRole,
 } from '../../lib/access.js';
 import { updateOrderIfVersion } from '../../lib/order-lock.js';
@@ -24,7 +25,9 @@ function mapPublicTechnician(
     };
   }>,
   distanceKm?: number,
+  privacy: 'public' | 'owner' = 'public',
 ) {
+  const hideExactHome = privacy === 'public';
   return {
     id: t.id,
     displayName: t.displayName ?? `${t.user.firstName} ${t.user.lastName}`.trim(),
@@ -32,13 +35,13 @@ function mapPublicTechnician(
     bio: t.bio,
     yearsExperience: t.yearsExperience,
     serviceCity: t.serviceCity,
-    servicePostalCode: t.servicePostalCode,
+    servicePostalCode: hideExactHome ? null : t.servicePostalCode,
     serviceCountryCode: t.serviceCountryCode,
-    salonAddress: t.salonAddress,
+    salonAddress: hideExactHome && !t.offersSalonService ? null : t.salonAddress,
     offersHomeService: t.offersHomeService,
     offersSalonService: t.offersSalonService,
-    latitude: t.latitude,
-    longitude: t.longitude,
+    latitude: hideExactHome ? roundPublicCoord(t.latitude) : t.latitude,
+    longitude: hideExactHome ? roundPublicCoord(t.longitude) : t.longitude,
     ratingAvg: t.ratingAvg,
     reviewCount: t.reviewCount,
     distanceKm: distanceKm !== undefined ? Math.round(distanceKm * 10) / 10 : null,
@@ -78,12 +81,6 @@ export class TechnicianService {
   }) {
     await requireVerifiedUser(userId);
     const existing = await prisma.technicianProfile.findUnique({ where: { userId } });
-    if (existing) {
-      throw Object.assign(new Error('Technician profile already exists'), {
-        statusCode: 409,
-        code: 'TECHNICIAN_EXISTS',
-      });
-    }
 
     const services = await prisma.serviceType.findMany({
       where: { id: { in: input.serviceTypeIds }, isActive: true },
@@ -94,39 +91,69 @@ export class TechnicianService {
 
     const technicianRole = await prisma.role.findUniqueOrThrow({ where: { name: 'TECHNICIAN' } });
 
-    // Production waits for admin approval. Preview/dev auto-approve so the
-    // marketplace is testable without a second operator.
-    const status =
-      process.env.NODE_ENV === 'production' && process.env.PREVIEW_MODE !== 'true'
-        ? 'UNDER_REVIEW'
-        : 'APPROVED';
+    if (existing?.status === 'APPROVED') {
+      throw Object.assign(new Error('You are already an approved expert'), {
+        statusCode: 409,
+        code: 'ALREADY_EXPERT',
+      });
+    }
+    if (existing?.status === 'SUSPENDED') {
+      throw Object.assign(new Error('This expert account is suspended'), {
+        statusCode: 403,
+        code: 'TECHNICIAN_SUSPENDED',
+      });
+    }
+    if (existing && (existing.status === 'UNDER_REVIEW' || existing.status === 'PENDING_APPLICATION')) {
+      throw Object.assign(new Error('Your application is already under review'), {
+        statusCode: 409,
+        code: 'APPLICATION_PENDING',
+      });
+    }
+
+    const profileInclude = {
+      services: { include: { serviceType: true } },
+      availability: true,
+      user: { select: { firstName: true, lastName: true } },
+    } as const;
 
     const profile = await prisma.$transaction(async (tx) => {
-      if (status === 'APPROVED') {
-        await tx.userRole.upsert({
-          where: { userId_roleId: { userId, roleId: technicianRole.id } },
-          create: { userId, roleId: technicianRole.id },
-          update: {},
+      await tx.userRole.deleteMany({ where: { userId, roleId: technicianRole.id } });
+
+      const applicationData = {
+        displayName: input.displayName,
+        headline: input.headline,
+        bio: input.bio,
+        yearsExperience: input.yearsExperience,
+        serviceCity: input.serviceCity,
+        servicePostalCode: input.servicePostalCode,
+        serviceCountryCode: input.serviceCountryCode,
+        salonAddress: input.salonAddress,
+        offersHomeService: input.offersHomeService,
+        offersSalonService: input.offersSalonService,
+        latitude: input.latitude,
+        longitude: input.longitude,
+        status: 'UNDER_REVIEW' as const,
+        approvedAt: null,
+      };
+
+      if (existing?.status === 'REJECTED') {
+        await tx.technicianService.deleteMany({ where: { technicianId: existing.id } });
+        return tx.technicianProfile.update({
+          where: { id: existing.id },
+          data: {
+            ...applicationData,
+            services: {
+              create: input.serviceTypeIds.map((serviceTypeId) => ({ serviceTypeId })),
+            },
+          },
+          include: profileInclude,
         });
       }
 
       return tx.technicianProfile.create({
         data: {
           userId,
-          status,
-          displayName: input.displayName,
-          headline: input.headline,
-          bio: input.bio,
-          yearsExperience: input.yearsExperience,
-          serviceCity: input.serviceCity,
-          servicePostalCode: input.servicePostalCode,
-          serviceCountryCode: input.serviceCountryCode,
-          salonAddress: input.salonAddress,
-          offersHomeService: input.offersHomeService,
-          offersSalonService: input.offersSalonService,
-          latitude: input.latitude,
-          longitude: input.longitude,
-          approvedAt: status === 'APPROVED' ? new Date() : null,
+          ...applicationData,
           services: {
             create: input.serviceTypeIds.map((serviceTypeId) => ({ serviceTypeId })),
           },
@@ -140,15 +167,11 @@ export class TechnicianService {
             ],
           },
         },
-        include: {
-          services: { include: { serviceType: true } },
-          availability: true,
-          user: { select: { firstName: true, lastName: true } },
-        },
+        include: profileInclude,
       });
     });
 
-    return { ...mapPublicTechnician(profile), status: profile.status };
+    return { ...mapPublicTechnician(profile, undefined, 'owner'), status: profile.status };
   }
 
   async getMine(userId: string) {
@@ -166,7 +189,7 @@ export class TechnicianService {
         code: 'TECHNICIAN_NOT_FOUND',
       });
     }
-    return { ...mapPublicTechnician(profile), status: profile.status };
+    return { ...mapPublicTechnician(profile, undefined, 'owner'), status: profile.status };
   }
 
   async updateMine(
@@ -192,6 +215,12 @@ export class TechnicianService {
       throw Object.assign(new Error('Technician profile not found'), {
         statusCode: 404,
         code: 'TECHNICIAN_NOT_FOUND',
+      });
+    }
+    if (existing.status === 'REJECTED' || existing.status === 'SUSPENDED') {
+      throw Object.assign(new Error('Submit a new application to continue'), {
+        statusCode: 409,
+        code: 'REAPPLY_REQUIRED',
       });
     }
 
@@ -635,6 +664,8 @@ export class TechnicianService {
           serviceAddressLine: params.input.serviceAddressLine,
           serviceCity: params.input.serviceCity ?? tech.serviceCity,
           servicePostalCode: params.input.servicePostalCode ?? tech.servicePostalCode,
+          serviceLatitude: params.input.serviceLatitude,
+          serviceLongitude: params.input.serviceLongitude,
           lineItems: {
             create: services.map((s) => ({
               serviceTypeId: s.id,
@@ -816,6 +847,8 @@ export class TechnicianService {
       serviceAddressLine: order.serviceAddressLine,
       serviceCity: order.serviceCity,
       servicePostalCode: order.servicePostalCode,
+      serviceLatitude: order.serviceLatitude,
+      serviceLongitude: order.serviceLongitude,
       customerNotes: order.customerNotes,
       canComplete: canMarkAppointmentComplete(order.status),
       canRespond: order.status === 'WAITING_FOR_TECHNICIAN',
@@ -923,6 +956,9 @@ export class TechnicianService {
         status: row.status,
         displayName: row.displayName ?? `${row.user.firstName} ${row.user.lastName}`.trim(),
         email: row.user.email,
+        headline: row.headline,
+        bio: row.bio,
+        salonAddress: row.salonAddress,
         serviceCity: row.serviceCity,
         servicePostalCode: row.servicePostalCode,
         offersHomeService: row.offersHomeService,

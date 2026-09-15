@@ -10,3 +10,4 @@ export * from './technicians.js';
 export * from './payments.js';
 export * from './reviews.js';
 export * from './care-reports.js';
+export * from './geo.js';
