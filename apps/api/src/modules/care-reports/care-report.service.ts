@@ -4,7 +4,8 @@ import { prisma, type CareOperationCode, type Prisma } from '@velure/database';
 import type { Env } from '../../config/env.js';
 import { requireApprovedTechnicianProfile } from '../../lib/access.js';
 import { updateOrderIfVersion } from '../../lib/order-lock.js';
-import { createS3Client, signedGetUrl } from '../media/s3.js';
+import { mediaPublicUrl } from '../media/media-url.js';
+import { createS3Client } from '../media/s3.js';
 
 const HAIR_CODES = new Set<string>(HAIR_ADD_CODES);
 
@@ -433,7 +434,6 @@ export class CareReportService {
 
   private async mapFull(report: ReportRow, includeInternal: boolean) {
     const s3 = createS3Client(this.env);
-    const bucket = this.env.S3_BUCKET;
     const photos = await Promise.all(
       report.photos.map(async (p) => ({
         id: p.id,
@@ -442,7 +442,7 @@ export class CareReportService {
         phase: p.photoPhase,
         angle: p.photoAngle,
         kind: p.mimeType.startsWith('video/') ? ('video' as const) : ('image' as const),
-        url: s3 && bucket ? await signedGetUrl(s3, bucket, p.storageKey) : null,
+        url: await mediaPublicUrl(this.env, s3, p.storageKey),
         createdAt: p.createdAt.toISOString(),
       })),
     );

@@ -31,7 +31,7 @@ describe.skipIf(!hasDb)('media persistence', () => {
     const wig = await createWig(customer.userId);
     const key = `wigs/${wig.id}/${randomUUID()}.jpg`;
     const bytes = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
-    await writePreviewFile(key, bytes);
+    await writePreviewFile(testEnv(), key, bytes);
 
     await prisma.wigAttachment.create({
       data: {
