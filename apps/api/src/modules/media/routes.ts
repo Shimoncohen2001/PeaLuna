@@ -3,6 +3,7 @@ import {
   confirmUploadSchema,
   createUploadUrlSchema,
   directUploadSchema,
+  errorResponse,
   successResponse,
 } from '@velure/contracts';
 import { prisma } from '@velure/database';
@@ -132,13 +133,12 @@ export async function mediaRoutes(app: AppInstance, env: Env): Promise<void> {
       schema: { body: createUploadUrlSchema },
     },
     async (request, reply) => {
-      if (!s3 || !env.S3_BUCKET) {
-        if (!diskEnabled) {
-          throw Object.assign(new Error('Media storage is not configured'), {
-            statusCode: 503,
-            code: 'STORAGE_UNAVAILABLE',
-          });
-        }
+      if ((!s3 || !env.S3_BUCKET) && !diskEnabled) {
+        return reply
+          .status(503)
+          .send(
+            errorResponse('STORAGE_UNAVAILABLE', 'Media storage is not configured', request.requestId),
+          );
       }
 
       const user = requireUser(request);
@@ -250,14 +250,20 @@ export async function mediaRoutes(app: AppInstance, env: Env): Promise<void> {
         const extra = err as { statusCode?: number; code?: string; message?: string };
         if (extra.statusCode && extra.statusCode < 500) throw err;
         request.log.error({ err }, 'Direct media upload failed');
-        throw Object.assign(
-          new Error(
-            env.PREVIEW_MODE
-              ? extra.message || 'Photo upload failed'
-              : 'Photo upload failed',
-          ),
-          { statusCode: extra.statusCode && extra.statusCode >= 400 ? extra.statusCode : 500, code: extra.code ?? 'UPLOAD_FAILED' },
-        );
+        const code = extra.code ?? 'UPLOAD_FAILED';
+        // Replying here keeps the storage-specific code, which the generic 500
+        // handler would otherwise flatten into INTERNAL_ERROR.
+        return reply
+          .status(extra.statusCode && extra.statusCode >= 500 ? extra.statusCode : 500)
+          .send(
+            errorResponse(
+              code,
+              code === 'STORAGE_UNAVAILABLE'
+                ? 'Media storage is not configured'
+                : 'Photo upload failed',
+              request.requestId,
+            ),
+          );
       }
     },
   );

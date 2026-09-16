@@ -2,8 +2,24 @@ import { GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from 
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import type { Env } from '../../config/env.js';
 
+function isLoopbackEndpoint(endpoint: string | undefined): boolean {
+  if (!endpoint) return false;
+  try {
+    const host = new URL(endpoint).hostname.replace(/^\[|\]$/g, '');
+    return host === 'localhost' || host === '127.0.0.1' || host === '::1';
+  } catch {
+    return false;
+  }
+}
+
 export function createS3Client(env: Env): S3Client | null {
   if (!env.S3_BUCKET || !env.S3_ACCESS_KEY || !env.S3_SECRET_KEY) {
+    return null;
+  }
+
+  // A loopback endpoint on a deployed instance is a leftover local MinIO value:
+  // using it would make every upload fail instead of falling back to disk storage.
+  if (env.NODE_ENV === 'production' && isLoopbackEndpoint(env.S3_ENDPOINT)) {
     return null;
   }
 
