@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { randomUUID } from 'node:crypto';
+import { existsSync } from 'node:fs';
+import { mkdtemp } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { normalizeAllowedMime } from '@velure/contracts';
 import { roundPublicCoord, toOrderActorRole } from './access.js';
 import {
   assertPreviewStorageKey,
   isDiskMediaEnabled,
+  previewFileExists,
   readPreviewFile,
   writePreviewFile,
 } from '../modules/media/preview-store.js';
@@ -46,9 +51,23 @@ describe('preview disk store', () => {
   it('writes and reads a jpeg, and rejects a bad key', async () => {
     const key = `wigs/${randomUUID()}/${randomUUID()}.jpg`;
     const body = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
-    await writePreviewFile(key, body);
-    expect(await readPreviewFile(key)).toEqual(body);
+    await writePreviewFile({}, key, body);
+    expect(await readPreviewFile({}, key)).toEqual(body);
     expect(() => assertPreviewStorageKey('../secret.txt')).toThrow();
+  });
+
+  it('stores under MEDIA_DIR when a volume is mounted', async () => {
+    const mediaDir = await mkdtemp(join(tmpdir(), 'pealuna-volume-'));
+    const key = `wigs/${randomUUID()}/${randomUUID()}.jpg`;
+    const body = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
+
+    await writePreviewFile({ MEDIA_DIR: mediaDir }, key, body);
+
+    expect(await readPreviewFile({ MEDIA_DIR: mediaDir }, key)).toEqual(body);
+    expect(await previewFileExists({ MEDIA_DIR: mediaDir }, key)).toBe(true);
+    expect(existsSync(join(mediaDir, 'media', ...key.split('/')))).toBe(true);
+    // The temp-dir store must not see a file written to the volume.
+    expect(await previewFileExists({}, key)).toBe(false);
   });
 
   it('uses disk when S3 is missing outside production', () => {
@@ -56,5 +75,14 @@ describe('preview disk store', () => {
     expect(isDiskMediaEnabled({ NODE_ENV: 'production', PREVIEW_MODE: true }, false)).toBe(true);
     expect(isDiskMediaEnabled({ NODE_ENV: 'production', PREVIEW_MODE: false }, false)).toBe(false);
     expect(isDiskMediaEnabled({ NODE_ENV: 'test', PREVIEW_MODE: false }, true)).toBe(false);
+  });
+
+  it('keeps disk storage on in production when a volume is mounted', () => {
+    expect(
+      isDiskMediaEnabled({ NODE_ENV: 'production', PREVIEW_MODE: false, MEDIA_DIR: '/data' }, false),
+    ).toBe(true);
+    expect(
+      isDiskMediaEnabled({ NODE_ENV: 'production', PREVIEW_MODE: false, MEDIA_DIR: '/data' }, true),
+    ).toBe(false);
   });
 });

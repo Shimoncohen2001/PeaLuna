@@ -28,7 +28,7 @@ FROM node:20.11-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
-RUN apk add --no-cache wget openssl libc6-compat
+RUN apk add --no-cache wget openssl libc6-compat su-exec
 RUN addgroup -g 1001 -S nodejs && adduser -S pealuna -u 1001 -G nodejs
 
 COPY --from=builder --chown=pealuna:nodejs /app/package.json /app/pnpm-workspace.yaml /app/pnpm-lock.yaml ./
@@ -39,7 +39,8 @@ COPY --from=builder --chown=pealuna:nodejs /app/apps/web/package.json ./apps/web
 COPY --from=builder --chown=pealuna:nodejs /app/apps/api/dist ./dist
 COPY --from=builder --chown=pealuna:nodejs /app/infrastructure/docker/api-entrypoint.sh ./api-entrypoint.sh
 
-USER pealuna
+# Entrypoint starts as root only to hand the mounted volume to pealuna,
+# then drops to that user before running anything.
 EXPOSE 4000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=5 \
   CMD wget -qO- http://127.0.0.1:${PORT:-4000}/health/live || exit 1

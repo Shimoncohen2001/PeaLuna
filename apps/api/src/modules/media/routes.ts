@@ -15,7 +15,9 @@ import { requireUser } from '../../lib/access.js';
 import { createS3Client, headObject, putObject, signedPutUrl } from './s3.js';
 import {
   assertPreviewStorageKey,
+  ensureMediaRoot,
   isDiskMediaEnabled,
+  isDurableDiskMedia,
   previewFileExists,
   previewPublicUrl,
   readPreviewFile,
@@ -103,6 +105,20 @@ async function assertWigMediaAccess(params: {
 export async function mediaRoutes(app: AppInstance, env: Env): Promise<void> {
   const s3 = createS3Client(env);
   const diskEnabled = isDiskMediaEnabled(env, Boolean(s3));
+
+  if (diskEnabled) {
+    try {
+      const dir = await ensureMediaRoot(env);
+      app.log.info(
+        { dir, durable: isDurableDiskMedia(env) },
+        isDurableDiskMedia(env)
+          ? 'Media stored on the mounted volume'
+          : 'Media stored in a temp dir, files are lost on restart',
+      );
+    } catch (err) {
+      app.log.error({ err, mediaDir: env.MEDIA_DIR }, 'Media directory is not writable');
+    }
+  }
 
   const asBuffer = (_req: unknown, body: Buffer, done: (err: null, data: Buffer) => void) => {
     done(null, body);
@@ -208,7 +224,7 @@ export async function mediaRoutes(app: AppInstance, env: Env): Promise<void> {
         if (s3 && env.S3_BUCKET) {
           await putObject(s3, env.S3_BUCKET, storageKey, bytes, body.mimeType);
         } else if (diskEnabled) {
-          await writePreviewFile(storageKey, bytes);
+          await writePreviewFile(env, storageKey, bytes);
         } else {
           throw Object.assign(new Error('Media storage is not configured'), {
             statusCode: 503,
@@ -311,7 +327,7 @@ export async function mediaRoutes(app: AppInstance, env: Env): Promise<void> {
           });
         }
       } else if (diskEnabled) {
-        const ok = await previewFileExists(body.storageKey);
+        const ok = await previewFileExists(env, body.storageKey);
         if (!ok) {
           throw Object.assign(new Error('Upload was not found in storage'), {
             statusCode: 400,
@@ -375,7 +391,7 @@ export async function mediaRoutes(app: AppInstance, env: Env): Promise<void> {
         code: 'EMPTY_OBJECT',
       });
     }
-    await writePreviewFile(key, payload);
+    await writePreviewFile(env, key, payload);
     return reply.status(204).send();
   });
 
@@ -385,7 +401,7 @@ export async function mediaRoutes(app: AppInstance, env: Env): Promise<void> {
     }
     const key = decodeURIComponent((request.params as { key: string }).key);
     try {
-      const data = await readPreviewFile(key);
+      const data = await readPreviewFile(env, key);
       const ext = key.split('.').pop()?.toLowerCase();
       const mime =
         ext === 'png'
