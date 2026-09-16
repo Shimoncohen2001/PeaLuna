@@ -181,12 +181,20 @@ enum TransactionStatus {
 /// Escrow lifecycle for marketplace bookings
 enum PaymentStatus {
   UNPAID
+  /// Customer chose cash, waiting for the expert to confirm they received it
+  CASH_PENDING
   AUTHORIZED
   CAPTURING
   CAPTURED
   REFUNDED
   FAILED
   VOIDED
+}
+
+/// How the customer settles an order
+enum PaymentMethod {
+  CARD
+  CASH
 }
 
 enum PickupDeliveryType {
@@ -390,6 +398,7 @@ model TechnicianProfile {
   salonAddress         String?          @map("salon_address") @db.VarChar(255)
   offersHomeService    Boolean          @default(true) @map("offers_home_service")
   offersSalonService   Boolean          @default(true) @map("offers_salon_service")
+  acceptsCashPayment   Boolean          @default(false) @map("accepts_cash_payment")
   latitude             Float?
   longitude            Float?
   ratingAvg            Float            @default(0) @map("rating_avg")
@@ -547,6 +556,8 @@ model RepairOrder {
   serviceLatitude       Float?      @map("service_latitude")
   serviceLongitude      Float?      @map("service_longitude")
   paymentStatus         PaymentStatus @default(UNPAID) @map("payment_status")
+  paymentMethod         PaymentMethod @default(CARD) @map("payment_method")
+  cashConfirmedAt       DateTime?   @map("cash_confirmed_at") @db.Timestamptz
   submittedAt           DateTime?   @map("submitted_at") @db.Timestamptz
   completedAt           DateTime?   @map("completed_at") @db.Timestamptz
   archivedAt            DateTime?   @map("archived_at") @db.Timestamptz
@@ -775,10 +786,14 @@ model PlatformCommission {
   commissionCents Int      @map("commission_cents")
   technicianCents Int      @map("technician_cents")
   currency        String   @default("ILS") @db.Char(3)
+  /// Cash orders never transit through the platform: the expert owes this commission.
+  dueFromTechnician Boolean @default(false) @map("due_from_technician")
+  settledAt       DateTime? @map("settled_at") @db.Timestamptz
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   order RepairOrder @relation(fields: [orderId], references: [id])
 
+  @@index([dueFromTechnician, settledAt])
   @@map("platform_commissions")
 }
 

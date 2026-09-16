@@ -148,6 +148,29 @@ export type Messages = {
     releaseFailed: string;
     reviewFailed: string;
   };
+  cash: {
+    payCash: string;
+    chosen: string;
+    waitingConfirm: string;
+    cancel: string;
+    confirmed: string;
+    failed: string;
+    expertPending: string;
+    expertConfirm: string;
+    expertConfirming: string;
+    expertConfirmPrompt: string;
+    expertDue: string;
+    expertConfirmed: string;
+    optIn: string;
+    optInHint: string;
+    adminTitle: string;
+    adminEmpty: string;
+    adminDue: string;
+    adminSettled: string;
+    adminSettle: string;
+    adminTabDue: string;
+    adminTabSettled: string;
+  };
   book: {
     eyebrow: string;
     title: string;
@@ -525,6 +548,30 @@ export const en: Messages = {
     simulationFailed: 'Simulation failed',
     releaseFailed: 'Release failed',
     reviewFailed: 'Review failed',
+  },
+  cash: {
+    payCash: 'Pay in cash',
+    chosen: 'You chose to pay in cash, directly to the expert on the day of the appointment.',
+    waitingConfirm: 'The expert will confirm the cash was received, which closes the balance.',
+    cancel: 'Pay by card instead',
+    confirmed: 'Cash payment confirmed by the expert — the order is settled.',
+    failed: 'Could not switch to cash',
+    expertPending: 'This client pays in cash. Confirm once you have the money in hand.',
+    expertConfirm: 'I received the cash payment',
+    expertConfirming: 'Confirming…',
+    expertConfirmPrompt:
+      'Confirm you received the full amount in cash? This closes the order and cannot be undone.',
+    expertDue: 'PeaLuna commission you owe on this cash order: {amount}',
+    expertConfirmed: 'Cash payment confirmed — the order is settled.',
+    optIn: 'I accept cash payments',
+    optInHint: 'Clients can then pay you directly. You still owe PeaLuna its 20% commission.',
+    adminTitle: 'Cash commissions',
+    adminEmpty: 'No cash commission to collect.',
+    adminDue: 'To collect',
+    adminSettled: 'Settled',
+    adminSettle: 'Mark as settled',
+    adminTabDue: 'Outstanding',
+    adminTabSettled: 'Settled',
   },
   book: {
     eyebrow: 'Booking',
@@ -908,6 +955,33 @@ export const fr: Messages = {
     releaseFailed: 'Libération impossible',
     reviewFailed: 'Avis impossible',
   },
+  cash: {
+    payCash: 'Payer en espèces',
+    chosen: 'Tu as choisi de payer en espèces, directement à l’experte le jour du rendez-vous.',
+    waitingConfirm:
+      'L’experte confirmera avoir reçu l’argent, ce qui soldera la commande.',
+    cancel: 'Payer par carte finalement',
+    confirmed: 'Paiement en espèces confirmé par l’experte — la commande est soldée.',
+    failed: 'Passage aux espèces impossible',
+    expertPending:
+      'Cette cliente paie en espèces. Confirme une fois l’argent reçu en main propre.',
+    expertConfirm: 'J’ai reçu le paiement en espèces',
+    expertConfirming: 'Confirmation…',
+    expertConfirmPrompt:
+      'Confirmer la réception de la totalité du montant en espèces ? Cela solde la commande et n’est pas réversible.',
+    expertDue: 'Commission PeaLuna à reverser sur cette commande en espèces : {amount}',
+    expertConfirmed: 'Paiement en espèces confirmé — la commande est soldée.',
+    optIn: 'J’accepte les paiements en espèces',
+    optInHint:
+      'Les clientes pourront alors te régler directement. Tu restes redevable des 20% de commission PeaLuna.',
+    adminTitle: 'Commissions espèces',
+    adminEmpty: 'Aucune commission espèces à recouvrer.',
+    adminDue: 'À recouvrer',
+    adminSettled: 'Réglée',
+    adminSettle: 'Marquer comme réglée',
+    adminTabDue: 'En attente',
+    adminTabSettled: 'Réglées',
+  },
   book: {
     eyebrow: 'Réservation',
     title: 'Réparer & soigner',
@@ -1286,6 +1360,30 @@ export const he: Messages = {
     simulationFailed: 'הסימולציה נכשלה',
     releaseFailed: 'השחרור נכשל',
     reviewFailed: 'הביקורת נכשלה',
+  },
+  cash: {
+    payCash: 'תשלום במזומן',
+    chosen: 'בחרת לשלם במזומן, ישירות למומחית ביום התור.',
+    waitingConfirm: 'המומחית תאשר שקיבלה את הכסף, וכך ההזמנה תיסגר.',
+    cancel: 'לשלם בכרטיס במקום',
+    confirmed: 'התשלום במזומן אושר על ידי המומחית — ההזמנה סגורה.',
+    failed: 'לא ניתן לעבור לתשלום במזומן',
+    expertPending: 'הלקוחה משלמת במזומן. אשרי לאחר שקיבלת את הכסף.',
+    expertConfirm: 'קיבלתי את התשלום במזומן',
+    expertConfirming: 'מאשר…',
+    expertConfirmPrompt:
+      'לאשר קבלת מלוא הסכום במזומן? הפעולה סוגרת את ההזמנה ואינה הפיכה.',
+    expertDue: 'עמלת PeaLuna שעליך להעביר על הזמנה זו: {amount}',
+    expertConfirmed: 'התשלום במזומן אושר — ההזמנה סגורה.',
+    optIn: 'אני מקבלת תשלומים במזומן',
+    optInHint: 'לקוחות יוכלו לשלם לך ישירות. עמלת 20% ל-PeaLuna עדיין חלה.',
+    adminTitle: 'עמלות מזומן',
+    adminEmpty: 'אין עמלות מזומן לגבייה.',
+    adminDue: 'לגבייה',
+    adminSettled: 'שולמה',
+    adminSettle: 'סימון כשולמה',
+    adminTabDue: 'ממתינות',
+    adminTabSettled: 'שולמו',
   },
   book: {
     eyebrow: 'הזמנה',

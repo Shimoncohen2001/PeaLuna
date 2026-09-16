@@ -27,6 +27,7 @@ type TechProfile = {
   salonAddress: string | null;
   offersHomeService: boolean;
   offersSalonService: boolean;
+  acceptsCashPayment: boolean;
   latitude: number | null;
   longitude: number | null;
   status: string;
@@ -123,6 +124,7 @@ export default function ProApplyPage() {
       salonAddress: String(form.get('salonAddress') || address.label || '') || undefined,
       offersHomeService: form.get('offersHome') === 'on',
       offersSalonService: form.get('offersSalon') === 'on',
+      acceptsCashPayment: form.get('acceptsCash') === 'on',
       serviceTypeIds: selectedServices,
       latitude: address.lat ?? 32.0853,
       longitude: address.lng ?? 34.7818,
@@ -287,6 +289,19 @@ export default function ProApplyPage() {
               />{' '}
               {t.pro.salonOffer}
             </label>
+          </div>
+
+          <div className="text-sm text-white/70">
+            <label className="flex items-center gap-2">
+              <input
+                name="acceptsCash"
+                type="checkbox"
+                key={`cash-${profile?.id ?? 'new'}-${profile?.acceptsCashPayment}`}
+                defaultChecked={profile?.acceptsCashPayment ?? false}
+              />{' '}
+              {t.cash.optIn}
+            </label>
+            <p className="mt-1 text-xs text-white/45">{t.cash.optInHint}</p>
           </div>
 
           <fieldset>

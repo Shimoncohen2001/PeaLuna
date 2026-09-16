@@ -3,12 +3,14 @@ import {
   calculatePlatformCommissionCents,
   calculateTechnicianPayoutCents,
   canAuthorizePayment,
+  canChooseCashPayment,
+  canConfirmCashPayment,
   canReleaseEscrow,
   PLATFORM_COMMISSION_BPS,
 } from '@velure/domain';
 import { prisma, Prisma } from '@velure/database';
 import type { Env } from '../../config/env.js';
-import { requireCustomerProfile } from '../../lib/access.js';
+import { requireApprovedTechnicianProfile, requireCustomerProfile } from '../../lib/access.js';
 
 export class PaymentService {
   private readonly stripe: Stripe | null;
@@ -436,10 +438,232 @@ export class PaymentService {
     };
   }
 
+  /** Customer chooses to settle in cash directly with the expert. */
+  async chooseCashPayment(orderId: string, userId: string) {
+    const customer = await requireCustomerProfile(userId);
+    const order = await prisma.repairOrder.findFirst({
+      where: { id: orderId, customerId: customer.id },
+      include: { technician: { select: { acceptsCashPayment: true } } },
+    });
+    if (!order) {
+      throw Object.assign(new Error('Order not found'), { statusCode: 404, code: 'ORDER_NOT_FOUND' });
+    }
+    if (order.paymentStatus === 'CASH_PENDING') {
+      return {
+        paymentStatus: 'CASH_PENDING' as const,
+        paymentMethod: 'CASH' as const,
+        amountCents: order.totalCents,
+        currency: order.currency,
+      };
+    }
+    if (order.paymentStatus === 'CAPTURED') {
+      throw Object.assign(new Error('Order already paid'), { statusCode: 409, code: 'ALREADY_PAID' });
+    }
+    if (!order.technician?.acceptsCashPayment) {
+      throw Object.assign(new Error('This expert does not accept cash'), {
+        statusCode: 409,
+        code: 'CASH_NOT_ACCEPTED',
+      });
+    }
+    if (!canAuthorizePayment(order.status)) {
+      throw Object.assign(
+        new Error('Payment is locked until the expert accepts this appointment'),
+        { statusCode: 403, code: 'PAYMENT_AWAITING_EXPERT' },
+      );
+    }
+    if (!canChooseCashPayment(order.status, order.paymentStatus, true)) {
+      throw Object.assign(new Error('A card payment is already engaged on this order'), {
+        statusCode: 409,
+        code: 'CARD_PAYMENT_ENGAGED',
+      });
+    }
+
+    const claimed = await prisma.repairOrder.updateMany({
+      where: { id: order.id, paymentStatus: { in: ['UNPAID', 'FAILED'] } },
+      data: { paymentStatus: 'CASH_PENDING', paymentMethod: 'CASH' },
+    });
+    if (claimed.count === 0) {
+      throw Object.assign(new Error('A card payment is already engaged on this order'), {
+        statusCode: 409,
+        code: 'CARD_PAYMENT_ENGAGED',
+      });
+    }
+
+    return {
+      paymentStatus: 'CASH_PENDING' as const,
+      paymentMethod: 'CASH' as const,
+      amountCents: order.totalCents,
+      currency: order.currency,
+    };
+  }
+
+  /** Customer changes their mind and goes back to card before handing any cash. */
+  async cancelCashPayment(orderId: string, userId: string) {
+    const customer = await requireCustomerProfile(userId);
+    const order = await prisma.repairOrder.findFirst({
+      where: { id: orderId, customerId: customer.id },
+    });
+    if (!order) {
+      throw Object.assign(new Error('Order not found'), { statusCode: 404, code: 'ORDER_NOT_FOUND' });
+    }
+    if (order.paymentStatus !== 'CASH_PENDING') {
+      throw Object.assign(new Error('No pending cash payment on this order'), {
+        statusCode: 409,
+        code: 'CASH_NOT_PENDING',
+      });
+    }
+
+    await prisma.repairOrder.updateMany({
+      where: { id: order.id, paymentStatus: 'CASH_PENDING' },
+      data: { paymentStatus: 'UNPAID', paymentMethod: 'CARD' },
+    });
+
+    return { paymentStatus: 'UNPAID' as const, paymentMethod: 'CARD' as const };
+  }
+
+  /**
+   * Expert confirms they received the cash, which closes the balance.
+   * The platform never touched this money, so its commission is recorded as owed.
+   */
+  async confirmCashReceived(orderId: string, userId: string) {
+    const profile = await requireApprovedTechnicianProfile(userId);
+    const order = await prisma.repairOrder.findFirst({
+      where: { id: orderId, technicianId: profile.id },
+      include: { commission: true },
+    });
+    if (!order) {
+      throw Object.assign(new Error('Order not found'), { statusCode: 404, code: 'ORDER_NOT_FOUND' });
+    }
+
+    const platformFee = calculatePlatformCommissionCents(order.totalCents);
+    const technicianPayout = calculateTechnicianPayoutCents(order.totalCents);
+
+    if (order.paymentStatus === 'CAPTURED' && order.paymentMethod === 'CASH') {
+      return {
+        paymentStatus: 'CAPTURED' as const,
+        commissionDueCents: platformFee,
+        technicianKeepsCents: technicianPayout,
+        currency: order.currency,
+      };
+    }
+    if (!canConfirmCashPayment(order.status, order.paymentStatus)) {
+      throw Object.assign(
+        new Error('Cash can only be confirmed once the service is complete'),
+        { statusCode: 409, code: 'CASH_CONFIRM_NOT_ALLOWED' },
+      );
+    }
+
+    const confirmedAt = new Date();
+    const claimed = await prisma.repairOrder.updateMany({
+      where: { id: order.id, paymentStatus: 'CASH_PENDING' },
+      data: { paymentStatus: 'CAPTURED', cashConfirmedAt: confirmedAt },
+    });
+    if (claimed.count === 0) {
+      throw Object.assign(new Error('Cash payment was already confirmed'), {
+        statusCode: 409,
+        code: 'CASH_ALREADY_CONFIRMED',
+      });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.transaction.upsert({
+        where: { stripePaymentIntentId: `cash_${order.id}` },
+        create: {
+          orderId: order.id,
+          type: 'CHARGE',
+          status: 'SUCCEEDED',
+          amountCents: order.totalCents,
+          currency: order.currency,
+          stripePaymentIntentId: `cash_${order.id}`,
+          metadata: {
+            method: 'cash',
+            confirmedAt: confirmedAt.toISOString(),
+            confirmedByUserId: userId,
+            commissionDueCents: platformFee,
+          },
+        },
+        update: { status: 'SUCCEEDED' },
+      });
+
+      if (!order.commission) {
+        await tx.platformCommission.create({
+          data: {
+            orderId: order.id,
+            grossCents: order.totalCents,
+            commissionBps: PLATFORM_COMMISSION_BPS,
+            commissionCents: platformFee,
+            technicianCents: technicianPayout,
+            currency: order.currency,
+            dueFromTechnician: true,
+          },
+        });
+      }
+    });
+
+    return {
+      paymentStatus: 'CAPTURED' as const,
+      commissionDueCents: platformFee,
+      technicianKeepsCents: technicianPayout,
+      currency: order.currency,
+    };
+  }
+
+  /** Admin view of the commissions experts owe on cash orders. */
+  async listCashCommissions(settled: boolean) {
+    const rows = await prisma.platformCommission.findMany({
+      where: { dueFromTechnician: true, settledAt: settled ? { not: null } : null },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+      include: {
+        order: {
+          select: {
+            orderNumber: true,
+            cashConfirmedAt: true,
+            technician: {
+              select: {
+                displayName: true,
+                user: { select: { firstName: true, lastName: true, email: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return rows.map((row) => ({
+      id: row.id,
+      orderNumber: row.order.orderNumber,
+      technicianName:
+        row.order.technician?.displayName ??
+        `${row.order.technician?.user.firstName ?? ''} ${row.order.technician?.user.lastName ?? ''}`.trim(),
+      technicianEmail: row.order.technician?.user.email ?? null,
+      grossCents: row.grossCents,
+      commissionCents: row.commissionCents,
+      currency: row.currency,
+      confirmedAt: row.order.cashConfirmedAt?.toISOString() ?? null,
+      settledAt: row.settledAt?.toISOString() ?? null,
+    }));
+  }
+
+  /** Admin marks a cash commission as collected from the expert. */
+  async settleCashCommission(commissionId: string) {
+    const updated = await prisma.platformCommission.updateMany({
+      where: { id: commissionId, dueFromTechnician: true, settledAt: null },
+      data: { settledAt: new Date() },
+    });
+    if (updated.count === 0) {
+      throw Object.assign(new Error('Commission not found or already settled'), {
+        statusCode: 409,
+        code: 'COMMISSION_NOT_DUE',
+      });
+    }
+    return { id: commissionId, settled: true };
+  }
+
   /** Cancel an uncaptured PaymentIntent when the customer/ops cancels the order. */
   async voidAuthorization(orderId: string) {
     const claimed = await prisma.repairOrder.updateMany({
-      where: { id: orderId, paymentStatus: 'AUTHORIZED' },
+      where: { id: orderId, paymentStatus: { in: ['AUTHORIZED', 'CASH_PENDING'] } },
       data: { paymentStatus: 'VOIDED' },
     });
     if (claimed.count === 0) return;

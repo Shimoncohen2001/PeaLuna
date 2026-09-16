@@ -22,6 +22,7 @@ type OrderWithRelations = Prisma.RepairOrderGetPayload<{
     lineItems: true;
     wig: { select: { id: true; name: true } };
     review: { select: { id: true } };
+    technician: { select: { acceptsCashPayment: true } };
     statusHistory: { select: { action: true }; orderBy: { createdAt: 'desc' }; take: 1 };
   };
 }>;
@@ -30,6 +31,7 @@ const orderDetailInclude = {
   lineItems: true,
   wig: { select: { id: true, name: true } },
   review: { select: { id: true } },
+  technician: { select: { acceptsCashPayment: true } },
   statusHistory: {
     orderBy: { createdAt: 'desc' as const },
     take: 1,
@@ -52,6 +54,9 @@ function mapOrder(order: OrderWithRelations, actorRoles: Role[]) {
     wigId: order.wigId,
     wigName: order.wig.name,
     paymentStatus: order.paymentStatus,
+    paymentMethod: order.paymentMethod,
+    cashAccepted: order.technician?.acceptsCashPayment ?? false,
+    cashConfirmedAt: order.cashConfirmedAt?.toISOString() ?? null,
     venueType: order.venueType,
     scheduledAt: order.scheduledAt?.toISOString() ?? null,
     availableActions: getAvailableActions(order.status as OrderStatus, actorRole),

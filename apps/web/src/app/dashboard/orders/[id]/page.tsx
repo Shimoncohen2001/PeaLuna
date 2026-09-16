@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { canAuthorizePayment, canReleaseEscrow } from '@velure/domain';
+import { canAuthorizePayment, canChooseCashPayment, canReleaseEscrow } from '@velure/domain';
 import type { OrderDto } from '@velure/contracts';
 import { Button } from '@/components/ui/button';
 import { ReviewModal } from '@/components/reviews/review-modal';
@@ -109,6 +109,38 @@ export default function OrderDetailPage() {
     },
   });
 
+  const cashKeyRef = useRef(crypto.randomUUID());
+  const chooseCash = useMutation({
+    mutationFn: () =>
+      authFetch<{ paymentStatus: string }>(`/api/v1/orders/${params.id}/payments/cash`, {
+        method: 'POST',
+        headers: { 'Idempotency-Key': cashKeyRef.current },
+      }),
+    onSuccess: async () => {
+      setPayError(null);
+      setPayMessage(t.cash.chosen);
+      await invalidate();
+    },
+    onError: (err) => {
+      setPayError(err instanceof ApiClientError ? err.message : t.cash.failed);
+    },
+  });
+
+  const cancelCash = useMutation({
+    mutationFn: () =>
+      authFetch<{ paymentStatus: string }>(`/api/v1/orders/${params.id}/payments/cash/cancel`, {
+        method: 'POST',
+      }),
+    onSuccess: async () => {
+      setPayError(null);
+      setPayMessage(null);
+      await invalidate();
+    },
+    onError: (err) => {
+      setPayError(err instanceof ApiClientError ? err.message : t.cash.failed);
+    },
+  });
+
   const release = useMutation({
     mutationFn: () =>
       authFetch<{ message: string; platformFeeCents: number; technicianPayoutCents: number }>(
@@ -156,6 +188,9 @@ export default function OrderDetailPage() {
   const paymentAllowed = canAuthorizePayment(data.status);
   const canShowPayButtons =
     paymentAllowed && (paymentStatus === 'UNPAID' || paymentStatus === 'FAILED');
+  const cashOffered = canChooseCashPayment(data.status, paymentStatus, data.cashAccepted ?? false);
+  const cashPending = paymentStatus === 'CASH_PENDING';
+  const cashSettled = paymentStatus === 'CAPTURED' && data.paymentMethod === 'CASH';
   const stripeCheckout =
     startPayment.data?.mode === 'stripe' &&
     startPayment.data.clientSecret &&
@@ -249,8 +284,33 @@ export default function OrderDetailPage() {
                       : t.payment.payCard}
                 </Button>
               ) : null}
+              {cashOffered ? (
+                <Button
+                  variant="secondary"
+                  disabled={chooseCash.isPending}
+                  onClick={() => chooseCash.mutate()}
+                >
+                  {t.cash.payCash}
+                </Button>
+              ) : null}
             </>
           ) : null}
+
+          {cashPending ? (
+            <div className="w-full space-y-3 rounded-lg border border-ink/10 bg-warm-white px-4 py-3">
+              <p className="text-sm text-ink">{t.cash.chosen}</p>
+              <p className="text-sm text-muted">{t.cash.waitingConfirm}</p>
+              <Button
+                variant="secondary"
+                disabled={cancelCash.isPending}
+                onClick={() => cancelCash.mutate()}
+              >
+                {t.cash.cancel}
+              </Button>
+            </div>
+          ) : null}
+
+          {cashSettled ? <p className="text-sm text-ink">{t.cash.confirmed}</p> : null}
 
           {paymentStatus === 'AUTHORIZED' && canReleaseEscrow(data.status, paymentStatus) ? (
             <Button variant="gold" disabled={release.isPending} onClick={() => release.mutate()}>
@@ -262,7 +322,7 @@ export default function OrderDetailPage() {
             <p className="text-sm text-muted">{t.payment.releaseWhenComplete}</p>
           ) : null}
 
-          {paymentStatus === 'CAPTURED' ? (
+          {paymentStatus === 'CAPTURED' && !cashSettled ? (
             <p className="text-sm text-ink">{t.payment.captured}</p>
           ) : null}
 

@@ -38,3 +38,25 @@ export function canReleaseEscrow(
 ): boolean {
   return status === OrderStatus.COMPLETED && paymentStatus === 'AUTHORIZED';
 }
+
+/**
+ * Customer may switch to cash as long as no money is engaged yet.
+ * The expert must have opted in, since they carry the collection risk.
+ */
+export function canChooseCashPayment(
+  status: OrderStatusType | string,
+  paymentStatus: string,
+  technicianAcceptsCash: boolean,
+): boolean {
+  if (!technicianAcceptsCash) return false;
+  if (!canAuthorizePayment(status)) return false;
+  return paymentStatus === 'UNPAID' || paymentStatus === 'FAILED';
+}
+
+/** Expert closes the balance only once the job is done and cash was chosen. */
+export function canConfirmCashPayment(
+  status: OrderStatusType | string,
+  paymentStatus: string,
+): boolean {
+  return status === OrderStatus.COMPLETED && paymentStatus === 'CASH_PENDING';
+}

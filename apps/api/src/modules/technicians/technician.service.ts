@@ -1,5 +1,6 @@
 import {
   calculatePlatformCommissionCents,
+  canConfirmCashPayment,
   canMarkAppointmentComplete,
   resolveTransition,
   type Role,
@@ -40,6 +41,7 @@ function mapPublicTechnician(
     salonAddress: hideExactHome && !t.offersSalonService ? null : t.salonAddress,
     offersHomeService: t.offersHomeService,
     offersSalonService: t.offersSalonService,
+    acceptsCashPayment: t.acceptsCashPayment,
     latitude: hideExactHome ? roundPublicCoord(t.latitude) : t.latitude,
     longitude: hideExactHome ? roundPublicCoord(t.longitude) : t.longitude,
     ratingAvg: t.ratingAvg,
@@ -75,6 +77,7 @@ export class TechnicianService {
     salonAddress?: string;
     offersHomeService: boolean;
     offersSalonService: boolean;
+    acceptsCashPayment?: boolean;
     serviceTypeIds: string[];
     latitude?: number;
     longitude?: number;
@@ -130,6 +133,7 @@ export class TechnicianService {
         salonAddress: input.salonAddress,
         offersHomeService: input.offersHomeService,
         offersSalonService: input.offersSalonService,
+        acceptsCashPayment: input.acceptsCashPayment ?? false,
         latitude: input.latitude,
         longitude: input.longitude,
         status: 'UNDER_REVIEW' as const,
@@ -205,6 +209,7 @@ export class TechnicianService {
       salonAddress?: string;
       offersHomeService?: boolean;
       offersSalonService?: boolean;
+      acceptsCashPayment?: boolean;
       serviceTypeIds?: string[];
       latitude?: number;
       longitude?: number;
@@ -250,6 +255,7 @@ export class TechnicianService {
           salonAddress: input.salonAddress,
           offersHomeService: input.offersHomeService,
           offersSalonService: input.offersSalonService,
+          acceptsCashPayment: input.acceptsCashPayment,
           latitude: input.latitude,
           longitude: input.longitude,
         },
@@ -842,6 +848,9 @@ export class TechnicianService {
       currency: order.currency,
       totalCents: order.totalCents,
       paymentStatus: order.paymentStatus,
+      paymentMethod: order.paymentMethod,
+      cashConfirmedAt: order.cashConfirmedAt?.toISOString() ?? null,
+      canConfirmCash: canConfirmCashPayment(order.status, order.paymentStatus),
       venueType: order.venueType,
       scheduledAt: order.scheduledAt?.toISOString() ?? null,
       serviceAddressLine: order.serviceAddressLine,

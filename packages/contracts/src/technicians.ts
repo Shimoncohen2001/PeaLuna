@@ -12,6 +12,7 @@ export const technicianApplySchema = z.object({
   salonAddress: z.string().max(255).trim().optional(),
   offersHomeService: z.boolean().default(true),
   offersSalonService: z.boolean().default(true),
+  acceptsCashPayment: z.boolean().default(false),
   serviceTypeIds: z.array(z.string().uuid()).min(1).max(20),
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),

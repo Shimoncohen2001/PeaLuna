@@ -2,7 +2,7 @@ import { successResponse } from '@velure/contracts';
 import type { AppInstance } from '../../types/app.js';
 import type { Env } from '../../config/env.js';
 import { API_PREFIX } from '../../config/constants.js';
-import { requireUser } from '../../lib/access.js';
+import { requireAdmin, requireUser } from '../../lib/access.js';
 import { withIdempotency } from '../../lib/idempotency.js';
 import { PaymentService } from './payment.service.js';
 import Stripe from 'stripe';
@@ -60,6 +60,79 @@ export async function paymentRoutes(app: AppInstance, env: Env): Promise<void> {
         execute: () => payments.releaseEscrow(id, user.sub),
       });
       return reply.status(result.statusCode).send(successResponse(result.payload, request.requestId));
+    },
+  );
+
+  app.post(
+    `${API_PREFIX}/orders/:id/payments/cash`,
+    { preHandler: [app.authenticate] },
+    async (request, reply) => {
+      const user = requireUser(request);
+      const { id } = request.params as { id: string };
+      const result = await withIdempotency({
+        header: request.headers['idempotency-key'],
+        requireKey: env.NODE_ENV === 'production',
+        userId: user.sub,
+        method: 'POST',
+        path: `${API_PREFIX}/orders/${id}/payments/cash`,
+        body: { orderId: id },
+        statusCode: 200,
+        execute: () => payments.chooseCashPayment(id, user.sub),
+      });
+      return reply.status(result.statusCode).send(successResponse(result.payload, request.requestId));
+    },
+  );
+
+  app.post(
+    `${API_PREFIX}/orders/:id/payments/cash/cancel`,
+    { preHandler: [app.authenticate] },
+    async (request, reply) => {
+      const user = requireUser(request);
+      const { id } = request.params as { id: string };
+      const result = await payments.cancelCashPayment(id, user.sub);
+      return reply.send(successResponse(result, request.requestId));
+    },
+  );
+
+  app.post(
+    `${API_PREFIX}/technicians/me/orders/:id/payments/cash-received`,
+    { preHandler: [app.authenticate] },
+    async (request, reply) => {
+      const user = requireUser(request);
+      const { id } = request.params as { id: string };
+      const result = await withIdempotency({
+        header: request.headers['idempotency-key'],
+        requireKey: env.NODE_ENV === 'production',
+        userId: user.sub,
+        method: 'POST',
+        path: `${API_PREFIX}/technicians/me/orders/${id}/payments/cash-received`,
+        body: { orderId: id },
+        statusCode: 200,
+        execute: () => payments.confirmCashReceived(id, user.sub),
+      });
+      return reply.status(result.statusCode).send(successResponse(result.payload, request.requestId));
+    },
+  );
+
+  app.get(
+    `${API_PREFIX}/admin/cash-commissions`,
+    { preHandler: [app.authenticate] },
+    async (request, reply) => {
+      requireAdmin(request);
+      const { settled } = request.query as { settled?: string };
+      const items = await payments.listCashCommissions(settled === 'true');
+      return reply.send(successResponse(items, request.requestId));
+    },
+  );
+
+  app.post(
+    `${API_PREFIX}/admin/cash-commissions/:id/settle`,
+    { preHandler: [app.authenticate] },
+    async (request, reply) => {
+      requireAdmin(request);
+      const { id } = request.params as { id: string };
+      const result = await payments.settleCashCommission(id);
+      return reply.send(successResponse(result, request.requestId));
     },
   );
 

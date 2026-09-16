@@ -69,9 +69,14 @@ export default function AdminTechniciansPage() {
           <h1 className="font-display text-4xl text-ink">{t.admin.expertsTitle}</h1>
           <p className="mt-2 text-muted">{t.admin.expertsSubtitle}</p>
         </div>
-        <Link href="/admin/services" className="text-sm text-champagne hover:underline">
-          {t.admin.services}
-        </Link>
+        <div className="flex gap-4">
+          <Link href="/admin/services" className="text-sm text-champagne hover:underline">
+            {t.admin.services}
+          </Link>
+          <Link href="/admin/cash" className="text-sm text-champagne hover:underline">
+            {t.cash.adminTitle}
+          </Link>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">

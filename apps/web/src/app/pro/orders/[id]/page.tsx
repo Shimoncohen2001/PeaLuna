@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { calculatePlatformCommissionCents } from '@velure/domain';
 import { Button } from '@/components/ui/button';
 import { ApiClientError } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
@@ -27,6 +28,9 @@ type JobDetail = {
   currency: string;
   totalCents: number;
   paymentStatus: string;
+  paymentMethod: 'CARD' | 'CASH';
+  cashConfirmedAt: string | null;
+  canConfirmCash: boolean;
   venueType: 'HOME' | 'SALON' | null;
   scheduledAt: string | null;
   serviceAddressLine: string | null;
@@ -52,9 +56,11 @@ type JobDetail = {
 export default function ProOrderDetailPage() {
   const params = useParams<{ id: string }>();
   const { authFetch, user } = useAuth();
-  const { t, locale } = useLocale();
+  const { t, locale, format } = useLocale();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
+  const [cashNote, setCashNote] = useState<string | null>(null);
+  const cashKeyRef = useRef(crypto.randomUUID());
   const isTech = user?.roles?.includes('TECHNICIAN');
   const dateLocale = intlLocale(locale);
 
@@ -80,6 +86,26 @@ export default function ProOrderDetailPage() {
     },
     onError: (err) => {
       setError(err instanceof ApiClientError ? err.message : t.auth.error);
+    },
+  });
+
+  const confirmCash = useMutation({
+    mutationFn: () =>
+      authFetch<{ commissionDueCents: number; currency: string }>(
+        `/api/v1/technicians/me/orders/${params.id}/payments/cash-received`,
+        { method: 'POST', headers: { 'Idempotency-Key': cashKeyRef.current } },
+      ),
+    onSuccess: async (result) => {
+      setError(null);
+      setCashNote(
+        `${t.cash.expertConfirmed} ${format(t.cash.expertDue, {
+          amount: formatMoney(result.commissionDueCents, result.currency, locale),
+        })}`,
+      );
+      await invalidate();
+    },
+    onError: (err) => {
+      setError(err instanceof ApiClientError ? err.message : t.cash.failed);
     },
   });
 
@@ -167,6 +193,38 @@ export default function ProOrderDetailPage() {
           <span>{t.common.total}</span>
           <span>{formatMoney(data.totalCents, data.currency, locale)}</span>
         </div>
+
+        {data.paymentMethod === 'CASH' ? (
+          <div className="mt-4 space-y-3 rounded-lg border border-[#e8b4a2]/30 bg-[#e8b4a2]/5 p-4">
+            {data.cashConfirmedAt ? (
+              <p className="text-sm text-[#f7efe8]">{t.cash.expertConfirmed}</p>
+            ) : (
+              <p className="text-sm text-[#f7efe8]">{t.cash.expertPending}</p>
+            )}
+            <p className="text-sm text-white/60">
+              {format(t.cash.expertDue, {
+                amount: formatMoney(
+                  calculatePlatformCommissionCents(data.totalCents),
+                  data.currency,
+                  locale,
+                ),
+              })}
+            </p>
+            {data.canConfirmCash ? (
+              <Button
+                variant="gold"
+                disabled={confirmCash.isPending}
+                onClick={() => {
+                  if (!window.confirm(t.cash.expertConfirmPrompt)) return;
+                  confirmCash.mutate();
+                }}
+              >
+                {confirmCash.isPending ? t.cash.expertConfirming : t.cash.expertConfirm}
+              </Button>
+            ) : null}
+            {cashNote ? <p className="text-sm text-[#e8b4a2]">{cashNote}</p> : null}
+          </div>
+        ) : null}
       </section>
 
       <section className="rounded-2xl border border-white/10 bg-white/5 p-6">
