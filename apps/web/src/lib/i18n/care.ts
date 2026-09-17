@@ -253,6 +253,7 @@ export type CareUi = {
   adviceLine: string;
   toComplete: string;
   lockHint: string;
+  skipHint: string;
   confirmSubmit: string;
   validating: string;
   finishCare: string;
@@ -357,6 +358,7 @@ const CARE_UI: Record<Locale, CareUi> = {
     adviceLine: 'Conseils : {text}',
     toComplete: 'à compléter',
     lockHint: '« Terminer le soin » enregistre la fiche et clôture le rendez-vous.',
+    skipHint: 'Tu peux passer une étape si elle ne s’applique pas — ça ne bloque pas la finalisation.',
     confirmSubmit: 'Valider et terminer ce soin ? La fiche sera verrouillée dans l’historique.',
     validating: 'Validation…',
     finishCare: 'Terminer le soin',
@@ -460,6 +462,7 @@ const CARE_UI: Record<Locale, CareUi> = {
     adviceLine: 'Advice: {text}',
     toComplete: 'to complete',
     lockHint: '“Finish care” saves the report and closes the appointment.',
+    skipHint: 'You can skip a step if it doesn’t apply — it won’t block finishing the care.',
     confirmSubmit: 'Validate and finish this care? The report will be locked in the history.',
     validating: 'Validating…',
     finishCare: 'Finish care',
@@ -562,6 +565,7 @@ const CARE_UI: Record<Locale, CareUi> = {
     adviceLine: 'המלצות: {text}',
     toComplete: 'להשלים',
     lockHint: '«סיום הטיפול» שומר את הדוח וסוגר את התור.',
+    skipHint: 'אפשר לדלג על שלב אם הוא לא רלוונטי — זה לא יחסום את סיום הטיפול.',
     confirmSubmit: 'לאשר ולסיים את הטיפול? הדוח יינעל בהיסטוריה.',
     validating: 'מאשר…',
     finishCare: 'סיום הטיפול',

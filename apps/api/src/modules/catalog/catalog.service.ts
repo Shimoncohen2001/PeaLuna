@@ -275,11 +275,6 @@ export class CatalogService {
 
   async listIncompleteRequired(orderId: string) {
     const steps = await this.listOrderWorkflow(orderId);
-    return steps.filter((step) => {
-      if (!step.isRequired) return false;
-      if (!step.completed) return true;
-      if (step.inputKind === 'TEXT' && !step.note?.trim()) return true;
-      return false;
-    });
+    return steps.filter((step) => step.isRequired && !step.completed);
   }
 }

@@ -131,29 +131,6 @@ enum CarePhotoAngle {
   EXTRA
 }
 
-enum CareOperationCode {
-  WASH
-  DEEP_TREATMENT
-  DETANGLE
-  DRY
-  BLOW_DRY
-  STYLE
-  CUT
-  COLOR
-  BLEACH
-  TONER
-  LACE_REPAIR
-  LACE_REPLACE
-  BASE_REPAIR
-  HAIR_ADD
-  HAIR_REPLACE
-  RECONSTRUCTION
-  TRANSFORMATION
-  BABY_HAIR
-  KNOT_REPAIR
-  OTHER
-}
-
 enum AiAnalysisStatus {
   PENDING
   PROCESSING
@@ -784,7 +761,7 @@ model CareReport {
 model CareOperation {
   id        String             @id @default(uuid()) @db.Uuid
   reportId  String             @map("report_id") @db.Uuid
-  code      CareOperationCode
+  code      String             @db.VarChar(80)
   note      String?            @db.VarChar(500)
   createdAt DateTime           @default(now()) @map("created_at") @db.Timestamptz
 

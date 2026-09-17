@@ -1,6 +1,6 @@
 import { HAIR_ADD_CODES, type SaveCareReportInput } from '@velure/contracts';
 import { canConfirmCashPayment, canMarkAppointmentComplete, resolveTransition } from '@velure/domain';
-import { prisma, type CareOperationCode, type Prisma } from '@velure/database';
+import { prisma, type Prisma } from '@velure/database';
 import type { Env } from '../../config/env.js';
 import { requireApprovedTechnicianProfile } from '../../lib/access.js';
 import { updateOrderIfVersion } from '../../lib/order-lock.js';
@@ -71,7 +71,7 @@ export class CareReportService {
           await tx.careOperation.createMany({
             data: input.operations.map((op) => ({
               reportId: report.id,
-              code: op.code as CareOperationCode,
+              code: op.code,
               note: op.note,
             })),
           });
@@ -88,7 +88,7 @@ export class CareReportService {
   async submit(userId: string, orderId: string, input: SaveCareReportInput) {
     const report = await this.getWritable(userId, orderId);
     const operations = input.operations ?? [];
-    const errors = this.validateSubmit(input, operations, report.photos);
+    const errors = this.validateSubmit();
     if (errors.length > 0) {
       throw Object.assign(new Error(errors[0]), {
         statusCode: 400,
@@ -105,7 +105,7 @@ export class CareReportService {
         await tx.careOperation.createMany({
           data: operations.map((op) => ({
             reportId: report.id,
-            code: op.code as CareOperationCode,
+            code: op.code,
             note: op.note,
           })),
         });
@@ -388,58 +388,8 @@ export class CareReportService {
     };
   }
 
-  private validateSubmit(
-    input: SaveCareReportInput,
-    operations: { code: string }[],
-    photos: { purpose: string; photoPhase: string | null }[],
-  ): string[] {
-    const errors: string[] = [];
-    const req = [
-      ['beforeGeneralCondition', input.beforeGeneralCondition],
-      ['beforeWeightGrams', input.beforeWeightGrams],
-      ['wigKind', input.wigKind],
-      ['hairKind', input.hairKind],
-      ['lengthCm', input.lengthCm],
-      ['color', input.color],
-      ['laceCondition', input.laceCondition],
-      ['baseCondition', input.baseCondition],
-      ['hairCondition', input.hairCondition],
-      ['wearLevel', input.wearLevel],
-      ['tangleLevel', input.tangleLevel],
-      ['afterWeightGrams', input.afterWeightGrams],
-      ['afterGeneralCondition', input.afterGeneralCondition],
-      ['afterHairCondition', input.afterHairCondition],
-      ['afterLaceCondition', input.afterLaceCondition],
-      ['afterBaseCondition', input.afterBaseCondition],
-      ['afterWearLevel', input.afterWearLevel],
-      ['resultNotes', input.resultNotes],
-      ['washFrequency', input.washFrequency],
-    ] as const;
-    for (const [key, value] of req) {
-      if (value == null || value === '') errors.push(`Missing ${key}`);
-    }
-    if (input.hairLossObserved == null) errors.push('Missing hairLossObserved');
-    if (operations.length === 0) errors.push('Select at least one operation');
-    const hairWork = operations.some((op) => HAIR_CODES.has(op.code));
-    if (hairWork) {
-      if (!input.addedHairKind) errors.push('Missing added hair type');
-      if (!input.addedHairGrams) errors.push('Missing added hair weight');
-      if (!input.addedHairLengthCm) errors.push('Missing added hair length');
-      if (!input.addedHairColor) errors.push('Missing added hair color');
-      if (!input.addedHairZone) errors.push('Missing added hair zone');
-    }
-    const adviceOk = [input.otherAdvice, input.stylingAdvice, input.storageAdvice, input.heatAdvice, input.laceAdvice]
-      .some((v) => Boolean(v && String(v).trim()));
-    if (!adviceOk) errors.push('Add at least one client advice');
-    const beforePhotos = photos.filter(
-      (p) => p.photoPhase === 'BEFORE' || p.purpose === 'BEFORE_CARE',
-    );
-    const afterPhotos = photos.filter(
-      (p) => p.photoPhase === 'AFTER' || p.purpose === 'AFTER_CARE',
-    );
-    if (beforePhotos.length === 0) errors.push('Add at least one before photo');
-    if (afterPhotos.length === 0) errors.push('Add at least one after photo');
-    return errors;
+  private validateSubmit(): string[] {
+    return [];
   }
 
   private async mapFull(report: ReportRow, includeInternal: boolean) {

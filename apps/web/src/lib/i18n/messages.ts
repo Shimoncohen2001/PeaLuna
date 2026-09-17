@@ -411,6 +411,7 @@ export type Messages = {
     offeredServices: string;
     skills: string;
     workflowTitle: string;
+    skipStep: string;
     workflowHint: string;
     workflowIncomplete: string;
     markDone: string;
@@ -658,7 +659,7 @@ export const en: Messages = {
     nameHint: 'At least 2 characters. A URL slug is generated automatically.',
     deleteConfirm: 'Remove this item from the catalog?',
     skills: 'Skills',
-    skillsSubtitle: 'Skills available for experts to select on their profile.',
+    skillsSubtitle: 'List of skills — add, edit or remove. Experts tick the same list on their profile and when finishing a care.',
     addSkill: '+ Add a skill',
     workflow: 'Completion steps',
     workflowSubtitle: 'Steps an expert must fill in before finishing a service.',
@@ -844,8 +845,9 @@ export const en: Messages = {
     offeredServices: 'Services offered',
     skills: 'Skills I master',
     workflowTitle: 'Service steps',
-    workflowHint: 'Complete the required steps before finishing this service.',
-    workflowIncomplete: 'Complete every required step before finishing this service.',
+    skipStep: 'Skip this step',
+    workflowHint: 'Tick what’s done, or skip a step that doesn’t apply. Skipping never blocks finishing the care.',
+    workflowIncomplete: 'Skip or complete the remaining required steps, then finish.',
     markDone: 'Mark as done',
     stepNote: 'Note',
     availabilityHint: 'Set your weekly recurring slots.',
@@ -1097,7 +1099,7 @@ export const fr: Messages = {
     nameHint: 'Au moins 2 caractères. Un identifiant URL est généré automatiquement.',
     deleteConfirm: 'Retirer cet élément du catalogue ?',
     skills: 'Compétences',
-    skillsSubtitle: 'Compétences que les expertes peuvent sélectionner sur leur profil.',
+    skillsSubtitle: 'Liste des compétences — ajoute, modifie ou supprime. Les expertes cochent la même liste sur leur profil et à la fin d’un soin.',
     addSkill: '+ Ajouter une compétence',
     workflow: 'Étapes de réalisation',
     workflowSubtitle: 'Étapes qu’une experte doit renseigner avant de terminer une prestation.',
@@ -1283,8 +1285,9 @@ export const fr: Messages = {
     offeredServices: 'Services proposés',
     skills: 'Compétences maîtrisées',
     workflowTitle: 'Étapes de la prestation',
-    workflowHint: 'Complète les étapes obligatoires avant de terminer cette prestation.',
-    workflowIncomplete: 'Complète toutes les étapes obligatoires avant de terminer.',
+    skipStep: 'Passer cette étape',
+    workflowHint: 'Coche ce qui est fait, ou passe une étape qui ne s’applique pas. Passer une étape ne bloque pas la finalisation.',
+    workflowIncomplete: 'Passe ou complète les étapes restantes, puis termine.',
     markDone: 'Marquer comme fait',
     stepNote: 'Note',
     availabilityHint: 'Définis tes créneaux hebdomadaires (récurrent).',
@@ -1529,7 +1532,7 @@ export const he: Messages = {
     nameHint: 'לפחות 2 תווים. מזהה URL נוצר אוטומטית.',
     deleteConfirm: 'להסיר את הפריט מהקטלוג?',
     skills: 'כישורים',
-    skillsSubtitle: 'כישורים שהמומחיות יכולות לבחור בפרופיל.',
+    skillsSubtitle: 'רשימת כישורים — הוספה, עריכה או מחיקה. המומחיות מסמנות את אותה רשימה בפרופיל ובסיום טיפול.',
     addSkill: '+ הוספת כישור',
     workflow: 'שלבי ביצוע',
     workflowSubtitle: 'שלבים שמומחית חייבת למלא לפני סיום שירות.',
@@ -1715,8 +1718,9 @@ export const he: Messages = {
     offeredServices: 'שירותים מוצעים',
     skills: 'כישורים שאני שולטת בהם',
     workflowTitle: 'שלבי השירות',
-    workflowHint: 'יש להשלים את שלבי החובה לפני סיום השירות.',
-    workflowIncomplete: 'יש להשלים את כל שלבי החובה לפני הסיום.',
+    skipStep: 'דילוג על השלב',
+    workflowHint: 'סמני מה שבוצע, או דלגי על שלב לא רלוונטי. דילוג לא חוסם את סיום הטיפול.',
+    workflowIncomplete: 'יש לדלג או להשלים את השלבים הנותרים ואז לסיים.',
     markDone: 'סימון כבוצע',
     stepNote: 'הערה',
     availabilityHint: 'הגדירי את המשבצות השבועיות הקבועות.',

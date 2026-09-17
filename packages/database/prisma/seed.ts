@@ -102,36 +102,26 @@ const SERVICE_CATALOG = [
 ];
 
 const SKILL_CATALOG = [
-  {
-    slug: 'lace-repair',
-    name: 'תיקון לייס',
-    description: 'תיקון והחלפת לייס',
-    sortOrder: 1,
-  },
-  {
-    slug: 'baby-hair',
-    name: 'בייבי הייר',
-    description: 'יצירה ועיצוב בייבי הייר',
-    sortOrder: 2,
-  },
-  {
-    slug: 'color',
-    name: 'צבע',
-    description: 'צביעה, באליאז׳ ותיקון צבע',
-    sortOrder: 3,
-  },
-  {
-    slug: 'wash-treatment',
-    name: 'שטיפה וטיפול',
-    description: 'שטיפה, לחות ובראשינג',
-    sortOrder: 4,
-  },
-  {
-    slug: 'lace-conversion',
-    name: 'המרה ללייס',
-    description: 'המרת פאה קלאסית ללייס',
-    sortOrder: 5,
-  },
+  { slug: 'lavage', name: 'Lavage', sortOrder: 1 },
+  { slug: 'soin-profond', name: 'Soin profond', sortOrder: 2 },
+  { slug: 'demelage', name: 'Démêlage', sortOrder: 3 },
+  { slug: 'sechage', name: 'Séchage', sortOrder: 4 },
+  { slug: 'brushing', name: 'Brushing', sortOrder: 5 },
+  { slug: 'coiffage', name: 'Coiffage', sortOrder: 6 },
+  { slug: 'coupe', name: 'Coupe', sortOrder: 7 },
+  { slug: 'coloration', name: 'Coloration', sortOrder: 8 },
+  { slug: 'decoloration', name: 'Décoloration', sortOrder: 9 },
+  { slug: 'patine', name: 'Patine', sortOrder: 10 },
+  { slug: 'reparation-lace', name: 'Réparation lace', sortOrder: 11 },
+  { slug: 'remplacement-lace', name: 'Remplacement lace', sortOrder: 12 },
+  { slug: 'reparation-de-la-base', name: 'Réparation de la base', sortOrder: 13 },
+  { slug: 'ajout-de-cheveux', name: 'Ajout de cheveux', sortOrder: 14 },
+  { slug: 'remplacement-de-cheveux', name: 'Remplacement de cheveux', sortOrder: 15 },
+  { slug: 'reconstruction', name: 'Reconstruction', sortOrder: 16 },
+  { slug: 'transformation', name: 'Transformation', sortOrder: 17 },
+  { slug: 'baby-hair-style', name: 'Baby hair', sortOrder: 18 },
+  { slug: 'reparation-des-noeuds', name: 'Réparation des nœuds', sortOrder: 19 },
+  { slug: 'autre', name: 'Autre', sortOrder: 20 },
 ];
 
 const WORKFLOW_STEP_CATALOG = [
@@ -215,6 +205,13 @@ async function main() {
       slug: { in: ['repair-lace-front', 'deep-conditioning', 'transformation-style'] },
     },
     data: { isActive: false },
+  });
+
+  await prisma.skill.updateMany({
+    where: {
+      slug: { in: ['lace-repair', 'baby-hair', 'color', 'wash-treatment', 'lace-conversion'] },
+    },
+    data: { isActive: false, sortOrder: 1000 },
   });
 
   for (const skill of SKILL_CATALOG) {

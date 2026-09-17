@@ -22,7 +22,7 @@ import {
 import { useLocale } from '@/lib/i18n/locale';
 import { uploadWigMedia } from '@/lib/upload-media';
 import { OrderWorkflowChecklist, incompleteRequiredSteps } from '@/components/care/order-workflow-checklist';
-import type { OrderWorkflowStepDto } from '@velure/contracts';
+import { HAIR_ADD_CODES, type OrderWorkflowStepDto, type SkillDto } from '@velure/contracts';
 
 type Photo = {
   id: string;
@@ -113,7 +113,7 @@ function followUpCopy(
   return ui.finishSuccessDone;
 }
 
-const HAIR_OPS = new Set(['HAIR_ADD', 'HAIR_REPLACE']);
+const HAIR_OPS = new Set<string>(HAIR_ADD_CODES);
 
 function num(v: string): number | null {
   if (!v.trim()) return null;
@@ -168,6 +168,11 @@ export function CareReportForm({ orderId }: { orderId: string }) {
       authFetch<OrderWorkflowStepDto[]>(`/api/v1/technicians/me/orders/${orderId}/workflow`),
   });
 
+  const catalogSkills = useQuery({
+    queryKey: ['skills'],
+    queryFn: () => authFetch<SkillDto[]>('/api/v1/skills'),
+  });
+
   useEffect(() => {
     if (!report.data) return;
     setForm((prev) => ({
@@ -185,6 +190,16 @@ export function CareReportForm({ orderId }: { orderId: string }) {
   const selectedOps = form.operations ?? [];
   const needsHair = selectedOps.some((o) => HAIR_OPS.has(o.code));
   const locked = report.data?.status === 'SUBMITTED';
+  const operationCatalog = useMemo(() => {
+    if (catalogSkills.data && catalogSkills.data.length > 0) {
+      return catalogSkills.data.map((s) => ({ code: s.slug, label: s.name }));
+    }
+    return OPERATION_CODES.map((code) => ({ code, label: careLabel(locale, code) }));
+  }, [catalogSkills.data, locale]);
+
+  function operationLabel(code: string) {
+    return operationCatalog.find((o) => o.code === code)?.label ?? careLabel(locale, code);
+  }
 
   const payload = useMemo(
     () => ({
@@ -406,6 +421,23 @@ export function CareReportForm({ orderId }: { orderId: string }) {
       }
     }
     return null;
+  }
+
+  async function goNext(skip: boolean) {
+    if (!skip) {
+      const msg = validateStep(step);
+      if (msg) {
+        setError(msg);
+        return;
+      }
+    }
+    setError(null);
+    try {
+      await save.mutateAsync();
+      setStep((s) => s + (s === 2 && !needsHair ? 2 : 1));
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : t.pro.saveFailed);
+    }
   }
 
   const photos = form.photos ?? report.data?.photos ?? [];
@@ -654,12 +686,12 @@ export function CareReportForm({ orderId }: { orderId: string }) {
       {step === 2 ? (
         <section className="rounded-2xl border border-white/10 bg-white/5 p-6">
           <div className="grid gap-2 sm:grid-cols-2">
-            {OPERATION_CODES.map((code) => {
-              const checked = selectedOps.some((o) => o.code === code);
+            {operationCatalog.map((item) => {
+              const checked = selectedOps.some((o) => o.code === item.code);
               return (
-                <label key={code} className="flex items-center gap-2 text-sm text-white/80">
-                  <input type="checkbox" checked={checked} onChange={() => toggleOp(code)} />
-                  {careLabel(locale, code)}
+                <label key={item.code} className="flex items-center gap-2 text-sm text-white/80">
+                  <input type="checkbox" checked={checked} onChange={() => toggleOp(item.code)} />
+                  {item.label}
                 </label>
               );
             })}
@@ -668,7 +700,7 @@ export function CareReportForm({ orderId }: { orderId: string }) {
             <div className="mt-4 space-y-3">
               <p className="text-sm text-white/50">{ui.opNotes}</p>
               {selectedOps.map((op) => (
-                <Field key={op.code} label={careLabel(locale, op.code)}>
+                <Field key={op.code} label={operationLabel(op.code)}>
                   <input
                     className={inputClass}
                     value={op.note ?? ''}
@@ -947,7 +979,7 @@ export function CareReportForm({ orderId }: { orderId: string }) {
           <p>
             Avant : {careLabel(locale, form.beforeGeneralCondition ?? '')} · {form.beforeWeightGrams ?? '—'} g
           </p>
-          <p>Travail : {selectedOps.map((o) => careLabel(locale, o.code)).join(', ') || '—'}</p>
+          <p>Travail : {selectedOps.map((o) => operationLabel(o.code)).join(', ') || '—'}</p>
           <p>
             Après : {careLabel(locale, form.afterGeneralCondition ?? '')} · {form.afterWeightGrams ?? '—'} g
             {delta != null ? ` (${delta > 0 ? '+' : ''}${delta} g)` : ''}
@@ -982,25 +1014,14 @@ export function CareReportForm({ orderId }: { orderId: string }) {
           </Button>
         ) : null}
         {step < STEPS.length - 1 ? (
-          <Button
-            variant="gold"
-            onClick={async () => {
-              const msg = validateStep(step);
-              if (msg) {
-                setError(msg);
-                return;
-              }
-              setError(null);
-              try {
-                await save.mutateAsync();
-                setStep((s) => s + (s === 2 && !needsHair ? 2 : 1));
-              } catch (err) {
-                setError(err instanceof ApiClientError ? err.message : t.pro.saveFailed);
-              }
-            }}
-          >
-            {t.common.continue}
-          </Button>
+          <>
+            <Button variant="gold" onClick={() => void goNext(false)}>
+              {t.common.continue}
+            </Button>
+            <Button variant="secondary" onClick={() => void goNext(true)}>
+              {t.common.skip}
+            </Button>
+          </>
         ) : (
           <Button
             variant="gold"
@@ -1008,18 +1029,6 @@ export function CareReportForm({ orderId }: { orderId: string }) {
             disabled={submit.isPending || submit.isSuccess}
             onClick={() => {
               if (submitGuard.current || submit.isPending) return;
-              const msg =
-                validateStep(0) ??
-                validateStep(1) ??
-                validateStep(2) ??
-                (needsHair ? validateStep(3) : null) ??
-                validateStep(4) ??
-                validateStep(5) ??
-                validateStep(6);
-              if (msg) {
-                setError(msg);
-                return;
-              }
               if (incompleteRequiredSteps(workflow.data).length > 0) {
                 setError(t.pro.workflowIncomplete);
                 return;
@@ -1032,6 +1041,9 @@ export function CareReportForm({ orderId }: { orderId: string }) {
           </Button>
         )}
       </div>
+      {step < STEPS.length - 1 ? (
+        <p className="text-xs text-white/45">{ui.skipHint}</p>
+      ) : null}
     </div>
   );
 }

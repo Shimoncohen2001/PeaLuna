@@ -7,12 +7,7 @@ import { useAuth } from '@/lib/auth';
 import { useLocale } from '@/lib/i18n/locale';
 
 export function incompleteRequiredSteps(steps: OrderWorkflowStepDto[] | undefined) {
-  return (steps ?? []).filter((step) => {
-    if (!step.isRequired) return false;
-    if (!step.completed) return true;
-    if (step.inputKind === 'TEXT' && !step.note?.trim()) return true;
-    return false;
-  });
+  return (steps ?? []).filter((step) => step.isRequired && !step.completed);
 }
 
 export function OrderWorkflowChecklist({
@@ -92,6 +87,18 @@ export function OrderWorkflowChecklist({
                 ) : null}
               </span>
             </label>
+            {!step.completed && !locked ? (
+              <button
+                type="button"
+                className="mt-2 text-xs text-[#e8b4a2] hover:underline"
+                disabled={save.isPending}
+                onClick={() =>
+                  commit(local.map((s) => (s.id === step.id ? { ...s, completed: true } : s)))
+                }
+              >
+                {t.pro.skipStep}
+              </button>
+            ) : null}
             {step.inputKind === 'TEXT' ? (
               <textarea
                 rows={2}

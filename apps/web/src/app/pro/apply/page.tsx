@@ -340,10 +340,10 @@ export default function ProApplyPage() {
           {(skills.data?.length ?? 0) > 0 ? (
             <fieldset>
               <legend className="text-sm text-white/70">{t.pro.skills}</legend>
-              <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+              <ul className="mt-2 overflow-hidden rounded-2xl border border-white/10">
                 {skills.data?.map((s) => (
-                  <li key={s.id}>
-                    <label className="flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm">
+                  <li key={s.id} className="border-b border-white/10 last:border-b-0">
+                    <label className="flex items-center gap-3 px-4 py-3 text-sm text-white/80">
                       <input
                         type="checkbox"
                         checked={selectedSkills.includes(s.id)}

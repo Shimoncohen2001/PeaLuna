@@ -7,33 +7,19 @@ export const wigKindEnum = z.enum(['LACE_FRONT', 'FULL_LACE', 'CLOSURE', 'GLUELE
 export const hairKindEnum = z.enum(['HUMAN', 'SYNTHETIC', 'MIXED', 'OTHER']);
 export const carePhotoPhaseEnum = z.enum(['BEFORE', 'AFTER']);
 export const carePhotoAngleEnum = z.enum(['FRONT', 'BACK', 'LEFT', 'RIGHT', 'LACE', 'EXTRA']);
-export const careOperationCodeEnum = z.enum([
-  'WASH',
-  'DEEP_TREATMENT',
-  'DETANGLE',
-  'DRY',
-  'BLOW_DRY',
-  'STYLE',
-  'CUT',
-  'COLOR',
-  'BLEACH',
-  'TONER',
-  'LACE_REPAIR',
-  'LACE_REPLACE',
-  'BASE_REPAIR',
+export const careOperationCodeSchema = z.string().min(1).max(80).trim();
+
+export const HAIR_ADD_CODES = [
   'HAIR_ADD',
   'HAIR_REPLACE',
-  'RECONSTRUCTION',
-  'TRANSFORMATION',
-  'BABY_HAIR',
-  'KNOT_REPAIR',
-  'OTHER',
-]);
-
-export const HAIR_ADD_CODES = ['HAIR_ADD', 'HAIR_REPLACE'] as const;
+  'hair-add',
+  'hair-replace',
+  'ajout-de-cheveux',
+  'remplacement-de-cheveux',
+] as const;
 
 export const careOperationInputSchema = z.object({
-  code: careOperationCodeEnum,
+  code: careOperationCodeSchema,
   note: z.string().max(500).trim().optional().nullable(),
 });
 
