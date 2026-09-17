@@ -15,11 +15,6 @@ export default function CareReportPage() {
       <Link href={`/pro/orders/${params.id}`} className="text-sm text-[#e8b4a2] hover:underline">
         <span className="inline-block rtl:rotate-180">←</span> {ui.backToJob}
       </Link>
-      <div>
-        <p className="text-sm uppercase tracking-[0.15em] text-[#e8b4a2]">{ui.sheetEyebrow}</p>
-        <h1 className="font-display text-4xl text-[#f7efe8]">{ui.sheetTitle}</h1>
-        <p className="mt-2 text-white/50">{ui.sheetHint}</p>
-      </div>
       <CareReportForm orderId={params.id} />
     </div>
   );

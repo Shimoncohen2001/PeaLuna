@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { nextTechnicianFollowUp, type TechnicianFollowUp } from '@velure/domain';
 import { Button } from '@/components/ui/button';
 import { CameraCapture } from '@/components/media/camera-capture';
 import { ApiClientError } from '@/lib/api-client';
@@ -85,7 +86,32 @@ type CareReport = {
   otherAdvice: string | null;
   weightDeltaGrams: number | null;
   photos: Photo[];
+  orderStatus?: string;
+  paymentStatus?: string;
+  paymentMethod?: 'CARD' | 'CASH';
+  canConfirmCash?: boolean;
 };
+
+type JobBrief = {
+  id: string;
+  status: string;
+  paymentStatus: string;
+  canConfirmCash: boolean;
+};
+
+function followUpHref(orderId: string, followUp: TechnicianFollowUp): string {
+  if (followUp === 'CONFIRM_CASH') return `/pro/orders/${orderId}?done=care&next=cash`;
+  return '/pro';
+}
+
+function followUpCopy(
+  followUp: TechnicianFollowUp,
+  ui: ReturnType<typeof careUi>,
+): string {
+  if (followUp === 'CONFIRM_CASH') return ui.finishSuccessCash;
+  if (followUp === 'WAIT_CLIENT_CAPTURE') return ui.finishSuccessCard;
+  return ui.finishSuccessDone;
+}
 
 const HAIR_OPS = new Set(['HAIR_ADD', 'HAIR_REPLACE']);
 
@@ -124,10 +150,16 @@ export function CareReportForm({ orderId }: { orderId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<CareReport>>({});
   const [busyUpload, setBusyUpload] = useState(false);
+  const submitGuard = useRef(false);
 
   const report = useQuery({
     queryKey: ['care-report', orderId],
     queryFn: () => authFetch<CareReport>(`/api/v1/technicians/me/orders/${orderId}/care-report`),
+  });
+
+  const job = useQuery({
+    queryKey: ['pro-order', orderId],
+    queryFn: () => authFetch<JobBrief>(`/api/v1/technicians/me/orders/${orderId}`),
   });
 
   const workflow = useQuery({
@@ -213,24 +245,53 @@ export function CareReportForm({ orderId }: { orderId: string }) {
   });
 
   const submit = useMutation({
-    mutationFn: () =>
-      authFetch(`/api/v1/technicians/me/orders/${orderId}/care-report/submit`, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      }),
-    onSuccess: async () => {
-      setError(null);
-      await queryClient.invalidateQueries({ queryKey: ['care-report', orderId] });
-      await queryClient.invalidateQueries({ queryKey: ['pro-order', orderId] });
-      await queryClient.invalidateQueries({ queryKey: ['pro-orders'] });
-      if (report.data?.wigId) {
-        router.push(`/pro/wigs/${report.data.wigId}`);
+    mutationFn: async () => {
+      try {
+        return await authFetch<CareReport>(`/api/v1/technicians/me/orders/${orderId}/care-report/submit`, {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+      } catch (err) {
+        if (err instanceof ApiClientError && err.code === 'CARE_REPORT_LOCKED') {
+          const current = await authFetch<JobBrief>(`/api/v1/technicians/me/orders/${orderId}`);
+          return {
+            ...(report.data as CareReport),
+            status: 'SUBMITTED' as const,
+            orderStatus: current.status,
+            paymentStatus: current.paymentStatus,
+            canConfirmCash: current.canConfirmCash,
+          };
+        }
+        throw err;
       }
     },
+    onSuccess: () => {
+      setError(null);
+      void queryClient.invalidateQueries({ queryKey: ['care-report', orderId] });
+      void queryClient.invalidateQueries({ queryKey: ['pro-order', orderId] });
+      void queryClient.invalidateQueries({ queryKey: ['pro-orders'] });
+      void queryClient.invalidateQueries({ queryKey: ['pro-dashboard'] });
+    },
     onError: (err) => {
+      submitGuard.current = false;
       setError(err instanceof ApiClientError ? err.message : ui.incomplete);
     },
   });
+
+  const done = locked || submit.isSuccess;
+  const followUp = nextTechnicianFollowUp(
+    submit.data?.orderStatus ?? job.data?.status ?? 'COMPLETED',
+    submit.data?.paymentStatus ?? job.data?.paymentStatus ?? 'UNPAID',
+  );
+  const nextHref = followUpHref(orderId, followUp);
+
+  useEffect(() => {
+    if (!submit.isSuccess) return;
+    const timer = window.setTimeout(() => {
+      router.replace(nextHref);
+    }, 1400);
+    return () => window.clearTimeout(timer);
+  }, [submit.isSuccess, nextHref, router]);
 
   async function upload(phase: 'BEFORE' | 'AFTER', angle: string, file: File) {
     if (!report.data) return;
@@ -358,29 +419,28 @@ export function CareReportForm({ orderId }: { orderId: string }) {
   if (report.isLoading) return <p className="text-white/50">{ui.loadingSheet}</p>;
   if (!report.data) return <p className="text-red-300">{ui.openFailed}</p>;
 
-  if (locked) {
+  if (done) {
     return (
-      <div className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6">
-        <h2 className="font-display text-3xl text-[#e8b4a2]">{ui.savedTitle}</h2>
-        <p className="text-white/60">
-          {report.data.wigName} · {report.data.wigReference} · {report.data.technicianDisplayName}
-        </p>
-        <p className="text-sm text-white/70">
-          {careLabel(locale, report.data.beforeGeneralCondition ?? '')} →{' '}
-          {careLabel(locale, report.data.afterGeneralCondition ?? '')}
-          {report.data.weightDeltaGrams != null
-            ? ` · ${report.data.weightDeltaGrams > 0 ? '+' : ''}${report.data.weightDeltaGrams} g`
-            : ''}
-        </p>
-        <a href={`/pro/wigs/${report.data.wigId}`} className="text-sm text-[#e8b4a2] hover:underline">
-          {t.pro.wigHistory}
-        </a>
-      </div>
+      <CareFinishedPanel
+        ui={ui}
+        followUp={followUp}
+        nextHref={nextHref}
+        autoRedirect={submit.isSuccess}
+        jobHref={`/pro/orders/${orderId}`}
+        wigHref={report.data.wigId ? `/pro/wigs/${report.data.wigId}` : null}
+        wigLabel={t.pro.wigHistory}
+        onGo={(href) => router.replace(href)}
+      />
     );
   }
 
   return (
     <div className="space-y-6">
+      <div>
+        <p className="text-sm uppercase tracking-[0.15em] text-[#e8b4a2]">{ui.sheetEyebrow}</p>
+        <h1 className="font-display text-4xl text-[#f7efe8]">{ui.sheetTitle}</h1>
+        <p className="mt-2 text-white/50">{ui.sheetHint}</p>
+      </div>
       <OrderWorkflowChecklist orderId={orderId} locked={locked} />
       <ol className="flex flex-wrap gap-2">
         {STEPS.map((label, i) => (
@@ -944,8 +1004,10 @@ export function CareReportForm({ orderId }: { orderId: string }) {
         ) : (
           <Button
             variant="gold"
-            disabled={submit.isPending}
+            className="min-h-11 w-full sm:w-auto"
+            disabled={submit.isPending || submit.isSuccess}
             onClick={() => {
+              if (submitGuard.current || submit.isPending) return;
               const msg =
                 validateStep(0) ??
                 validateStep(1) ??
@@ -962,7 +1024,7 @@ export function CareReportForm({ orderId }: { orderId: string }) {
                 setError(t.pro.workflowIncomplete);
                 return;
               }
-              if (!window.confirm(ui.confirmSubmit)) return;
+              submitGuard.current = true;
               submit.mutate();
             }}
           >
@@ -970,6 +1032,54 @@ export function CareReportForm({ orderId }: { orderId: string }) {
           </Button>
         )}
       </div>
+    </div>
+  );
+}
+
+function CareFinishedPanel({
+  ui,
+  followUp,
+  nextHref,
+  autoRedirect,
+  jobHref,
+  wigHref,
+  wigLabel,
+  onGo,
+}: {
+  ui: ReturnType<typeof careUi>;
+  followUp: TechnicianFollowUp;
+  nextHref: string;
+  autoRedirect: boolean;
+  jobHref: string;
+  wigHref: string | null;
+  wigLabel: string;
+  onGo: (href: string) => void;
+}) {
+  const primaryLabel = followUp === 'CONFIRM_CASH' ? ui.nextCash : ui.nextDashboard;
+  return (
+    <div className="space-y-5 rounded-2xl border border-[#e8b4a2]/40 bg-[#e8b4a2]/10 p-6">
+      <h2 className="font-display text-3xl text-[#e8b4a2]">{ui.finishSuccessTitle}</h2>
+      <p className="text-sm text-white/75">{followUpCopy(followUp, ui)}</p>
+      {autoRedirect ? <p className="text-xs text-white/45">{ui.redirecting}</p> : null}
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <Button variant="gold" className="w-full sm:w-auto" onClick={() => onGo(nextHref)}>
+          {primaryLabel}
+        </Button>
+        {followUp === 'CONFIRM_CASH' ? (
+          <Button variant="secondary" className="w-full sm:w-auto" onClick={() => onGo('/pro')}>
+            {ui.nextDashboard}
+          </Button>
+        ) : (
+          <Button variant="secondary" className="w-full sm:w-auto" onClick={() => onGo(jobHref)}>
+            {ui.nextJob}
+          </Button>
+        )}
+      </div>
+      {wigHref ? (
+        <button type="button" onClick={() => onGo(wigHref)} className="text-sm text-[#e8b4a2] hover:underline">
+          {wigLabel}
+        </button>
+      ) : null}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { HAIR_ADD_CODES, type SaveCareReportInput } from '@velure/contracts';
-import { canMarkAppointmentComplete, resolveTransition } from '@velure/domain';
+import { canConfirmCashPayment, canMarkAppointmentComplete, resolveTransition } from '@velure/domain';
 import { prisma, type CareOperationCode, type Prisma } from '@velure/database';
 import type { Env } from '../../config/env.js';
 import { requireApprovedTechnicianProfile } from '../../lib/access.js';
@@ -159,7 +159,14 @@ export class CareReportService {
       });
     });
 
-    return this.mapFull(submitted, true);
+    const mapped = await this.mapFull(submitted, true);
+    return {
+      ...mapped,
+      orderStatus: submitted.order.status,
+      paymentStatus: submitted.order.paymentStatus,
+      paymentMethod: submitted.order.paymentMethod,
+      canConfirmCash: canConfirmCashPayment(submitted.order.status, submitted.order.paymentStatus),
+    };
   }
 
   async listForWig(wigId: string, options: { includeInternal: boolean }) {

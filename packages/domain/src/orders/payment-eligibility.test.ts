@@ -5,6 +5,7 @@ import {
   canChooseCashPayment,
   canConfirmCashPayment,
   canReleaseEscrow,
+  nextTechnicianFollowUp,
 } from './payment-eligibility.js';
 
 describe('payment eligibility', () => {
@@ -35,5 +36,12 @@ describe('payment eligibility', () => {
     expect(canConfirmCashPayment(OrderStatus.ACCEPTED, 'CASH_PENDING')).toBe(false);
     expect(canConfirmCashPayment(OrderStatus.COMPLETED, 'UNPAID')).toBe(false);
     expect(canConfirmCashPayment(OrderStatus.COMPLETED, 'CAPTURED')).toBe(false);
+  });
+
+  it('sends the expert to cash confirm, otherwise lets the client capture', () => {
+    expect(nextTechnicianFollowUp(OrderStatus.COMPLETED, 'CASH_PENDING')).toBe('CONFIRM_CASH');
+    expect(nextTechnicianFollowUp(OrderStatus.COMPLETED, 'AUTHORIZED')).toBe('WAIT_CLIENT_CAPTURE');
+    expect(nextTechnicianFollowUp(OrderStatus.COMPLETED, 'CAPTURED')).toBe('DONE');
+    expect(nextTechnicianFollowUp(OrderStatus.ACCEPTED, 'CASH_PENDING')).toBe('DONE');
   });
 });

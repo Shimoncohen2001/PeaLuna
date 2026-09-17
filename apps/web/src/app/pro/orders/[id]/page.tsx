@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { calculatePlatformCommissionCents } from '@velure/domain';
 import { Button } from '@/components/ui/button';
 import { ApiClientError } from '@/lib/api-client';
@@ -50,17 +50,21 @@ type JobDetail = {
   };
   customer: { name: string; email: string; phone: string | null };
   services: { id: string; name: string; lineTotalCents: number }[];
-  media: JobMedia[];
+  media?: JobMedia[];
 };
 
 export default function ProOrderDetailPage() {
   const params = useParams<{ id: string }>();
   const { authFetch, user } = useAuth();
   const { t, locale, format } = useLocale();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [cashNote, setCashNote] = useState<string | null>(null);
+  const [careDone, setCareDone] = useState(false);
   const cashKeyRef = useRef(crypto.randomUUID());
+  const cashSectionRef = useRef<HTMLDivElement | null>(null);
+  const cashGuard = useRef(false);
   const isTech = user?.roles?.includes('TECHNICIAN');
   const dateLocale = intlLocale(locale);
 
@@ -70,6 +74,24 @@ export default function ProOrderDetailPage() {
     queryFn: () => authFetch<JobDetail>(`/api/v1/technicians/me/orders/${params.id}`),
     retry: false,
   });
+
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    const fromCare = query.get('done') === 'care';
+    const highlightCash = query.get('next') === 'cash';
+    if (fromCare) setCareDone(true);
+    if (highlightCash) {
+      window.setTimeout(() => {
+        cashSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 200);
+    }
+    if (fromCare || highlightCash) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('done');
+      url.searchParams.delete('next');
+      window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+    }
+  }, []);
 
   const invalidate = async () => {
     await queryClient.invalidateQueries({ queryKey: ['pro-order', params.id] });
@@ -90,12 +112,27 @@ export default function ProOrderDetailPage() {
   });
 
   const confirmCash = useMutation({
-    mutationFn: () =>
-      authFetch<{ commissionDueCents: number; currency: string }>(
-        `/api/v1/technicians/me/orders/${params.id}/payments/cash-received`,
-        { method: 'POST', headers: { 'Idempotency-Key': cashKeyRef.current } },
-      ),
+    mutationFn: async () => {
+      try {
+        return await authFetch<{ commissionDueCents: number; currency: string }>(
+          `/api/v1/technicians/me/orders/${params.id}/payments/cash-received`,
+          { method: 'POST', headers: { 'Idempotency-Key': cashKeyRef.current } },
+        );
+      } catch (err) {
+        if (
+          err instanceof ApiClientError &&
+          (err.code === 'CASH_ALREADY_CONFIRMED' || err.code === 'ALREADY_PAID')
+        ) {
+          return {
+            commissionDueCents: calculatePlatformCommissionCents(job.data?.totalCents ?? 0),
+            currency: job.data?.currency ?? 'ILS',
+          };
+        }
+        throw err;
+      }
+    },
     onSuccess: async (result) => {
+      cashGuard.current = false;
       setError(null);
       setCashNote(
         `${t.cash.expertConfirmed} ${format(t.cash.expertDue, {
@@ -103,8 +140,12 @@ export default function ProOrderDetailPage() {
         })}`,
       );
       await invalidate();
+      window.setTimeout(() => {
+        router.replace('/pro');
+      }, 1600);
     },
     onError: (err) => {
+      cashGuard.current = false;
       setError(err instanceof ApiClientError ? err.message : t.cash.failed);
     },
   });
@@ -140,6 +181,11 @@ export default function ProOrderDetailPage() {
       </div>
 
       {error ? <p className="text-sm text-red-300">{error}</p> : null}
+      {careDone ? (
+        <p className="rounded-xl border border-[#e8b4a2]/40 bg-[#e8b4a2]/10 px-4 py-3 text-sm text-[#f7efe8]">
+          {t.pro.careDoneBanner}
+        </p>
+      ) : null}
 
       <section className="rounded-2xl border border-white/10 bg-white/5 p-6">
         <BookingStatusTracker status={data.status} />
@@ -195,7 +241,11 @@ export default function ProOrderDetailPage() {
         </div>
 
         {data.paymentMethod === 'CASH' ? (
-          <div className="mt-4 space-y-3 rounded-lg border border-[#e8b4a2]/30 bg-[#e8b4a2]/5 p-4">
+          <div
+            ref={cashSectionRef}
+            id="cash-settle"
+            className="mt-4 space-y-3 rounded-lg border border-[#e8b4a2]/30 bg-[#e8b4a2]/5 p-4"
+          >
             {data.cashConfirmedAt ? (
               <p className="text-sm text-[#f7efe8]">{t.cash.expertConfirmed}</p>
             ) : (
@@ -211,29 +261,41 @@ export default function ProOrderDetailPage() {
               })}
             </p>
             {data.canConfirmCash ? (
-              <Button
-                variant="gold"
-                disabled={confirmCash.isPending}
-                onClick={() => {
-                  if (!window.confirm(t.cash.expertConfirmPrompt)) return;
-                  confirmCash.mutate();
-                }}
-              >
-                {confirmCash.isPending ? t.cash.expertConfirming : t.cash.expertConfirm}
-              </Button>
+              <>
+                <p className="text-xs text-white/50">{t.cash.expertConfirmPrompt}</p>
+                <Button
+                  variant="gold"
+                  className="w-full sm:w-auto"
+                  disabled={confirmCash.isPending || Boolean(cashNote)}
+                  onClick={() => {
+                    if (cashGuard.current || confirmCash.isPending) return;
+                    cashGuard.current = true;
+                    confirmCash.mutate();
+                  }}
+                >
+                  {confirmCash.isPending ? t.cash.expertConfirming : t.cash.expertConfirm}
+                </Button>
+              </>
             ) : null}
-            {cashNote ? <p className="text-sm text-[#e8b4a2]">{cashNote}</p> : null}
+            {cashNote ? (
+              <>
+                <p className="text-sm text-[#e8b4a2]">{cashNote}</p>
+                <Button variant="secondary" className="w-full sm:w-auto" onClick={() => router.replace('/pro')}>
+                  {t.pro.backToDashboard}
+                </Button>
+              </>
+            ) : null}
           </div>
         ) : null}
       </section>
 
       <section className="rounded-2xl border border-white/10 bg-white/5 p-6">
         <h2 className="font-display text-2xl text-[#f7efe8]">{t.job.photos}</h2>
-        {data.media.length === 0 ? (
+        {(data.media ?? []).length === 0 ? (
           <p className="mt-3 text-sm text-white/50">{t.job.noPhotos}</p>
         ) : (
           <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {data.media.map((item) => (
+            {(data.media ?? []).map((item) => (
               <li key={item.id} className="overflow-hidden rounded-lg border border-white/10">
                 {item.url && item.kind === 'video' ? (
                   <video src={item.url} className="h-36 w-full object-cover" controls />
@@ -284,9 +346,16 @@ export default function ProOrderDetailPage() {
           </Link>
         ) : null}
         {data.status === 'COMPLETED' ? (
-          <Link href={`/pro/orders/${data.id}/care`} className="text-sm text-[#e8b4a2] hover:underline">
-            {t.pro.viewCareSheet}
-          </Link>
+          <>
+            <Link href={`/pro/orders/${data.id}/care`} className="text-sm text-[#e8b4a2] hover:underline">
+              {t.pro.viewCareSheet}
+            </Link>
+            {!data.canConfirmCash ? (
+              <Link href="/pro" className="text-sm text-[#e8b4a2] hover:underline">
+                {t.pro.backToDashboard}
+              </Link>
+            ) : null}
+          </>
         ) : null}
       </div>
     </div>

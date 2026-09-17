@@ -60,3 +60,15 @@ export function canConfirmCashPayment(
 ): boolean {
   return status === OrderStatus.COMPLETED && paymentStatus === 'CASH_PENDING';
 }
+
+/** What the expert should do immediately after the care report is submitted. */
+export type TechnicianFollowUp = 'CONFIRM_CASH' | 'WAIT_CLIENT_CAPTURE' | 'DONE';
+
+export function nextTechnicianFollowUp(
+  status: OrderStatusType | string,
+  paymentStatus: string,
+): TechnicianFollowUp {
+  if (canConfirmCashPayment(status, paymentStatus)) return 'CONFIRM_CASH';
+  if (canReleaseEscrow(status, paymentStatus)) return 'WAIT_CLIENT_CAPTURE';
+  return 'DONE';
+}

@@ -418,6 +418,8 @@ export type Messages = {
     availabilityHint: string;
     closed: string;
     viewCareSheet: string;
+    careDoneBanner: string;
+    backToDashboard: string;
   };
   geo: {
     meters: string;
@@ -593,8 +595,7 @@ export const en: Messages = {
     expertPending: 'This client pays in cash. Confirm once you have the money in hand.',
     expertConfirm: 'I received the cash payment',
     expertConfirming: 'Confirming…',
-    expertConfirmPrompt:
-      'Confirm you received the full amount in cash? This closes the order and cannot be undone.',
+    expertConfirmPrompt: 'This confirms you received the full amount and closes the order.',
     expertDue: 'PeaLuna commission you owe on this cash order: {amount}',
     expertConfirmed: 'Cash payment confirmed — the order is settled.',
     optIn: 'I accept cash payments',
@@ -850,6 +851,8 @@ export const en: Messages = {
     availabilityHint: 'Set your weekly recurring slots.',
     closed: 'Closed',
     viewCareSheet: 'View care report',
+    careDoneBanner: 'Care completed successfully ✓',
+    backToDashboard: 'Back to dashboard',
   },
   geo: {
     meters: '{n} m',
@@ -1030,8 +1033,7 @@ export const fr: Messages = {
       'Cette cliente paie en espèces. Confirme une fois l’argent reçu en main propre.',
     expertConfirm: 'J’ai reçu le paiement en espèces',
     expertConfirming: 'Confirmation…',
-    expertConfirmPrompt:
-      'Confirmer la réception de la totalité du montant en espèces ? Cela solde la commande et n’est pas réversible.',
+    expertConfirmPrompt: 'Cela confirme que tu as reçu le montant et solde la commande.',
     expertDue: 'Commission PeaLuna à reverser sur cette commande en espèces : {amount}',
     expertConfirmed: 'Paiement en espèces confirmé — la commande est soldée.',
     optIn: 'J’accepte les paiements en espèces',
@@ -1288,6 +1290,8 @@ export const fr: Messages = {
     availabilityHint: 'Définis tes créneaux hebdomadaires (récurrent).',
     closed: 'Fermé',
     viewCareSheet: 'Voir la fiche de soin',
+    careDoneBanner: 'Soin terminé avec succès ✓',
+    backToDashboard: 'Retour au tableau de bord',
   },
   geo: {
     meters: '{n} m',
@@ -1463,8 +1467,7 @@ export const he: Messages = {
     expertPending: 'הלקוחה משלמת במזומן. אשרי לאחר שקיבלת את הכסף.',
     expertConfirm: 'קיבלתי את התשלום במזומן',
     expertConfirming: 'מאשר…',
-    expertConfirmPrompt:
-      'לאשר קבלת מלוא הסכום במזומן? הפעולה סוגרת את ההזמנה ואינה הפיכה.',
+    expertConfirmPrompt: 'הפעולה מאשרת שקיבלת את הסכום וסוגרת את ההזמנה.',
     expertDue: 'עמלת PeaLuna שעליך להעביר על הזמנה זו: {amount}',
     expertConfirmed: 'התשלום במזומן אושר — ההזמנה סגורה.',
     optIn: 'אני מקבלת תשלומים במזומן',
@@ -1719,6 +1722,8 @@ export const he: Messages = {
     availabilityHint: 'הגדירי את המשבצות השבועיות הקבועות.',
     closed: 'סגור',
     viewCareSheet: 'צפייה בדוח הטיפול',
+    careDoneBanner: 'הטיפול הסתיים בהצלחה ✓',
+    backToDashboard: 'חזרה ללוח הבקרה',
   },
   geo: {
     meters: '{n} מ׳',

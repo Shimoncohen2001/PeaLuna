@@ -201,6 +201,14 @@ export type CareUi = {
   openFailed: string;
   savedTitle: string;
   savedHint: string;
+  finishSuccessTitle: string;
+  finishSuccessCash: string;
+  finishSuccessCard: string;
+  finishSuccessDone: string;
+  redirecting: string;
+  nextCash: string;
+  nextDashboard: string;
+  nextJob: string;
   general: string;
   weightBefore: string;
   wigAge: string;
@@ -297,6 +305,14 @@ const CARE_UI: Record<Locale, CareUi> = {
     openFailed: 'Impossible d’ouvrir la fiche de soin.',
     savedTitle: 'Fiche de soin enregistrée',
     savedHint: 'Cette fiche est verrouillée dans l’historique de la perruque.',
+    finishSuccessTitle: 'Soin terminé avec succès ✓',
+    finishSuccessCash: 'Confirme maintenant que tu as bien reçu le paiement en espèces.',
+    finishSuccessCard: 'La cliente validera le paiement de son côté. Tu n’as rien d’autre à faire.',
+    finishSuccessDone: 'Ce rendez-vous est clos. Tu peux revenir à tes prochains soins.',
+    redirecting: 'Redirection…',
+    nextCash: 'Confirmer le paiement',
+    nextDashboard: 'Tableau de bord',
+    nextJob: 'Voir le rendez-vous',
     general: 'État général',
     weightBefore: 'Poids avant (g)',
     wigAge: 'Âge de la perruque (années)',
@@ -340,7 +356,7 @@ const CARE_UI: Record<Locale, CareUi> = {
     photosCount: 'Photos avant {before} · après {after}',
     adviceLine: 'Conseils : {text}',
     toComplete: 'à compléter',
-    lockHint: 'La fiche sera verrouillée après validation.',
+    lockHint: '« Terminer le soin » enregistre la fiche et clôture le rendez-vous.',
     confirmSubmit: 'Valider et terminer ce soin ? La fiche sera verrouillée dans l’historique.',
     validating: 'Validation…',
     finishCare: 'Terminer le soin',
@@ -392,6 +408,14 @@ const CARE_UI: Record<Locale, CareUi> = {
     openFailed: 'Could not open the care report.',
     savedTitle: 'Care report saved',
     savedHint: 'This report is locked in the wig history.',
+    finishSuccessTitle: 'Care completed successfully ✓',
+    finishSuccessCash: 'Confirm now that you received the cash payment.',
+    finishSuccessCard: 'The client will validate payment on their side. You’re done here.',
+    finishSuccessDone: 'This appointment is closed. You can go back to your next jobs.',
+    redirecting: 'Redirecting…',
+    nextCash: 'Confirm payment',
+    nextDashboard: 'Dashboard',
+    nextJob: 'View appointment',
     general: 'Overall condition',
     weightBefore: 'Weight before (g)',
     wigAge: 'Wig age (years)',
@@ -435,7 +459,7 @@ const CARE_UI: Record<Locale, CareUi> = {
     photosCount: 'Photos before {before} · after {after}',
     adviceLine: 'Advice: {text}',
     toComplete: 'to complete',
-    lockHint: 'The report will be locked after validation.',
+    lockHint: '“Finish care” saves the report and closes the appointment.',
     confirmSubmit: 'Validate and finish this care? The report will be locked in the history.',
     validating: 'Validating…',
     finishCare: 'Finish care',
@@ -486,6 +510,14 @@ const CARE_UI: Record<Locale, CareUi> = {
     openFailed: 'לא ניתן לפתוח את דוח הטיפול.',
     savedTitle: 'דוח הטיפול נשמר',
     savedHint: 'הדוח נעול בהיסטוריית הפאה.',
+    finishSuccessTitle: 'הטיפול הסתיים בהצלחה ✓',
+    finishSuccessCash: 'אשרי עכשיו שקיבלת את התשלום במזומן.',
+    finishSuccessCard: 'הלקוחה תאשר את התשלום מצדה. אין לך מה לעשות עכשיו.',
+    finishSuccessDone: 'התור נסגר. אפשר לחזור לטיפולים הבאים.',
+    redirecting: 'מעבירה…',
+    nextCash: 'אישור תשלום',
+    nextDashboard: 'לוח בקרה',
+    nextJob: 'צפייה בתור',
     general: 'מצב כללי',
     weightBefore: 'משקל לפני (ג׳)',
     wigAge: 'גיל הפאה (שנים)',
@@ -529,7 +561,7 @@ const CARE_UI: Record<Locale, CareUi> = {
     photosCount: 'תמונות לפני {before} · אחרי {after}',
     adviceLine: 'המלצות: {text}',
     toComplete: 'להשלים',
-    lockHint: 'הדוח יינעל אחרי האישור.',
+    lockHint: '«סיום הטיפול» שומר את הדוח וסוגר את התור.',
     confirmSubmit: 'לאשר ולסיים את הטיפול? הדוח יינעל בהיסטוריה.',
     validating: 'מאשר…',
     finishCare: 'סיום הטיפול',
