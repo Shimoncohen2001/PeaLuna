@@ -26,7 +26,7 @@ export default function HomePage() {
     <>
       <Header />
       <main className="pt-16">
-        <section className="relative overflow-hidden px-6 pb-24 pt-20 md:pt-32">
+        <section className="relative overflow-hidden px-4 pb-16 pt-16 sm:px-6 sm:pb-24 sm:pt-20 md:pt-32">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-blush/40 to-transparent" />
           <motion.div
             className="relative mx-auto max-w-4xl text-center"
@@ -42,25 +42,25 @@ export default function HomePage() {
             </motion.p>
             <motion.h1
               variants={fadeUp}
-              className="font-display text-5xl leading-tight text-ink md:text-7xl"
+              className="font-display text-4xl leading-tight text-ink sm:text-5xl md:text-7xl"
             >
               {t.home.titleLine1}
               <span className="block text-champagne">{t.home.titleAccent}</span>
             </motion.h1>
-            <motion.p variants={fadeUp} className="mx-auto mt-6 max-w-2xl text-lg text-muted">
+            <motion.p variants={fadeUp} className="mx-auto mt-6 max-w-2xl text-base text-muted sm:text-lg">
               {t.home.subtitle}
             </motion.p>
             <motion.div
               variants={fadeUp}
-              className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
+              className="mt-10 flex w-full flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4"
             >
-              <a href="/register">
-                <Button variant="primary" size="lg">
+              <a href="/register" className="w-full max-w-xs sm:w-auto">
+                <Button variant="primary" size="lg" className="w-full">
                   {t.home.ctaBook}
                 </Button>
               </a>
-              <a href="/pro">
-                <Button variant="secondary" size="lg">
+              <a href="/pro" className="w-full max-w-xs sm:w-auto">
+                <Button variant="secondary" size="lg" className="w-full">
                   {t.home.ctaBecomeExpert}
                 </Button>
               </a>
@@ -68,7 +68,7 @@ export default function HomePage() {
           </motion.div>
         </section>
 
-        <section id="trust" className="border-t border-ink/5 bg-ink px-6 py-20 text-warm-white">
+        <section id="trust" className="border-t border-ink/5 bg-ink px-4 py-16 text-warm-white sm:px-6 sm:py-20">
           <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-3">
             {trustItems.map(({ icon: Icon, title, desc }) => (
               <motion.article
@@ -76,7 +76,7 @@ export default function HomePage() {
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="rounded-[var(--radius-card)] border border-warm-white/10 p-8"
+                className="rounded-[var(--radius-card)] border border-warm-white/10 p-6 sm:p-8"
               >
                 <Icon className="mb-4 h-8 w-8 text-champagne" aria-hidden />
                 <h3 className="font-display text-xl">{title}</h3>
@@ -86,9 +86,9 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="how-it-works" className="px-6 py-24">
+        <section id="how-it-works" className="px-4 py-16 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-3xl text-center">
-            <h2 className="font-display text-4xl text-ink">{t.home.howTitle}</h2>
+            <h2 className="font-display text-3xl text-ink sm:text-4xl">{t.home.howTitle}</h2>
             <ol className="mt-12 space-y-8 text-left rtl:text-right">
               {steps.map((step, i) => (
                 <li key={step} className="flex gap-4">
@@ -102,7 +102,7 @@ export default function HomePage() {
           </div>
         </section>
       </main>
-      <footer className="border-t border-ink/5 px-6 py-8 text-center text-sm text-muted">
+      <footer className="border-t border-ink/5 px-4 py-8 text-center text-sm text-muted sm:px-6">
         © {new Date().getFullYear()} {t.brand} · Israel
       </footer>
     </>

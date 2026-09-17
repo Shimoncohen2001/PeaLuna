@@ -8,6 +8,14 @@ export const LOCALE_LABELS: Record<Locale, string> = {
   he: 'עברית',
 };
 
+export const LOCALE_CODES: Record<Locale, string> = {
+  fr: 'FR',
+  en: 'EN',
+  he: 'HE',
+};
+
+export const LOCALE_SWITCH_ORDER: Locale[] = ['fr', 'en', 'he'];
+
 export const LOCALE_STORAGE_KEY = 'pealuna.locale';
 
 export type Messages = {

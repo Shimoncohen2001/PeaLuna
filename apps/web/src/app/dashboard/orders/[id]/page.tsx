@@ -217,7 +217,7 @@ export default function OrderDetailPage() {
         <p className="text-sm uppercase tracking-[0.15em] text-champagne">
           {formatStatus(data.status, t.status)}
         </p>
-        <h1 className="font-display text-4xl text-ink">{data.orderNumber}</h1>
+        <h1 className="font-display text-3xl text-ink sm:text-4xl">{data.orderNumber}</h1>
         <p className="mt-2 text-muted">{data.wigName}</p>
         {data.scheduledAt ? (
           <p className="mt-1 text-sm text-muted">
@@ -264,7 +264,7 @@ export default function OrderDetailPage() {
           </p>
         ) : null}
 
-        <div className="mt-4 flex flex-wrap gap-3">
+        <div className="action-row mt-4">
           {canShowPayButtons ? (
             <>
               {allowSimulation ? (
@@ -375,7 +375,7 @@ export default function OrderDetailPage() {
       ) : null}
 
       {customerActions.length > 0 ? (
-        <section className="flex flex-wrap gap-3">
+        <section className="action-row">
           {customerActions.map((act) => (
             <Button
               key={act}

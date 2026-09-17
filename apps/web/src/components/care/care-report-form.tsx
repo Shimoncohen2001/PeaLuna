@@ -1008,7 +1008,7 @@ export function CareReportForm({ orderId }: { orderId: string }) {
         </section>
       ) : null}
 
-      <div className="flex flex-wrap gap-3">
+      <div className="action-row">
         {step > 0 ? (
           <Button variant="secondary" onClick={() => setStep((s) => s - (s === 4 && !needsHair ? 2 : 1))}>
             {t.common.back}

@@ -27,13 +27,13 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-display text-4xl text-ink">
+        <h1 className="font-display text-3xl text-ink sm:text-4xl">
           {format(t.dashboard.hello, { name: user?.firstName ?? '' })}
         </h1>
         <p className="mt-2 text-muted">{t.dashboard.subtitle}</p>
       </div>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="action-row">
         <Link href="/dashboard/book">
           <Button variant="primary">{t.dashboard.bookCare}</Button>
         </Link>

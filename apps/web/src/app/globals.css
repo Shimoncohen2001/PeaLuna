@@ -26,6 +26,14 @@
   body {
     @apply bg-warm-white text-ink antialiased;
     font-family: var(--font-body);
+    overflow-x: clip;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
   }
 
   html[dir='rtl'] body {
@@ -51,5 +59,20 @@
 
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-champagne;
+  }
+}
+
+@layer components {
+  .action-row {
+    @apply flex flex-col gap-3 sm:flex-row sm:flex-wrap;
+  }
+
+  .action-row > button,
+  .action-row > a {
+    @apply w-full sm:w-auto;
+  }
+
+  .action-row > a > button {
+    @apply w-full;
   }
 }

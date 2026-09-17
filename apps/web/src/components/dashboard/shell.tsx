@@ -58,37 +58,49 @@ export function DashboardShell({
     >
       <header
         className={cn(
-          'border-b backdrop-blur-md',
+          'sticky top-0 z-40 border-b backdrop-blur-md',
           variant === 'pro' ? 'border-white/10 bg-[#120d0f]/80' : 'border-ink/5 bg-warm-white/80',
         )}
       >
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+        <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-3 sm:h-16 sm:gap-3 sm:px-6 sm:py-0">
           <Link
             href={variant === 'pro' ? '/pro' : '/dashboard'}
-            className={cn('font-display text-2xl', variant === 'pro' ? 'text-[#e8b4a2]' : 'text-ink')}
+            className={cn(
+              'shrink-0 font-display text-xl sm:text-2xl',
+              variant === 'pro' ? 'text-[#e8b4a2]' : 'text-ink',
+            )}
           >
             {t.brand}
           </Link>
-          <div className="flex items-center gap-3">
-            <LanguageSwitcher variant={variant === 'pro' ? 'dark' : 'light'} />
+          <div className="ml-auto flex min-w-0 items-center justify-end gap-2 sm:gap-3">
+            <LanguageSwitcher />
             {variant === 'customer' && isAdmin ? (
-              <Link href="/admin" className="text-sm text-champagne hover:underline">
+              <Link
+                href="/admin"
+                className="hidden text-sm text-champagne hover:underline sm:inline"
+              >
                 {t.nav.admin}
               </Link>
             ) : null}
             {variant === 'customer' && isPro ? (
-              <Link href="/pro" className="text-sm text-champagne hover:underline">
+              <Link
+                href="/pro"
+                className="hidden text-sm text-champagne hover:underline sm:inline"
+              >
                 {t.nav.proSpace}
               </Link>
             ) : null}
             {variant === 'pro' ? (
-              <Link href="/dashboard" className="text-sm text-[#e8b4a2] hover:underline">
+              <Link
+                href="/dashboard"
+                className="hidden text-sm text-[#e8b4a2] hover:underline sm:inline"
+              >
                 {t.nav.clientSpace}
               </Link>
             ) : null}
             <span
               className={cn(
-                'hidden text-sm sm:inline',
+                'hidden text-sm lg:inline',
                 variant === 'pro' ? 'text-white/60' : 'text-muted',
               )}
             >
@@ -97,6 +109,7 @@ export function DashboardShell({
             <Button
               variant={variant === 'pro' ? 'secondary' : 'ghost'}
               size="sm"
+              className="shrink-0"
               onClick={() => void logout()}
             >
               {t.nav.logout}
@@ -104,8 +117,11 @@ export function DashboardShell({
           </div>
         </div>
       </header>
-      <div className="mx-auto grid max-w-6xl gap-8 px-6 py-8 md:grid-cols-[200px_1fr]">
-        <nav className="flex flex-row gap-2 overflow-x-auto md:flex-col" aria-label="Dashboard">
+      <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 sm:px-6 sm:py-8 md:grid-cols-[200px_1fr] md:gap-8">
+        <nav
+          className="-mx-4 flex flex-row gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-col md:overflow-visible md:px-0 md:pb-0"
+          aria-label="Dashboard"
+        >
           {nav.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
@@ -113,7 +129,7 @@ export function DashboardShell({
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'whitespace-nowrap rounded-lg px-3 py-2 text-sm transition-colors',
+                  'shrink-0 whitespace-nowrap rounded-lg px-3 py-2.5 text-sm transition-colors',
                   variant === 'pro'
                     ? active
                       ? 'bg-[#e8b4a2] text-[#1a1214]'
@@ -128,7 +144,7 @@ export function DashboardShell({
             );
           })}
         </nav>
-        <main>{children}</main>
+        <main className="min-w-0">{children}</main>
       </div>
     </div>
   );

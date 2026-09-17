@@ -18,13 +18,13 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="font-display text-4xl text-ink">{t.orders.title}</h1>
+          <h1 className="font-display text-3xl text-ink sm:text-4xl">{t.orders.title}</h1>
           <p className="mt-2 text-muted">{t.orders.subtitle}</p>
         </div>
-        <Link href="/dashboard/book">
-          <Button variant="primary">{t.orders.newBooking}</Button>
+        <Link href="/dashboard/book" className="w-full sm:w-auto">
+          <Button variant="primary" className="w-full sm:w-auto">{t.orders.newBooking}</Button>
         </Link>
       </div>
 

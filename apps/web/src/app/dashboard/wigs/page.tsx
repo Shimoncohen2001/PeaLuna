@@ -80,12 +80,12 @@ export default function WigsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="font-display text-4xl text-ink">{t.wigs.title}</h1>
+          <h1 className="font-display text-3xl text-ink sm:text-4xl">{t.wigs.title}</h1>
           <p className="mt-2 text-muted">{t.wigs.subtitle}</p>
         </div>
-        <Button variant="primary" onClick={() => setOpen((v) => !v)}>
+        <Button variant="primary" className="w-full sm:w-auto" onClick={() => setOpen((v) => !v)}>
           {open ? t.common.cancel : t.wigs.add}
         </Button>
       </div>

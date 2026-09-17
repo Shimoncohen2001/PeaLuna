@@ -9,8 +9,8 @@ export function Header() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-ink/5 bg-warm-white/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-        <Link href="/" className="font-display text-2xl tracking-tight text-ink">
+      <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 sm:justify-between sm:px-6">
+        <Link href="/" className="shrink-0 font-display text-xl tracking-tight text-ink sm:text-2xl">
           {t.brand}
         </Link>
         <nav className="hidden items-center gap-8 text-sm text-muted md:flex" aria-label="Main">
@@ -24,17 +24,17 @@ export function Header() {
             {t.nav.trust}
           </Link>
         </nav>
-        <div className="flex items-center gap-3">
+        <div className="ml-auto flex min-w-0 items-center justify-end gap-2 sm:gap-3">
           <LanguageSwitcher />
           <Link
             href="/login"
-            className="inline-flex h-9 items-center px-4 text-sm text-ink hover:text-champagne"
+            className="hidden h-9 items-center px-3 text-sm text-ink hover:text-champagne sm:inline-flex"
           >
             {t.nav.signIn}
           </Link>
           <Link
             href="/register"
-            className="inline-flex h-9 items-center rounded-full bg-champagne px-4 text-sm font-medium text-ink shadow-soft hover:bg-champagne-light"
+            className="inline-flex h-9 shrink-0 items-center rounded-full bg-champagne px-3 text-xs font-medium text-ink shadow-soft hover:bg-champagne-light sm:px-4 sm:text-sm"
           >
             {t.nav.bookRepair}
           </Link>

@@ -208,15 +208,15 @@ export default function BookPage() {
     <div className="space-y-8">
       <div>
         <p className="text-sm uppercase tracking-[0.2em] text-champagne">{t.book.eyebrow}</p>
-        <h1 className="font-display text-4xl text-ink">{t.book.title}</h1>
+        <h1 className="font-display text-3xl text-ink sm:text-4xl">{t.book.title}</h1>
         <p className="mt-2 text-muted">{t.book.subtitle}</p>
       </div>
 
-      <ol className="flex flex-wrap gap-2">
+      <ol className="-mx-1 flex flex-nowrap gap-2 overflow-x-auto pb-1 sm:flex-wrap">
         {STEPS.map((label, i) => (
           <li
             key={label}
-            className={`rounded-full px-3 py-1 text-sm ${
+            className={`shrink-0 rounded-full px-3 py-1 text-sm ${
               i === step
                 ? 'bg-ink text-warm-white'
                 : i < step
@@ -497,7 +497,7 @@ export default function BookPage() {
 
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
 
-      <div className="flex gap-3">
+      <div className="action-row">
         {step > 0 ? (
           <Button variant="secondary" onClick={() => setStep((s) => s - 1)}>
             {t.common.back}

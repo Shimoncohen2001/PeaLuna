@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { LanguageSwitcher } from '@/components/i18n/language-switcher';
 import { ApiClientError } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
 import { useLocale } from '@/lib/i18n/locale';
@@ -45,8 +46,11 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blush/30 to-warm-white px-6 py-12">
-      <div className="w-full max-w-md rounded-[var(--radius-card)] border border-ink/5 bg-warm-white p-8 shadow-elevated">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blush/30 to-warm-white px-4 py-8 sm:px-6 sm:py-12">
+      <div className="w-full max-w-md rounded-[var(--radius-card)] border border-ink/5 bg-warm-white p-5 shadow-elevated sm:p-8">
+        <div className="mb-4 flex justify-end">
+          <LanguageSwitcher />
+        </div>
         <h1 className="font-display text-3xl text-ink">{t.auth.joinTitle}</h1>
         <p className="mt-2 text-sm text-muted">{t.auth.joinSubtitle}</p>
         <form className="mt-8 space-y-4" onSubmit={onSubmit}>

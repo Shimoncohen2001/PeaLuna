@@ -55,8 +55,8 @@ function LoginForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blush/30 to-warm-white px-6">
-      <div className="w-full max-w-md rounded-[var(--radius-card)] border border-ink/5 bg-warm-white p-8 shadow-elevated">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blush/30 to-warm-white px-4 py-8 sm:px-6">
+      <div className="w-full max-w-md rounded-[var(--radius-card)] border border-ink/5 bg-warm-white p-5 shadow-elevated sm:p-8">
         <div className="flex justify-end">
           <LanguageSwitcher />
         </div>
