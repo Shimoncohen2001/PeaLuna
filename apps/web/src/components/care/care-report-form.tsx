@@ -21,8 +21,8 @@ import {
 } from '@/lib/i18n/care';
 import { useLocale } from '@/lib/i18n/locale';
 import { uploadWigMedia } from '@/lib/upload-media';
-import { OrderWorkflowChecklist, incompleteRequiredSteps } from '@/components/care/order-workflow-checklist';
-import { HAIR_ADD_CODES, type OrderWorkflowStepDto, type SkillDto } from '@velure/contracts';
+import { OrderWorkflowChecklist } from '@/components/care/order-workflow-checklist';
+import { HAIR_ADD_CODES, type SkillDto } from '@velure/contracts';
 
 type Photo = {
   id: string;
@@ -160,12 +160,6 @@ export function CareReportForm({ orderId }: { orderId: string }) {
   const job = useQuery({
     queryKey: ['pro-order', orderId],
     queryFn: () => authFetch<JobBrief>(`/api/v1/technicians/me/orders/${orderId}`),
-  });
-
-  const workflow = useQuery({
-    queryKey: ['order-workflow', orderId],
-    queryFn: () =>
-      authFetch<OrderWorkflowStepDto[]>(`/api/v1/technicians/me/orders/${orderId}/workflow`),
   });
 
   const catalogSkills = useQuery({
@@ -374,9 +368,6 @@ export function CareReportForm({ orderId }: { orderId: string }) {
         return ui.errBefore;
       }
     }
-    if (current === 1 && beforePhotos.length === 0) {
-      return ui.errBeforePhoto;
-    }
     if (current === 2 && selectedOps.length === 0) {
       return ui.errOps;
     }
@@ -403,9 +394,6 @@ export function CareReportForm({ orderId }: { orderId: string }) {
       ) {
         return ui.errAfter;
       }
-    }
-    if (current === 5 && afterPhotos.length === 0) {
-      return ui.errAfterPhoto;
     }
     if (current === 6) {
       const adviceOk = [
@@ -491,6 +479,15 @@ export function CareReportForm({ orderId }: { orderId: string }) {
       </ol>
 
       {error ? <p className="text-sm text-red-300">{error}</p> : null}
+
+      {step < STEPS.length - 1 ? (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[#e8b4a2]/40 bg-[#e8b4a2]/10 p-3">
+          <p className="min-w-0 flex-1 text-sm font-medium text-[#f7efe8]">{STEPS[step]}</p>
+          <Button variant="secondary" className="min-h-11" onClick={() => void goNext(true)}>
+            {t.pro.skipStep}
+          </Button>
+        </div>
+      ) : null}
 
       {step === 0 ? (
         <section className="grid gap-4 rounded-2xl border border-white/10 bg-white/5 p-6 sm:grid-cols-2">
@@ -679,6 +676,8 @@ export function CareReportForm({ orderId }: { orderId: string }) {
           phase={step === 1 ? 'BEFORE' : 'AFTER'}
           photos={step === 1 ? beforePhotos : afterPhotos}
           busy={busyUpload || locked}
+          skipLabel={t.pro.skipStep}
+          onSkip={() => void goNext(true)}
           onPick={(angle, file) => void upload(step === 1 ? 'BEFORE' : 'AFTER', angle, file)}
         />
       ) : null}
@@ -1019,7 +1018,7 @@ export function CareReportForm({ orderId }: { orderId: string }) {
               {t.common.continue}
             </Button>
             <Button variant="secondary" onClick={() => void goNext(true)}>
-              {t.common.skip}
+              {t.pro.skipStep}
             </Button>
           </>
         ) : (
@@ -1029,10 +1028,6 @@ export function CareReportForm({ orderId }: { orderId: string }) {
             disabled={submit.isPending || submit.isSuccess}
             onClick={() => {
               if (submitGuard.current || submit.isPending) return;
-              if (incompleteRequiredSteps(workflow.data).length > 0) {
-                setError(t.pro.workflowIncomplete);
-                return;
-              }
               submitGuard.current = true;
               submit.mutate();
             }}
@@ -1100,11 +1095,15 @@ function PhotoGrid({
   phase,
   photos,
   busy,
+  skipLabel,
+  onSkip,
   onPick,
 }: {
   phase: 'BEFORE' | 'AFTER';
   photos: Photo[];
   busy: boolean;
+  skipLabel: string;
+  onSkip: () => void;
   onPick: (angle: string, file: File) => void;
 }) {
   const { locale } = useLocale();
@@ -1113,10 +1112,17 @@ function PhotoGrid({
   const extras = photos.filter((p) => p.angle === 'EXTRA');
   return (
     <section className="rounded-2xl border border-white/10 bg-white/5 p-6">
-      <h2 className="font-display text-2xl text-[#f7efe8]">
-        {phase === 'BEFORE' ? ui.photosBefore : ui.photosAfter}
-      </h2>
-      <p className="mt-1 text-xs text-white/45">{ui.cameraHint}</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="font-display text-2xl text-[#f7efe8]">
+            {phase === 'BEFORE' ? ui.photosBefore : ui.photosAfter}
+          </h2>
+          <p className="mt-1 text-xs text-white/45">{ui.cameraHint}</p>
+        </div>
+        <Button variant="secondary" className="min-h-11 shrink-0" type="button" onClick={onSkip}>
+          {skipLabel}
+        </Button>
+      </div>
       <ul className="mt-4 grid gap-3 sm:grid-cols-3">
         {angles.map((angle) => {
           const shot = photos.find((p) => p.angle === angle);

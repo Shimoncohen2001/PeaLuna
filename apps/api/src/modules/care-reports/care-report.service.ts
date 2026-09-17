@@ -6,7 +6,6 @@ import { requireApprovedTechnicianProfile } from '../../lib/access.js';
 import { updateOrderIfVersion } from '../../lib/order-lock.js';
 import { mediaPublicUrl } from '../media/media-url.js';
 import { createS3Client } from '../media/s3.js';
-import { CatalogService } from '../catalog/catalog.service.js';
 
 const HAIR_CODES = new Set<string>(HAIR_ADD_CODES);
 
@@ -88,16 +87,6 @@ export class CareReportService {
   async submit(userId: string, orderId: string, input: SaveCareReportInput) {
     const report = await this.getWritable(userId, orderId);
     const operations = input.operations ?? [];
-    const errors = this.validateSubmit();
-    if (errors.length > 0) {
-      throw Object.assign(new Error(errors[0]), {
-        statusCode: 400,
-        code: 'CARE_REPORT_INCOMPLETE',
-        details: errors,
-      });
-    }
-
-    await new CatalogService().assertRequiredComplete(orderId);
 
     const submitted = await prisma.$transaction(async (tx) => {
       if (input.operations) {
@@ -386,10 +375,6 @@ export class CareReportService {
       nextCareAt: input.nextCareAt ? new Date(input.nextCareAt) : undefined,
       otherAdvice: input.otherAdvice ?? undefined,
     };
-  }
-
-  private validateSubmit(): string[] {
-    return [];
   }
 
   private async mapFull(report: ReportRow, includeInternal: boolean) {

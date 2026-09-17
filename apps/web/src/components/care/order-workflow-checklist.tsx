@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { OrderWorkflowStepDto } from '@velure/contracts';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
 import { useLocale } from '@/lib/i18n/locale';
 
@@ -88,16 +89,18 @@ export function OrderWorkflowChecklist({
               </span>
             </label>
             {!step.completed && !locked ? (
-              <button
+              <Button
                 type="button"
-                className="mt-2 text-xs text-[#e8b4a2] hover:underline"
+                variant="secondary"
+                size="sm"
+                className="mt-2"
                 disabled={save.isPending}
                 onClick={() =>
                   commit(local.map((s) => (s.id === step.id ? { ...s, completed: true } : s)))
                 }
               >
                 {t.pro.skipStep}
-              </button>
+              </Button>
             ) : null}
             {step.inputKind === 'TEXT' ? (
               <textarea
