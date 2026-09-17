@@ -19,7 +19,7 @@ import { PaymentService } from '../payments/payment.service.js';
 
 type OrderWithRelations = Prisma.RepairOrderGetPayload<{
   include: {
-    lineItems: true;
+    lineItems: { include: { serviceType: { select: { slug: true; name: true } } } };
     wig: { select: { id: true; name: true } };
     review: { select: { id: true } };
     technician: { select: { acceptsCashPayment: true } };
@@ -28,7 +28,7 @@ type OrderWithRelations = Prisma.RepairOrderGetPayload<{
 }>;
 
 const orderDetailInclude = {
-  lineItems: true,
+  lineItems: { include: { serviceType: { select: { slug: true, name: true } } } },
   wig: { select: { id: true, name: true } },
   review: { select: { id: true } },
   technician: { select: { acceptsCashPayment: true } },
@@ -64,7 +64,8 @@ function mapOrder(order: OrderWithRelations, actorRoles: Role[]) {
     lineItems: order.lineItems.map((li) => ({
       id: li.id,
       serviceTypeId: li.serviceTypeId,
-      serviceName: li.description ?? 'Service',
+      serviceSlug: li.serviceType.slug,
+      serviceName: li.description ?? li.serviceType.name ?? 'Service',
       quantity: li.quantity,
       unitPriceCents: li.unitPriceCents,
       lineTotalCents: li.totalCents,

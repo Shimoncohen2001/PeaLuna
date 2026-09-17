@@ -8,6 +8,7 @@ import { formatMoney, formatStatus, intlLocale } from '@/lib/format';
 import { Button } from '@/components/ui/button';
 import { SparkArea } from '@/components/charts/spark-area';
 import { useLocale } from '@/lib/i18n/locale';
+import { catalogServiceLabels } from '@/lib/i18n/catalog';
 
 type DashboardData = {
   stats: {
@@ -161,7 +162,7 @@ export default function ProDashboardPage() {
                   <div>
                     <p className="font-medium text-[#f7efe8]">{rdv.customerName}</p>
                     <p className="text-sm text-white/50">
-                      {rdv.services.join(', ')} · {formatStatus(rdv.status, t.status)}
+                      {catalogServiceLabels(locale, rdv.services).join(', ')} · {formatStatus(rdv.status, t.status)}
                     </p>
                     <p className="text-xs text-white/40">
                       {rdv.scheduledAt

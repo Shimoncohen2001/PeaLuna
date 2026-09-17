@@ -9,6 +9,7 @@ import { ApiClientError } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
 import { useLocale } from '@/lib/i18n/locale';
 import { formatStatus } from '@/lib/format';
+import { catalogServiceName, catalogSkillName } from '@/lib/i18n/catalog';
 import type { AddressValue } from '@/components/maps/address-picker';
 
 const AddressPicker = dynamic(
@@ -37,7 +38,7 @@ type TechProfile = {
 
 export default function ProApplyPage() {
   const { authFetch, user, refreshSession } = useAuth();
-  const { t, format } = useLocale();
+  const { t, format, locale } = useLocale();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
@@ -330,7 +331,7 @@ export default function ProApplyPage() {
                         )
                       }
                     />
-                    {s.name}
+                    {catalogServiceName(locale, s.slug, s.name)}
                   </label>
                 </li>
               ))}
@@ -353,7 +354,7 @@ export default function ProApplyPage() {
                           )
                         }
                       />
-                      {s.name}
+                      {catalogSkillName(locale, s.slug, s.name)}
                     </label>
                   </li>
                 ))}

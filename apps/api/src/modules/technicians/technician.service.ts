@@ -471,7 +471,7 @@ export class TechnicianService {
         include: {
           wig: { select: { name: true } },
           customer: { include: { user: { select: { firstName: true, lastName: true } } } },
-          lineItems: true,
+          lineItems: { include: { serviceType: { select: { slug: true, name: true } } } },
         },
       }),
       prisma.repairOrder.findMany({
@@ -537,7 +537,7 @@ export class TechnicianService {
         venueType: o.venueType,
         wigName: o.wig.name,
         customerName: `${o.customer.user.firstName} ${o.customer.user.lastName}`,
-        services: o.lineItems.map((li) => li.description ?? 'Service'),
+        services: o.lineItems.map((li) => li.description ?? li.serviceType.name ?? 'Service'),
         totalCents: o.totalCents,
       })),
     };
@@ -556,7 +556,7 @@ export class TechnicianService {
         take: limit,
         include: {
           wig: { select: { name: true } },
-          lineItems: true,
+          lineItems: { include: { serviceType: { select: { slug: true, name: true } } } },
           customer: { include: { user: { select: { firstName: true, lastName: true } } } },
         },
       }),
@@ -574,7 +574,7 @@ export class TechnicianService {
         customerName: `${o.customer.user.firstName} ${o.customer.user.lastName}`,
         totalCents: o.totalCents,
         currency: o.currency,
-        services: o.lineItems.map((li) => li.description ?? 'Service'),
+        services: o.lineItems.map((li) => li.description ?? li.serviceType.name ?? 'Service'),
       })),
     };
   }
@@ -757,7 +757,7 @@ export class TechnicianService {
       return tx.repairOrder.findUniqueOrThrow({
         where: { id: created.id },
         include: {
-          lineItems: true,
+          lineItems: { include: { serviceType: { select: { slug: true, name: true } } } },
           wig: { select: { id: true, name: true } },
           technician: {
             include: { user: { select: { firstName: true, lastName: true } } },
@@ -782,7 +782,8 @@ export class TechnicianService {
       escrowNote:
         'En attente de confirmation de l’experte. Ensuite paiement escrow (fonds bloqués jusqu’à validation).',
       lineItems: order.lineItems.map((li) => ({
-        serviceName: li.description ?? 'Service',
+        serviceSlug: li.serviceType.slug,
+        serviceName: li.description ?? li.serviceType.name ?? 'Service',
         lineTotalCents: li.totalCents,
       })),
     };
@@ -861,7 +862,7 @@ export class TechnicianService {
       where: { id: orderId, technicianId: profile.id },
       include: {
         wig: true,
-        lineItems: true,
+        lineItems: { include: { serviceType: { select: { slug: true, name: true } } } },
         customer: { include: { user: { select: { firstName: true, lastName: true, email: true } } } },
       },
     });
@@ -912,7 +913,8 @@ export class TechnicianService {
       },
       services: order.lineItems.map((li) => ({
         id: li.id,
-        name: li.description ?? 'Service',
+        slug: li.serviceType.slug,
+        name: li.description ?? li.serviceType.name ?? 'Service',
         lineTotalCents: li.totalCents,
       })),
     };
@@ -988,8 +990,8 @@ export class TechnicianService {
         take: params.limit,
         include: {
           user: { select: { email: true, firstName: true, lastName: true } },
-          services: { include: { serviceType: { select: { name: true } } } },
-          skills: { include: { skill: { select: { name: true, isActive: true } } } },
+          services: { include: { serviceType: { select: { slug: true, name: true } } } },
+          skills: { include: { skill: { select: { slug: true, name: true, isActive: true } } } },
         },
       }),
     ]);

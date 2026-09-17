@@ -12,6 +12,7 @@ import { useAuth } from '@/lib/auth';
 import { useLocale } from '@/lib/i18n/locale';
 import { formatMoney, formatStatus, intlLocale } from '@/lib/format';
 import { BookingStatusTracker } from '@/components/booking/booking-status-tracker';
+import { catalogServiceName } from '@/lib/i18n/catalog';
 import { useState, useRef } from 'react';
 import type { Messages } from '@/lib/i18n/messages';
 
@@ -238,7 +239,7 @@ export default function OrderDetailPage() {
         <ul className="mt-4 space-y-2">
           {data.lineItems?.map((li) => (
             <li key={li.id} className="flex justify-between text-sm">
-              <span>{li.serviceName}</span>
+              <span>{catalogServiceName(locale, li.serviceSlug, li.serviceName)}</span>
               <span>{formatMoney(li.lineTotalCents, data.currency, locale)}</span>
             </li>
           ))}

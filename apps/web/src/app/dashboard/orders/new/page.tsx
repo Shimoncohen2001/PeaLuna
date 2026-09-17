@@ -10,6 +10,7 @@ import { ApiClientError } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
 import { formatMoney } from '@/lib/format';
 import { useLocale } from '@/lib/i18n/locale';
+import { catalogServiceDescription, catalogServiceName } from '@/lib/i18n/catalog';
 
 export default function NewOrderPage() {
   const { authFetch } = useAuth();
@@ -121,8 +122,12 @@ export default function NewOrderPage() {
                         className="mt-1"
                       />
                       <span className="flex-1">
-                        <span className="block font-medium text-ink">{service.name}</span>
-                        <span className="block text-sm text-muted">{service.description}</span>
+                        <span className="block font-medium text-ink">
+                          {catalogServiceName(locale, service.slug, service.name)}
+                        </span>
+                        <span className="block text-sm text-muted">
+                          {catalogServiceDescription(locale, service.slug, service.description)}
+                        </span>
                       </span>
                       <span className="text-sm text-ink">
                         {formatMoney(service.basePriceCents, service.currency, locale)}

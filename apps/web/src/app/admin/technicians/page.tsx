@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ApiClientError } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
 import { useLocale } from '@/lib/i18n/locale';
+import { catalogServiceLabels, catalogSkillLabels } from '@/lib/i18n/catalog';
 import { formatStatus } from '@/lib/format';
 
 type AdminTechnician = {
@@ -121,10 +122,14 @@ export default function AdminTechniciansPage() {
                 {formatStatus(expert.status)} · {new Date(expert.createdAt).toLocaleDateString(dateLocale)}
               </p>
               {expert.services.length > 0 ? (
-                <p className="mt-1 text-xs text-muted">{expert.services.join(' · ')}</p>
+                <p className="mt-1 text-xs text-muted">
+                  {catalogServiceLabels(locale, expert.services).join(' · ')}
+                </p>
               ) : null}
               {expert.skills?.length > 0 ? (
-                <p className="mt-1 text-xs text-champagne">{expert.skills.join(' · ')}</p>
+                <p className="mt-1 text-xs text-champagne">
+                  {catalogSkillLabels(locale, expert.skills).join(' · ')}
+                </p>
               ) : null}
             </div>
             {expert.status === 'UNDER_REVIEW' || expert.status === 'PENDING_APPLICATION' ? (

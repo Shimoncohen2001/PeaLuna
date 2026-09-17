@@ -12,6 +12,7 @@ import { useAuth } from '@/lib/auth';
 import { useLocale } from '@/lib/i18n/locale';
 import { formatMoney, formatStatus, intlLocale } from '@/lib/format';
 import { BookingStatusTracker } from '@/components/booking/booking-status-tracker';
+import { catalogServiceName } from '@/lib/i18n/catalog';
 
 type JobMedia = {
   id: string;
@@ -50,7 +51,7 @@ type JobDetail = {
     reference?: string;
   };
   customer: { name: string; email: string; phone: string | null };
-  services: { id: string; name: string; lineTotalCents: number }[];
+  services: { id: string; slug?: string; name: string; lineTotalCents: number }[];
   media?: JobMedia[];
 };
 
@@ -232,7 +233,7 @@ export default function ProOrderDetailPage() {
         <ul className="mt-3 space-y-2 text-sm">
           {data.services.map((s) => (
             <li key={s.id} className="flex justify-between text-white/70">
-              <span>{s.name}</span>
+              <span>{catalogServiceName(locale, s.slug, s.name)}</span>
               <span className="text-[#e8b4a2]">{formatMoney(s.lineTotalCents, data.currency, locale)}</span>
             </li>
           ))}

@@ -7,6 +7,7 @@ import { formatMoney, formatStatus, intlLocale } from '@/lib/format';
 import { Button } from '@/components/ui/button';
 import { ApiClientError } from '@/lib/api-client';
 import { useLocale } from '@/lib/i18n/locale';
+import { catalogServiceLabels } from '@/lib/i18n/catalog';
 import { useState } from 'react';
 
 type ProOrder = {
@@ -74,7 +75,7 @@ export default function ProOrdersPage() {
                 <Link href={`/pro/orders/${o.id}`} className="min-w-0 flex-1">
                   <p className="font-medium text-[#f7efe8]">{o.customerName}</p>
                   <p className="text-sm text-white/50">
-                    {o.orderNumber} · {o.services.join(', ')}
+                    {o.orderNumber} · {catalogServiceLabels(locale, o.services).join(', ')}
                   </p>
                   <p className="text-xs text-white/40">
                     {formatStatus(o.status, t.status)}

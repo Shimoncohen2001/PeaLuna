@@ -20,6 +20,7 @@ import {
   WEAR_OPTIONS,
   WIG_KIND_OPTIONS,
 } from '@/lib/i18n/care';
+import { catalogSkillName } from '@/lib/i18n/catalog';
 import { useLocale } from '@/lib/i18n/locale';
 import { uploadWigMedia } from '@/lib/upload-media';
 import { OrderWorkflowChecklist } from '@/components/care/order-workflow-checklist';
@@ -188,7 +189,10 @@ export function CareReportForm({ orderId }: { orderId: string }) {
   const locked = report.data?.status === 'SUBMITTED';
   const operationCatalog = useMemo(() => {
     if (catalogSkills.data && catalogSkills.data.length > 0) {
-      return catalogSkills.data.map((s) => ({ code: s.slug, label: s.name }));
+      return catalogSkills.data.map((s) => ({
+        code: s.slug,
+        label: catalogSkillName(locale, s.slug, s.name),
+      }));
     }
     return OPERATION_CODES.map((code) => ({ code, label: careLabel(locale, code) }));
   }, [catalogSkills.data, locale]);

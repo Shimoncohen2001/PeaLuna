@@ -13,6 +13,12 @@ import { useLocale } from '@/lib/i18n/locale';
 import { formatDistanceKm, formatMoney, intlLocale } from '@/lib/format';
 import { BookingMediaStep } from '@/components/booking/booking-media-step';
 import type { AddressValue } from '@/components/maps/address-picker';
+import {
+  catalogServiceCategory,
+  catalogServiceDescription,
+  catalogServiceName,
+  catalogSkillName,
+} from '@/lib/i18n/catalog';
 
 const ExpertsMap = dynamic(
   () => import('@/components/maps/experts-map').then((m) => m.ExpertsMap),
@@ -44,8 +50,8 @@ type TechnicianCard = {
   offersSalonService: boolean;
   latitude: number | null;
   longitude: number | null;
-  services: { id: string; name: string; basePriceCents: number }[];
-  skills?: { id: string; name: string }[];
+  services: { id: string; slug?: string; name: string; basePriceCents: number }[];
+  skills?: { id: string; slug?: string; name: string }[];
 };
 
 type BookingResult = {
@@ -245,10 +251,14 @@ export default function BookPage() {
                   }`}
                 >
                   <span className="block text-xs uppercase tracking-wide text-champagne">
-                    {service.category ?? t.book.service}
+                    {catalogServiceCategory(locale, service.slug, service.category) || t.book.service}
                   </span>
-                  <span className="mt-1 block font-medium text-ink">{service.name}</span>
-                  <span className="mt-1 block text-sm text-muted">{service.description}</span>
+                  <span className="mt-1 block font-medium text-ink">
+                    {catalogServiceName(locale, service.slug, service.name)}
+                  </span>
+                  <span className="mt-1 block text-sm text-muted">
+                    {catalogServiceDescription(locale, service.slug, service.description)}
+                  </span>
                   <span className="mt-3 block text-sm text-ink">
                     {formatMoney(service.basePriceCents, service.currency, locale)}
                   </span>
@@ -373,7 +383,9 @@ export default function BookPage() {
                     </p>
                     {tech.skills && tech.skills.length > 0 ? (
                       <p className="mt-1 text-xs text-champagne">
-                        {tech.skills.map((s) => s.name).join(' · ')}
+                        {tech.skills
+                          .map((s) => catalogSkillName(locale, s.slug, s.name))
+                          .join(' · ')}
                       </p>
                     ) : null}
                   </button>
@@ -472,6 +484,15 @@ export default function BookPage() {
         <form onSubmit={onConfirm} className="space-y-4 rounded-xl border border-ink/5 bg-warm-white p-6">
           <h2 className="font-display text-2xl">{t.book.stepConfirm}</h2>
           <ul className="space-y-2 text-sm text-muted">
+            <li>
+              {t.book.stepServices} :{' '}
+              <span className="text-ink">
+                {services.data
+                  ?.filter((s) => selectedServices.includes(s.id))
+                  .map((s) => catalogServiceName(locale, s.slug, s.name))
+                  .join(' · ') || '—'}
+              </span>
+            </li>
             <li>
               {t.book.stepWig} : <span className="text-ink">{selectedWig?.name ?? '—'}</span>
             </li>

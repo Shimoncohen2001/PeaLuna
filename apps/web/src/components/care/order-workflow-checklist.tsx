@@ -6,6 +6,7 @@ import type { OrderWorkflowStepDto } from '@velure/contracts';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
 import { useLocale } from '@/lib/i18n/locale';
+import { catalogWorkflowDescription, catalogWorkflowTitle } from '@/lib/i18n/catalog';
 
 export function incompleteRequiredSteps(steps: OrderWorkflowStepDto[] | undefined) {
   return (steps ?? []).filter((step) => step.isRequired && !step.completed);
@@ -19,7 +20,7 @@ export function OrderWorkflowChecklist({
   locked?: boolean;
 }) {
   const { authFetch } = useAuth();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const queryClient = useQueryClient();
   const [local, setLocal] = useState<OrderWorkflowStepDto[]>([]);
 
@@ -82,9 +83,13 @@ export function OrderWorkflowChecklist({
                 <span className="text-xs uppercase tracking-wide text-[#e8b4a2]">
                   {index + 1} · {step.isRequired ? t.common.required : t.common.optional}
                 </span>
-                <span className="mt-1 block font-medium">{step.title}</span>
+                <span className="mt-1 block font-medium">
+                  {catalogWorkflowTitle(locale, step.slug, step.title)}
+                </span>
                 {step.description ? (
-                  <span className="mt-1 block text-white/55">{step.description}</span>
+                  <span className="mt-1 block text-white/55">
+                    {catalogWorkflowDescription(locale, step.slug, step.description)}
+                  </span>
                 ) : null}
               </span>
             </label>

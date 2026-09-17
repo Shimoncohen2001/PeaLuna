@@ -36,6 +36,7 @@ export const orderActionSchema = z.object({
 export const orderLineItemSchema = z.object({
   id: z.string().uuid(),
   serviceTypeId: z.string().uuid(),
+  serviceSlug: z.string().optional(),
   serviceName: z.string(),
   quantity: z.number().int(),
   unitPriceCents: z.number().int(),
