@@ -23,6 +23,7 @@ type AdminTechnician = {
   yearsExperience: number | null;
   createdAt: string;
   services: string[];
+  skills: string[];
 };
 
 const FILTERS = [
@@ -73,6 +74,9 @@ export default function AdminTechniciansPage() {
           <Link href="/admin/services" className="text-sm text-champagne hover:underline">
             {t.admin.services}
           </Link>
+          <Link href="/admin/skills" className="text-sm text-champagne hover:underline">
+            {t.admin.skills}
+          </Link>
           <Link href="/admin/cash" className="text-sm text-champagne hover:underline">
             {t.cash.adminTitle}
           </Link>
@@ -118,6 +122,9 @@ export default function AdminTechniciansPage() {
               </p>
               {expert.services.length > 0 ? (
                 <p className="mt-1 text-xs text-muted">{expert.services.join(' · ')}</p>
+              ) : null}
+              {expert.skills?.length > 0 ? (
+                <p className="mt-1 text-xs text-champagne">{expert.skills.join(' · ')}</p>
               ) : null}
             </div>
             {expert.status === 'UNDER_REVIEW' || expert.status === 'PENDING_APPLICATION' ? (

@@ -33,6 +33,8 @@ export type Messages = {
     reviews: string;
     admin: string;
     adminExperts: string;
+    adminSkills: string;
+    adminWorkflow: string;
     clients: string;
   };
   home: {
@@ -62,6 +64,7 @@ export type Messages = {
     back: string;
     save: string;
     delete: string;
+    edit: string;
     cancel: string;
     confirmDelete: string;
     choose: string;
@@ -71,6 +74,8 @@ export type Messages = {
     dateTbd: string;
     requiredProfile: string;
     actionFailed: string;
+    required: string;
+    optional: string;
   };
   dashboard: {
     hello: string;
@@ -215,6 +220,24 @@ export type Messages = {
     category: string;
     minutes: string;
     inactive: string;
+    hidden: string;
+    priceIls: string;
+    nameHint: string;
+    deleteConfirm: string;
+    skills: string;
+    skillsSubtitle: string;
+    addSkill: string;
+    workflow: string;
+    workflowSubtitle: string;
+    addStep: string;
+    stepTitle: string;
+    stepDescription: string;
+    stepRequired: string;
+    inputKind: string;
+    inputCheck: string;
+    inputText: string;
+    moveUp: string;
+    moveDown: string;
     expertsTitle: string;
     expertsSubtitle: string;
     approve: string;
@@ -386,6 +409,12 @@ export type Messages = {
     homeOffer: string;
     salonOffer: string;
     offeredServices: string;
+    skills: string;
+    workflowTitle: string;
+    workflowHint: string;
+    workflowIncomplete: string;
+    markDone: string;
+    stepNote: string;
     availabilityHint: string;
     closed: string;
     viewCareSheet: string;
@@ -432,6 +461,8 @@ export const en: Messages = {
     reviews: 'Reviews',
     admin: 'Admin',
     adminExperts: 'Experts',
+    adminSkills: 'Skills',
+    adminWorkflow: 'Steps',
     clients: 'Clients',
   },
   home: {
@@ -462,6 +493,7 @@ export const en: Messages = {
     back: 'Back',
     save: 'Save',
     delete: 'Delete',
+    edit: 'Edit',
     cancel: 'Cancel',
     confirmDelete: 'Delete this wig?',
     choose: 'Choose…',
@@ -471,6 +503,8 @@ export const en: Messages = {
     dateTbd: 'Date to confirm',
     requiredProfile: 'Expert profile required.',
     actionFailed: 'This action could not be completed.',
+    required: 'Required',
+    optional: 'Optional',
   },
   dashboard: {
     hello: 'Hello, {name}',
@@ -611,13 +645,31 @@ export const en: Messages = {
   },
   admin: {
     title: 'Catalog',
-    services: 'Service options',
-    add: 'Add a service',
-    price: 'Price (agorot / cents)',
+    services: 'Services',
+    add: '+ Add',
+    price: 'Price',
     name: 'Name',
     category: 'Category',
     minutes: 'Minutes',
     inactive: 'Hide',
+    hidden: 'Hidden',
+    priceIls: 'Price (ILS)',
+    nameHint: 'At least 2 characters. A URL slug is generated automatically.',
+    deleteConfirm: 'Remove this item from the catalog?',
+    skills: 'Skills',
+    skillsSubtitle: 'Skills available for experts to select on their profile.',
+    addSkill: '+ Add a skill',
+    workflow: 'Completion steps',
+    workflowSubtitle: 'Steps an expert must fill in before finishing a service.',
+    addStep: '+ Add a step',
+    stepTitle: 'Step title',
+    stepDescription: 'Instructions',
+    stepRequired: 'Required to finish the service',
+    inputKind: 'Input type',
+    inputCheck: 'Checkbox',
+    inputText: 'Text note',
+    moveUp: 'Move up',
+    moveDown: 'Move down',
     expertsTitle: 'Experts',
     expertsSubtitle: 'Approve new technicians before they appear in booking.',
     approve: 'Approve',
@@ -789,6 +841,12 @@ export const en: Messages = {
     homeOffer: 'Home visits',
     salonOffer: 'In salon',
     offeredServices: 'Services offered',
+    skills: 'Skills I master',
+    workflowTitle: 'Service steps',
+    workflowHint: 'Complete the required steps before finishing this service.',
+    workflowIncomplete: 'Complete every required step before finishing this service.',
+    markDone: 'Mark as done',
+    stepNote: 'Note',
     availabilityHint: 'Set your weekly recurring slots.',
     closed: 'Closed',
     viewCareSheet: 'View care report',
@@ -835,6 +893,8 @@ export const fr: Messages = {
     reviews: 'Avis',
     admin: 'Admin',
     adminExperts: 'Expertes',
+    adminSkills: 'Compétences',
+    adminWorkflow: 'Étapes',
     clients: 'Clientes',
   },
   home: {
@@ -867,6 +927,7 @@ export const fr: Messages = {
     back: 'Retour',
     save: 'Enregistrer',
     delete: 'Supprimer',
+    edit: 'Modifier',
     cancel: 'Annuler',
     confirmDelete: 'Supprimer cette perruque ?',
     choose: 'Choisir…',
@@ -876,6 +937,8 @@ export const fr: Messages = {
     dateTbd: 'Date à confirmer',
     requiredProfile: 'Profil prestataire requis.',
     actionFailed: 'Action impossible.',
+    required: 'Obligatoire',
+    optional: 'Facultatif',
   },
   dashboard: {
     hello: 'Bonjour, {name}',
@@ -1020,13 +1083,31 @@ export const fr: Messages = {
   },
   admin: {
     title: 'Catalogue',
-    services: 'Options de service',
-    add: 'Ajouter un service',
-    price: 'Prix (agorot / centimes)',
+    services: 'Prestations',
+    add: '+ Ajouter',
+    price: 'Prix',
     name: 'Nom',
     category: 'Catégorie',
     minutes: 'Minutes',
     inactive: 'Masquer',
+    hidden: 'Masquée',
+    priceIls: 'Prix (ILS)',
+    nameHint: 'Au moins 2 caractères. Un identifiant URL est généré automatiquement.',
+    deleteConfirm: 'Retirer cet élément du catalogue ?',
+    skills: 'Compétences',
+    skillsSubtitle: 'Compétences que les expertes peuvent sélectionner sur leur profil.',
+    addSkill: '+ Ajouter une compétence',
+    workflow: 'Étapes de réalisation',
+    workflowSubtitle: 'Étapes qu’une experte doit renseigner avant de terminer une prestation.',
+    addStep: '+ Ajouter une étape',
+    stepTitle: 'Titre de l’étape',
+    stepDescription: 'Consignes',
+    stepRequired: 'Obligatoire pour terminer la prestation',
+    inputKind: 'Type de saisie',
+    inputCheck: 'Case à cocher',
+    inputText: 'Note texte',
+    moveUp: 'Monter',
+    moveDown: 'Descendre',
     expertsTitle: 'Expertes',
     expertsSubtitle: 'Approuve les nouvelles expertes avant qu’elles apparaissent à la réservation.',
     approve: 'Approuver',
@@ -1198,6 +1279,12 @@ export const fr: Messages = {
     homeOffer: 'À domicile',
     salonOffer: 'En salon',
     offeredServices: 'Services proposés',
+    skills: 'Compétences maîtrisées',
+    workflowTitle: 'Étapes de la prestation',
+    workflowHint: 'Complète les étapes obligatoires avant de terminer cette prestation.',
+    workflowIncomplete: 'Complète toutes les étapes obligatoires avant de terminer.',
+    markDone: 'Marquer comme fait',
+    stepNote: 'Note',
     availabilityHint: 'Définis tes créneaux hebdomadaires (récurrent).',
     closed: 'Fermé',
     viewCareSheet: 'Voir la fiche de soin',
@@ -1244,6 +1331,8 @@ export const he: Messages = {
     reviews: 'ביקורות',
     admin: 'ניהול',
     adminExperts: 'מומחיות',
+    adminSkills: 'כישורים',
+    adminWorkflow: 'שלבים',
     clients: 'לקוחות',
   },
   home: {
@@ -1274,6 +1363,7 @@ export const he: Messages = {
     back: 'חזרה',
     save: 'שמירה',
     delete: 'מחיקה',
+    edit: 'עריכה',
     cancel: 'ביטול',
     confirmDelete: 'למחוק את הפאה?',
     choose: 'בחירה…',
@@ -1283,6 +1373,8 @@ export const he: Messages = {
     dateTbd: 'תאריך לאישור',
     requiredProfile: 'נדרש פרופיל מומחית.',
     actionFailed: 'לא ניתן לבצע את הפעולה.',
+    required: 'חובה',
+    optional: 'רשות',
   },
   dashboard: {
     hello: 'שלום, {name}',
@@ -1422,13 +1514,31 @@ export const he: Messages = {
   },
   admin: {
     title: 'קטלוג',
-    services: 'אפשרויות שירות',
-    add: 'הוספת שירות',
-    price: 'מחיר (אגורות)',
+    services: 'שירותים',
+    add: '+ הוספה',
+    price: 'מחיר',
     name: 'שם',
     category: 'קטגוריה',
     minutes: 'דקות',
     inactive: 'הסתרה',
+    hidden: 'מוסתר',
+    priceIls: 'מחיר (ILS)',
+    nameHint: 'לפחות 2 תווים. מזהה URL נוצר אוטומטית.',
+    deleteConfirm: 'להסיר את הפריט מהקטלוג?',
+    skills: 'כישורים',
+    skillsSubtitle: 'כישורים שהמומחיות יכולות לבחור בפרופיל.',
+    addSkill: '+ הוספת כישור',
+    workflow: 'שלבי ביצוע',
+    workflowSubtitle: 'שלבים שמומחית חייבת למלא לפני סיום שירות.',
+    addStep: '+ הוספת שלב',
+    stepTitle: 'כותרת השלב',
+    stepDescription: 'הנחיות',
+    stepRequired: 'חובה לסיום השירות',
+    inputKind: 'סוג קלט',
+    inputCheck: 'סימון',
+    inputText: 'הערת טקסט',
+    moveUp: 'למעלה',
+    moveDown: 'למטה',
     expertsTitle: 'מומחיות',
     expertsSubtitle: 'אשרי מומחיות חדשות לפני שהן מופיעות בהזמנה.',
     approve: 'אישור',
@@ -1600,6 +1710,12 @@ export const he: Messages = {
     homeOffer: 'בבית הלקוחה',
     salonOffer: 'בסלון',
     offeredServices: 'שירותים מוצעים',
+    skills: 'כישורים שאני שולטת בהם',
+    workflowTitle: 'שלבי השירות',
+    workflowHint: 'יש להשלים את שלבי החובה לפני סיום השירות.',
+    workflowIncomplete: 'יש להשלים את כל שלבי החובה לפני הסיום.',
+    markDone: 'סימון כבוצע',
+    stepNote: 'הערה',
     availabilityHint: 'הגדירי את המשבצות השבועיות הקבועות.',
     closed: 'סגור',
     viewCareSheet: 'צפייה בדוח הטיפול',

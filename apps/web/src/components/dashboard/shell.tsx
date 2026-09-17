@@ -29,7 +29,9 @@ export function DashboardShell({
     ...(isAdmin
       ? [
           { href: '/admin/technicians', label: t.nav.adminExperts },
-          { href: '/admin/services', label: t.nav.admin },
+          { href: '/admin/services', label: t.admin.services },
+          { href: '/admin/skills', label: t.nav.adminSkills },
+          { href: '/admin/workflow', label: t.nav.adminWorkflow },
         ]
       : []),
   ];

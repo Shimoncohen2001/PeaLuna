@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ServiceTypeDto } from '@velure/contracts';
+import type { ServiceTypeDto, SkillDto } from '@velure/contracts';
 import { Button } from '@/components/ui/button';
 import { ApiClientError } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
@@ -32,6 +32,7 @@ type TechProfile = {
   longitude: number | null;
   status: string;
   services: { id: string; name: string }[];
+  skills?: { id: string; name: string }[];
 };
 
 export default function ProApplyPage() {
@@ -41,6 +42,7 @@ export default function ProApplyPage() {
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [address, setAddress] = useState<AddressValue>({
     label: '',
     city: 'Tel Aviv',
@@ -55,6 +57,11 @@ export default function ProApplyPage() {
     queryFn: () => authFetch<ServiceTypeDto[]>('/api/v1/services?limit=50'),
   });
 
+  const skills = useQuery({
+    queryKey: ['skills'],
+    queryFn: () => authFetch<SkillDto[]>('/api/v1/skills'),
+  });
+
   const mine = useQuery({
     queryKey: ['tech-me'],
     queryFn: () => authFetch<TechProfile>('/api/v1/technicians/me'),
@@ -64,6 +71,9 @@ export default function ProApplyPage() {
   useEffect(() => {
     if (mine.data?.services) {
       setSelectedServices(mine.data.services.map((s) => s.id));
+    }
+    if (mine.data?.skills) {
+      setSelectedSkills(mine.data.skills.map((s) => s.id));
     }
   }, [mine.data]);
 
@@ -126,6 +136,7 @@ export default function ProApplyPage() {
       offersSalonService: form.get('offersSalon') === 'on',
       acceptsCashPayment: form.get('acceptsCash') === 'on',
       serviceTypeIds: selectedServices,
+      skillIds: selectedSkills,
       latitude: address.lat ?? 32.0853,
       longitude: address.lng ?? 34.7818,
       yearsExperience: Number(form.get('yearsExperience') || 1),
@@ -325,6 +336,30 @@ export default function ProApplyPage() {
               ))}
             </ul>
           </fieldset>
+
+          {(skills.data?.length ?? 0) > 0 ? (
+            <fieldset>
+              <legend className="text-sm text-white/70">{t.pro.skills}</legend>
+              <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+                {skills.data?.map((s) => (
+                  <li key={s.id}>
+                    <label className="flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={selectedSkills.includes(s.id)}
+                        onChange={() =>
+                          setSelectedSkills((prev) =>
+                            prev.includes(s.id) ? prev.filter((x) => x !== s.id) : [...prev, s.id],
+                          )
+                        }
+                      />
+                      {s.name}
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </fieldset>
+          ) : null}
 
           {error ? <p className="text-sm text-red-300">{error}</p> : null}
           {ok ? <p className="text-sm text-[#e8b4a2]">{ok}</p> : null}

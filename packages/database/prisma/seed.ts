@@ -101,6 +101,66 @@ const SERVICE_CATALOG = [
   },
 ];
 
+const SKILL_CATALOG = [
+  {
+    slug: 'lace-repair',
+    name: 'תיקון לייס',
+    description: 'תיקון והחלפת לייס',
+    sortOrder: 1,
+  },
+  {
+    slug: 'baby-hair',
+    name: 'בייבי הייר',
+    description: 'יצירה ועיצוב בייבי הייר',
+    sortOrder: 2,
+  },
+  {
+    slug: 'color',
+    name: 'צבע',
+    description: 'צביעה, באליאז׳ ותיקון צבע',
+    sortOrder: 3,
+  },
+  {
+    slug: 'wash-treatment',
+    name: 'שטיפה וטיפול',
+    description: 'שטיפה, לחות ובראשינג',
+    sortOrder: 4,
+  },
+  {
+    slug: 'lace-conversion',
+    name: 'המרה ללייס',
+    description: 'המרת פאה קלאסית ללייס',
+    sortOrder: 5,
+  },
+];
+
+const WORKFLOW_STEP_CATALOG = [
+  {
+    slug: 'confirm-start',
+    title: 'אישור תחילת הטיפול',
+    description: 'אשר שהפאה בידך ושהטיפול יכול להתחיל.',
+    sortOrder: 1,
+    isRequired: false,
+    inputKind: 'CHECK' as const,
+  },
+  {
+    slug: 'document-work',
+    title: 'תיעוד העבודה שבוצעה',
+    description: 'מלא את פירוט העבודה בגיליון הטיפול.',
+    sortOrder: 2,
+    isRequired: false,
+    inputKind: 'CHECK' as const,
+  },
+  {
+    slug: 'confirm-ready',
+    title: 'אישור שהשירות מוכן',
+    description: 'אשר שהפאה מוכנה להחזרה ללקוחה.',
+    sortOrder: 3,
+    isRequired: false,
+    inputKind: 'CHECK' as const,
+  },
+];
+
 async function hashDemoPassword(password: string): Promise<string> {
   return argon2.hash(password, {
     type: argon2.argon2id,
@@ -144,18 +204,8 @@ async function main() {
   for (const service of SERVICE_CATALOG) {
     await prisma.serviceType.upsert({
       where: { slug: service.slug },
-      create: service,
-      update: {
-        name: service.name,
-        description: service.description,
-        category: service.category,
-        basePriceCents: service.basePriceCents,
-        estimatedDays: service.estimatedDays,
-        estimatedMinutes: service.estimatedMinutes,
-        sortOrder: service.sortOrder,
-        currency: 'ILS',
-        isActive: true,
-      },
+      create: { ...service, currency: 'ILS', isActive: true },
+      update: {},
     });
   }
 
@@ -166,6 +216,22 @@ async function main() {
     },
     data: { isActive: false },
   });
+
+  for (const skill of SKILL_CATALOG) {
+    await prisma.skill.upsert({
+      where: { slug: skill.slug },
+      create: skill,
+      update: {},
+    });
+  }
+
+  for (const step of WORKFLOW_STEP_CATALOG) {
+    await prisma.workflowStep.upsert({
+      where: { slug: step.slug },
+      create: step,
+      update: {},
+    });
+  }
 
   const allowDemo =
     process.env.NODE_ENV !== 'production' || process.env.ALLOW_DEMO_SEED === 'true';
@@ -343,6 +409,23 @@ async function main() {
         create: {
           technicianId: profile.id,
           serviceTypeId: service.id,
+        },
+        update: {},
+      });
+    }
+
+    const skills = await prisma.skill.findMany({ where: { isActive: true } });
+    for (const skill of skills) {
+      await prisma.technicianSkill.upsert({
+        where: {
+          technicianId_skillId: {
+            technicianId: profile.id,
+            skillId: skill.id,
+          },
+        },
+        create: {
+          technicianId: profile.id,
+          skillId: skill.id,
         },
         update: {},
       });

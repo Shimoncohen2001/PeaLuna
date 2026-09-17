@@ -45,6 +45,7 @@ type TechnicianCard = {
   latitude: number | null;
   longitude: number | null;
   services: { id: string; name: string; basePriceCents: number }[];
+  skills?: { id: string; name: string }[];
 };
 
 type BookingResult = {
@@ -370,6 +371,11 @@ export default function BookPage() {
                         : null}
                       {tech.serviceCity ? ` · ${tech.serviceCity}` : null}
                     </p>
+                    {tech.skills && tech.skills.length > 0 ? (
+                      <p className="mt-1 text-xs text-champagne">
+                        {tech.skills.map((s) => s.name).join(' · ')}
+                      </p>
+                    ) : null}
                   </button>
                 </li>
               ))}

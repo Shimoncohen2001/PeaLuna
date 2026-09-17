@@ -9,16 +9,7 @@ import { prisma } from '@velure/database';
 import type { AppInstance } from '../../types/app.js';
 import { API_PREFIX } from '../../config/constants.js';
 import { requireAdmin } from '../../lib/access.js';
-
-function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[^\w\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .slice(0, 80) || `service-${Date.now().toString(36)}`;
-}
+import { slugify } from '../../lib/slugify.js';
 
 function mapService(s: {
   id: string;
@@ -129,7 +120,7 @@ export async function serviceRoutes(app: AppInstance): Promise<void> {
     async (request, reply) => {
       requireAdmin(request);
       const body = request.body;
-      let slug = body.slug ?? slugify(body.name);
+      let slug = body.slug ?? slugify(body.name, 'service');
       const exists = await prisma.serviceType.findUnique({ where: { slug } });
       if (exists) slug = `${slug}-${Date.now().toString(36)}`;
 
@@ -179,11 +170,22 @@ export async function serviceRoutes(app: AppInstance): Promise<void> {
       const { id } = request.params as { id: string };
       const existing = await prisma.serviceType.findUnique({ where: { id } });
       if (!existing) throw app.httpErrors.notFound('Service not found');
-      const service = await prisma.serviceType.update({
-        where: { id },
-        data: { isActive: false },
-      });
-      return reply.send(successResponse(mapService(service), request.requestId));
+
+      const [lineItems, technicianLinks] = await Promise.all([
+        prisma.orderLineItem.count({ where: { serviceTypeId: id } }),
+        prisma.technicianService.count({ where: { serviceTypeId: id } }),
+      ]);
+
+      if (lineItems > 0 || technicianLinks > 0) {
+        const service = await prisma.serviceType.update({
+          where: { id },
+          data: { isActive: false },
+        });
+        return reply.send(successResponse(mapService(service), request.requestId));
+      }
+
+      await prisma.serviceType.delete({ where: { id } });
+      return reply.send(successResponse(mapService(existing), request.requestId));
     },
   );
 }

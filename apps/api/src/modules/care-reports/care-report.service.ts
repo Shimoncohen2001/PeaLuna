@@ -6,6 +6,7 @@ import { requireApprovedTechnicianProfile } from '../../lib/access.js';
 import { updateOrderIfVersion } from '../../lib/order-lock.js';
 import { mediaPublicUrl } from '../media/media-url.js';
 import { createS3Client } from '../media/s3.js';
+import { CatalogService } from '../catalog/catalog.service.js';
 
 const HAIR_CODES = new Set<string>(HAIR_ADD_CODES);
 
@@ -95,6 +96,8 @@ export class CareReportService {
         details: errors,
       });
     }
+
+    await new CatalogService().assertRequiredComplete(orderId);
 
     const submitted = await prisma.$transaction(async (tx) => {
       if (input.operations) {

@@ -16,15 +16,19 @@ import {
   toOrderActorRole,
 } from '../../lib/access.js';
 import { updateOrderIfVersion } from '../../lib/order-lock.js';
+import { CatalogService } from '../catalog/catalog.service.js';
+
+const catalog = new CatalogService();
+
+const technicianPublicInclude = {
+  services: { include: { serviceType: true } },
+  skills: { include: { skill: true } },
+  availability: true,
+  user: { select: { firstName: true, lastName: true } },
+} as const;
 
 function mapPublicTechnician(
-  t: Prisma.TechnicianProfileGetPayload<{
-    include: {
-      services: { include: { serviceType: true } };
-      availability: true;
-      user: { select: { firstName: true; lastName: true } };
-    };
-  }>,
+  t: Prisma.TechnicianProfileGetPayload<{ include: typeof technicianPublicInclude }>,
   distanceKm?: number,
   privacy: 'public' | 'owner' = 'public',
 ) {
@@ -55,6 +59,13 @@ function mapPublicTechnician(
       currency: s.serviceType.currency,
       category: s.serviceType.category,
     })),
+    skills: t.skills
+      .filter((s) => s.skill.isActive)
+      .map((s) => ({
+        id: s.skill.id,
+        slug: s.skill.slug,
+        name: s.skill.name,
+      })),
     availability: t.availability
       .filter((a) => a.isActive)
       .map((a) => ({
@@ -63,6 +74,28 @@ function mapPublicTechnician(
         endTime: a.endTime,
       })),
   };
+}
+
+async function assertActiveSkills(skillIds: string[]) {
+  if (skillIds.length === 0) return;
+  const skills = await prisma.skill.findMany({
+    where: { id: { in: skillIds }, isActive: true },
+  });
+  if (skills.length !== skillIds.length) {
+    throw Object.assign(new Error('Invalid skills'), { statusCode: 400, code: 'INVALID_SKILLS' });
+  }
+}
+
+async function replaceTechnicianSkills(
+  tx: Prisma.TransactionClient,
+  technicianId: string,
+  skillIds: string[],
+) {
+  await tx.technicianSkill.deleteMany({ where: { technicianId } });
+  if (skillIds.length === 0) return;
+  await tx.technicianSkill.createMany({
+    data: skillIds.map((skillId) => ({ technicianId, skillId })),
+  });
 }
 
 export class TechnicianService {
@@ -79,6 +112,7 @@ export class TechnicianService {
     offersSalonService: boolean;
     acceptsCashPayment?: boolean;
     serviceTypeIds: string[];
+    skillIds?: string[];
     latitude?: number;
     longitude?: number;
   }) {
@@ -91,6 +125,7 @@ export class TechnicianService {
     if (services.length !== input.serviceTypeIds.length) {
       throw Object.assign(new Error('Invalid services'), { statusCode: 400, code: 'INVALID_SERVICES' });
     }
+    await assertActiveSkills(input.skillIds ?? []);
 
     const technicianRole = await prisma.role.findUniqueOrThrow({ where: { name: 'TECHNICIAN' } });
 
@@ -113,11 +148,7 @@ export class TechnicianService {
       });
     }
 
-    const profileInclude = {
-      services: { include: { serviceType: true } },
-      availability: true,
-      user: { select: { firstName: true, lastName: true } },
-    } as const;
+    const profileInclude = technicianPublicInclude;
 
     const profile = await prisma.$transaction(async (tx) => {
       await tx.userRole.deleteMany({ where: { userId, roleId: technicianRole.id } });
@@ -142,16 +173,21 @@ export class TechnicianService {
 
       if (existing?.status === 'REJECTED') {
         await tx.technicianService.deleteMany({ where: { technicianId: existing.id } });
-        return tx.technicianProfile.update({
+        await tx.technicianSkill.deleteMany({ where: { technicianId: existing.id } });
+        const updated = await tx.technicianProfile.update({
           where: { id: existing.id },
           data: {
             ...applicationData,
             services: {
               create: input.serviceTypeIds.map((serviceTypeId) => ({ serviceTypeId })),
             },
+            skills: {
+              create: (input.skillIds ?? []).map((skillId) => ({ skillId })),
+            },
           },
           include: profileInclude,
         });
+        return updated;
       }
 
       return tx.technicianProfile.create({
@@ -160,6 +196,9 @@ export class TechnicianService {
           ...applicationData,
           services: {
             create: input.serviceTypeIds.map((serviceTypeId) => ({ serviceTypeId })),
+          },
+          skills: {
+            create: (input.skillIds ?? []).map((skillId) => ({ skillId })),
           },
           availability: {
             create: [
@@ -181,11 +220,7 @@ export class TechnicianService {
   async getMine(userId: string) {
     const profile = await prisma.technicianProfile.findUnique({
       where: { userId },
-      include: {
-        services: { include: { serviceType: true } },
-        availability: true,
-        user: { select: { firstName: true, lastName: true } },
-      },
+      include: technicianPublicInclude,
     });
     if (!profile) {
       throw Object.assign(new Error('Technician profile not found'), {
@@ -211,6 +246,7 @@ export class TechnicianService {
       offersSalonService?: boolean;
       acceptsCashPayment?: boolean;
       serviceTypeIds?: string[];
+      skillIds?: string[];
       latitude?: number;
       longitude?: number;
     },
@@ -239,6 +275,9 @@ export class TechnicianService {
           code: 'INVALID_SERVICES',
         });
       }
+    }
+    if (input.skillIds) {
+      await assertActiveSkills(input.skillIds);
     }
 
     await prisma.$transaction(async (tx) => {
@@ -269,6 +308,9 @@ export class TechnicianService {
             serviceTypeId,
           })),
         });
+      }
+      if (input.skillIds) {
+        await replaceTechnicianSkills(tx, existing.id, input.skillIds);
       }
     });
 
@@ -301,11 +343,7 @@ export class TechnicianService {
 
     const rows = await prisma.technicianProfile.findMany({
       where,
-      include: {
-        services: { include: { serviceType: true } },
-        availability: true,
-        user: { select: { firstName: true, lastName: true } },
-      },
+      include: technicianPublicInclude,
     });
 
     const { haversineKm } = await import('../../lib/access.js');
@@ -353,11 +391,7 @@ export class TechnicianService {
   async getById(id: string) {
     const profile = await prisma.technicianProfile.findFirst({
       where: { id, status: 'APPROVED' },
-      include: {
-        services: { include: { serviceType: true } },
-        availability: true,
-        user: { select: { firstName: true, lastName: true } },
-      },
+      include: technicianPublicInclude,
     });
     if (!profile) {
       throw Object.assign(new Error('Technician not found'), {
@@ -909,6 +943,7 @@ export class TechnicianService {
         code: 'CARE_REPORT_REQUIRED',
       });
     }
+    await catalog.assertRequiredComplete(orderId);
 
     const updated = await prisma.$transaction(async (tx) => {
       const transition = resolveTransition(order.status as never, 'COMPLETE', 'TECHNICIAN');
@@ -954,6 +989,7 @@ export class TechnicianService {
         include: {
           user: { select: { email: true, firstName: true, lastName: true } },
           services: { include: { serviceType: { select: { name: true } } } },
+          skills: { include: { skill: { select: { name: true, isActive: true } } } },
         },
       }),
     ]);
@@ -978,6 +1014,7 @@ export class TechnicianService {
         approvedAt: row.approvedAt?.toISOString() ?? null,
         createdAt: row.createdAt.toISOString(),
         services: row.services.map((s) => s.serviceType.name),
+        skills: row.skills.filter((s) => s.skill.isActive).map((s) => s.skill.name),
       })),
     };
   }

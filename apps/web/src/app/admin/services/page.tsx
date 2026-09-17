@@ -10,16 +10,25 @@ import { useAuth } from '@/lib/auth';
 import { useLocale } from '@/lib/i18n/locale';
 import { formatMoney } from '@/lib/format';
 
+const EMPTY_SERVICE = {
+  name: '',
+  category: '',
+  description: '',
+  basePriceCents: 15_000,
+  estimatedMinutes: 60,
+  isActive: true,
+};
+
 export default function AdminServicesPage() {
   const { authFetch } = useAuth();
   const { t, locale } = useLocale();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
-  const [editing, setEditing] = useState<ServiceTypeDto | null>(null);
+  const [editing, setEditing] = useState<Partial<ServiceTypeDto> | null>(null);
 
   const services = useQuery({
     queryKey: ['admin-services'],
-    queryFn: () => authFetch<ServiceTypeDto[]>('/api/v1/admin/services?limit=50'),
+    queryFn: () => authFetch<ServiceTypeDto[]>('/api/v1/admin/services?limit=100'),
   });
 
   const save = useMutation({
@@ -40,11 +49,11 @@ export default function AdminServicesPage() {
       await queryClient.invalidateQueries({ queryKey: ['services'] });
     },
     onError: (err) => {
-      setError(err instanceof ApiClientError ? err.message : 'Save failed');
+      setError(err instanceof ApiClientError ? err.message : t.admin.actionFailed);
     },
   });
 
-  const hide = useMutation({
+  const remove = useMutation({
     mutationFn: (id: string) => authFetch(`/api/v1/admin/services/${id}`, { method: 'DELETE' }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['admin-services'] });
@@ -55,11 +64,16 @@ export default function AdminServicesPage() {
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
+    const name = String(form.get('name') || '').trim();
+    if (name.length < 2) {
+      setError(t.admin.nameHint);
+      return;
+    }
     const shekels = Number(form.get('priceIls') || 0);
     save.mutate({
       id: editing?.id,
       body: {
-        name: String(form.get('name')),
+        name,
         description: String(form.get('description') || '') || undefined,
         category: String(form.get('category') || '') || undefined,
         basePriceCents: Math.round(shekels * 100),
@@ -75,14 +89,17 @@ export default function AdminServicesPage() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-sm uppercase tracking-[0.2em] text-champagne">{t.nav.admin}</p>
-          <h1 className="font-display text-4xl text-ink">{t.admin.title}</h1>
-          <p className="mt-2 text-muted">{t.admin.services}</p>
+          <h1 className="font-display text-4xl text-ink">{t.admin.services}</h1>
+          <p className="mt-2 text-muted">{t.admin.nameHint}</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Link href="/admin/technicians" className="text-sm text-champagne hover:underline">
-            {t.nav.adminExperts}
+        <div className="flex flex-wrap items-center gap-3">
+          <Link href="/admin/skills" className="text-sm text-champagne hover:underline">
+            {t.admin.skills}
           </Link>
-          <Button variant="primary" onClick={() => setEditing({} as ServiceTypeDto)}>
+          <Link href="/admin/workflow" className="text-sm text-champagne hover:underline">
+            {t.admin.workflow}
+          </Link>
+          <Button variant="primary" onClick={() => setEditing(EMPTY_SERVICE)}>
             {t.admin.add}
           </Button>
         </div>
@@ -99,7 +116,9 @@ export default function AdminServicesPage() {
               <input
                 name="name"
                 required
-                defaultValue={editing.name}
+                minLength={2}
+                maxLength={150}
+                defaultValue={editing.name ?? ''}
                 className="mt-1 w-full rounded-lg border border-ink/10 px-3 py-2"
               />
             </div>
@@ -112,7 +131,7 @@ export default function AdminServicesPage() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium">{t.admin.price}</label>
+              <label className="text-sm font-medium">{t.admin.priceIls}</label>
               <input
                 name="priceIls"
                 type="number"
@@ -145,7 +164,7 @@ export default function AdminServicesPage() {
           </div>
           <label className="flex items-center gap-2 text-sm">
             <input name="isActive" type="checkbox" defaultChecked={editing.isActive !== false} />
-            Active
+            {t.common.active}
           </label>
           {error ? <p className="text-sm text-red-700">{error}</p> : null}
           <div className="flex gap-3">
@@ -161,10 +180,7 @@ export default function AdminServicesPage() {
 
       <ul className="grid gap-4 sm:grid-cols-2">
         {services.data?.map((service) => (
-          <li
-            key={service.id}
-            className="rounded-xl border border-ink/5 bg-warm-white p-5"
-          >
+          <li key={service.id} className="rounded-xl border border-ink/5 bg-warm-white p-5">
             <p className="text-xs uppercase tracking-wide text-champagne">
               {service.category ?? '—'}
             </p>
@@ -174,19 +190,22 @@ export default function AdminServicesPage() {
               {formatMoney(service.basePriceCents, service.currency, locale)}
             </p>
             {service.isActive === false ? (
-              <p className="mt-1 text-xs text-muted">{t.admin.inactive}</p>
+              <p className="mt-1 text-xs text-muted">{t.admin.hidden}</p>
             ) : null}
             <div className="mt-4 flex gap-2">
               <Button variant="secondary" size="sm" onClick={() => setEditing(service)}>
-                {t.common.save}
+                {t.common.edit}
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => hide.mutate(service.id)}
-                disabled={hide.isPending}
+                onClick={() => {
+                  if (!window.confirm(t.admin.deleteConfirm)) return;
+                  remove.mutate(service.id);
+                }}
+                disabled={remove.isPending}
               >
-                {t.admin.inactive}
+                {t.common.delete}
               </Button>
             </div>
           </li>

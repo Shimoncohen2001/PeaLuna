@@ -236,6 +236,12 @@ enum OutboxEventStatus {
   FAILED
 }
 
+/// How a Pro records progress on an admin-configured completion step
+enum WorkflowStepInputKind {
+  CHECK
+  TEXT
+}
+
 // ─── Identity & RBAC ─────────────────────────────────────────────────────────
 
 model User {
@@ -410,6 +416,7 @@ model TechnicianProfile {
   user         User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
   availability TechnicianAvailability[]
   services     TechnicianService[]
+  skills       TechnicianSkill[]
   orders       RepairOrder[]
   careReports  CareReport[]
 
@@ -528,6 +535,72 @@ model ServiceType {
   @@map("service_types")
 }
 
+/// Expertise tags Pros can select — independent from priced ServiceType
+model Skill {
+  id          String   @id @default(uuid()) @db.Uuid
+  slug        String   @unique @db.VarChar(100)
+  name        String   @db.VarChar(150)
+  description String?  @db.Text
+  isActive    Boolean  @default(true) @map("is_active")
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  technicians TechnicianSkill[]
+
+  @@index([isActive, sortOrder])
+  @@map("skills")
+}
+
+model TechnicianSkill {
+  technicianId String   @map("technician_id") @db.Uuid
+  skillId      String   @map("skill_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  technician TechnicianProfile @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+  skill      Skill             @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([technicianId, skillId])
+  @@index([skillId])
+  @@map("technician_skills")
+}
+
+/// Admin-configured checklist a Pro must complete before finishing a job
+model WorkflowStep {
+  id          String                 @id @default(uuid()) @db.Uuid
+  slug        String                 @unique @db.VarChar(100)
+  title       String                 @db.VarChar(150)
+  description String?                @db.Text
+  sortOrder   Int                    @default(0) @map("sort_order")
+  isRequired  Boolean                @default(true) @map("is_required")
+  isActive    Boolean                @default(true) @map("is_active")
+  inputKind   WorkflowStepInputKind  @default(CHECK) @map("input_kind")
+  createdAt   DateTime               @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime               @updatedAt @map("updated_at") @db.Timestamptz
+
+  progress OrderWorkflowProgress[]
+
+  @@index([isActive, sortOrder])
+  @@map("workflow_steps")
+}
+
+model OrderWorkflowProgress {
+  id          String    @id @default(uuid()) @db.Uuid
+  orderId     String    @map("order_id") @db.Uuid
+  stepId      String    @map("step_id") @db.Uuid
+  completedAt DateTime? @map("completed_at") @db.Timestamptz
+  note        String?   @db.VarChar(2000)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  order RepairOrder  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  step  WorkflowStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, stepId])
+  @@index([orderId])
+  @@map("order_workflow_progress")
+}
+
 // ─── Orders ──────────────────────────────────────────────────────────────────
 
 model RepairOrder {
@@ -577,6 +650,7 @@ model RepairOrder {
   messageThread MessageThread?
   review       Review?
   careReport   CareReport?
+  workflowProgress OrderWorkflowProgress[]
 
   @@index([customerId])
   @@index([technicianId])

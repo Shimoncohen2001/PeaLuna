@@ -20,6 +20,8 @@ import {
 } from '@/lib/i18n/care';
 import { useLocale } from '@/lib/i18n/locale';
 import { uploadWigMedia } from '@/lib/upload-media';
+import { OrderWorkflowChecklist, incompleteRequiredSteps } from '@/components/care/order-workflow-checklist';
+import type { OrderWorkflowStepDto } from '@velure/contracts';
 
 type Photo = {
   id: string;
@@ -126,6 +128,12 @@ export function CareReportForm({ orderId }: { orderId: string }) {
   const report = useQuery({
     queryKey: ['care-report', orderId],
     queryFn: () => authFetch<CareReport>(`/api/v1/technicians/me/orders/${orderId}/care-report`),
+  });
+
+  const workflow = useQuery({
+    queryKey: ['order-workflow', orderId],
+    queryFn: () =>
+      authFetch<OrderWorkflowStepDto[]>(`/api/v1/technicians/me/orders/${orderId}/workflow`),
   });
 
   useEffect(() => {
@@ -373,6 +381,7 @@ export function CareReportForm({ orderId }: { orderId: string }) {
 
   return (
     <div className="space-y-6">
+      <OrderWorkflowChecklist orderId={orderId} locked={locked} />
       <ol className="flex flex-wrap gap-2">
         {STEPS.map((label, i) => (
           <li key={label}>
@@ -947,6 +956,10 @@ export function CareReportForm({ orderId }: { orderId: string }) {
                 validateStep(6);
               if (msg) {
                 setError(msg);
+                return;
+              }
+              if (incompleteRequiredSteps(workflow.data).length > 0) {
+                setError(t.pro.workflowIncomplete);
                 return;
               }
               if (!window.confirm(ui.confirmSubmit)) return;

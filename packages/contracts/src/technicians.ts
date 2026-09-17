@@ -14,12 +14,14 @@ export const technicianApplySchema = z.object({
   offersSalonService: z.boolean().default(true),
   acceptsCashPayment: z.boolean().default(false),
   serviceTypeIds: z.array(z.string().uuid()).min(1).max(20),
+  skillIds: z.array(z.string().uuid()).max(30).optional(),
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
 });
 
-export const technicianUpdateSchema = technicianApplySchema.partial().omit({ serviceTypeIds: true }).extend({
+export const technicianUpdateSchema = technicianApplySchema.partial().omit({ serviceTypeIds: true, skillIds: true }).extend({
   serviceTypeIds: z.array(z.string().uuid()).min(1).max(20).optional(),
+  skillIds: z.array(z.string().uuid()).max(30).optional(),
 });
 
 export const availabilitySlotSchema = z.object({
