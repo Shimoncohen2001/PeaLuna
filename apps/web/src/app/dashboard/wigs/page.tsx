@@ -5,6 +5,7 @@ import { FormEvent, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { WigDto } from '@velure/contracts';
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { ApiClientError } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
 import { useLocale } from '@/lib/i18n/locale';
@@ -12,6 +13,7 @@ import { useLocale } from '@/lib/i18n/locale';
 export default function WigsPage() {
   const { authFetch } = useAuth();
   const { t, format } = useLocale();
+  const confirm = useConfirm();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -65,8 +67,14 @@ export default function WigsPage() {
     });
   }
 
-  function onDelete(wig: WigDto) {
-    if (!window.confirm(t.wigs.deleteConfirm)) return;
+  async function onDelete(wig: WigDto) {
+    const ok = await confirm({
+      title: t.common.confirmTitle,
+      description: t.wigs.deleteConfirm,
+      confirmLabel: t.common.delete,
+      variant: 'primary',
+    });
+    if (!ok) return;
     deleteWig.mutate(wig.id);
   }
 

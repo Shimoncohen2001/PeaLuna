@@ -66,6 +66,7 @@ export type Messages = {
     delete: string;
     edit: string;
     cancel: string;
+    confirmTitle: string;
     confirmDelete: string;
     choose: string;
     yes: string;
@@ -498,6 +499,7 @@ export const en: Messages = {
     delete: 'Delete',
     edit: 'Edit',
     cancel: 'Cancel',
+    confirmTitle: 'Confirmation',
     confirmDelete: 'Delete this wig?',
     choose: 'Choose…',
     yes: 'Yes',
@@ -934,6 +936,7 @@ export const fr: Messages = {
     delete: 'Supprimer',
     edit: 'Modifier',
     cancel: 'Annuler',
+    confirmTitle: 'Confirmation',
     confirmDelete: 'Supprimer cette perruque ?',
     choose: 'Choisir…',
     yes: 'Oui',
@@ -1372,6 +1375,7 @@ export const he: Messages = {
     delete: 'מחיקה',
     edit: 'עריכה',
     cancel: 'ביטול',
+    confirmTitle: 'אישור',
     confirmDelete: 'למחוק את הפאה?',
     choose: 'בחירה…',
     yes: 'כן',

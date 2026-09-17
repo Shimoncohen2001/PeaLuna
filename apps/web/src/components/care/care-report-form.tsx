@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { nextTechnicianFollowUp, type TechnicianFollowUp } from '@velure/domain';
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { CameraCapture } from '@/components/media/camera-capture';
 import { ApiClientError } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
@@ -142,6 +143,7 @@ const inputClass =
 export function CareReportForm({ orderId }: { orderId: string }) {
   const { authFetch } = useAuth();
   const { locale, format, t } = useLocale();
+  const confirm = useConfirm();
   const ui = careUi(locale);
   const STEPS = ui.steps;
   const router = useRouter();
@@ -1026,8 +1028,16 @@ export function CareReportForm({ orderId }: { orderId: string }) {
             variant="gold"
             className="min-h-11 w-full sm:w-auto"
             disabled={submit.isPending || submit.isSuccess}
-            onClick={() => {
+            onClick={async () => {
               if (submitGuard.current || submit.isPending) return;
+              const ok = await confirm({
+                title: ui.finishCare,
+                description: ui.confirmSubmit,
+                confirmLabel: ui.finishCare,
+                cancelLabel: t.common.cancel,
+                variant: 'gold',
+              });
+              if (!ok) return;
               submitGuard.current = true;
               submit.mutate();
             }}

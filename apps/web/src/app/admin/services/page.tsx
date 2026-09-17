@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ServiceTypeDto } from '@velure/contracts';
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { ApiClientError } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
 import { useLocale } from '@/lib/i18n/locale';
@@ -22,6 +23,7 @@ const EMPTY_SERVICE = {
 export default function AdminServicesPage() {
   const { authFetch } = useAuth();
   const { t, locale } = useLocale();
+  const confirm = useConfirm();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<Partial<ServiceTypeDto> | null>(null);
@@ -199,8 +201,14 @@ export default function AdminServicesPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => {
-                  if (!window.confirm(t.admin.deleteConfirm)) return;
+                onClick={async () => {
+                  const ok = await confirm({
+                    title: t.common.confirmTitle,
+                    description: t.admin.deleteConfirm,
+                    confirmLabel: t.common.delete,
+                    variant: 'primary',
+                  });
+                  if (!ok) return;
                   remove.mutate(service.id);
                 }}
                 disabled={remove.isPending}

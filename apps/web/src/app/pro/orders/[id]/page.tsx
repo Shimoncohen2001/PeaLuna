@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { calculatePlatformCommissionCents } from '@velure/domain';
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { ApiClientError } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
 import { useLocale } from '@/lib/i18n/locale';
@@ -57,6 +58,7 @@ export default function ProOrderDetailPage() {
   const params = useParams<{ id: string }>();
   const { authFetch, user } = useAuth();
   const { t, locale, format } = useLocale();
+  const confirm = useConfirm();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
@@ -267,8 +269,15 @@ export default function ProOrderDetailPage() {
                   variant="gold"
                   className="w-full sm:w-auto"
                   disabled={confirmCash.isPending || Boolean(cashNote)}
-                  onClick={() => {
+                  onClick={async () => {
                     if (cashGuard.current || confirmCash.isPending) return;
+                    const ok = await confirm({
+                      title: t.cash.expertConfirm,
+                      description: t.cash.expertConfirmPrompt,
+                      confirmLabel: t.cash.expertConfirm,
+                      variant: 'gold',
+                    });
+                    if (!ok) return;
                     cashGuard.current = true;
                     confirmCash.mutate();
                   }}

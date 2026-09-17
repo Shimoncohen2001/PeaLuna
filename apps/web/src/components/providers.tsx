@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
+import { ConfirmProvider } from '@/components/ui/confirm-dialog';
 import { AuthProvider } from '@/lib/auth';
 import { LocaleProvider } from '@/lib/i18n/locale';
 
@@ -22,7 +23,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <LocaleProvider>
-        <AuthProvider>{children}</AuthProvider>
+        <ConfirmProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </ConfirmProvider>
       </LocaleProvider>
     </QueryClientProvider>
   );

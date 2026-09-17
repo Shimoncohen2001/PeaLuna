@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { SkillDto } from '@velure/contracts';
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { ApiClientError } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
 import { useLocale } from '@/lib/i18n/locale';
@@ -12,6 +13,7 @@ import { useLocale } from '@/lib/i18n/locale';
 export default function AdminSkillsPage() {
   const { authFetch } = useAuth();
   const { t } = useLocale();
+  const confirm = useConfirm();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -166,8 +168,14 @@ export default function AdminSkillsPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => {
-                      if (!window.confirm(t.admin.deleteConfirm)) return;
+                    onClick={async () => {
+                      const ok = await confirm({
+                        title: t.common.confirmTitle,
+                        description: t.admin.deleteConfirm,
+                        confirmLabel: t.common.delete,
+                        variant: 'primary',
+                      });
+                      if (!ok) return;
                       remove.mutate(skill.id);
                     }}
                     disabled={remove.isPending}
