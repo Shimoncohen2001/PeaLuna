@@ -488,6 +488,7 @@ export default function BookPage() {
               {t.common.total} : <span className="text-ink">{formatMoney(totalCents, 'ILS', locale)}</span>
             </li>
           </ul>
+          <p className="text-sm text-muted">{t.payment.escrowExplain}</p>
           <Button type="submit" variant="primary" disabled={book.isPending}>
             {book.isPending ? '…' : t.book.stepConfirm}
           </Button>

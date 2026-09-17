@@ -13,6 +13,7 @@ import { useLocale } from '@/lib/i18n/locale';
 import { formatMoney, formatStatus, intlLocale } from '@/lib/format';
 import { BookingStatusTracker } from '@/components/booking/booking-status-tracker';
 import { useState, useRef } from 'react';
+import type { Messages } from '@/lib/i18n/messages';
 
 const allowSimulation = process.env.NODE_ENV !== 'production';
 
@@ -23,11 +24,20 @@ type PaymentIntentResult = {
   paymentIntentId: string | null;
   publishableKey: string | null;
   amountCents: number;
-  platformFeeCents: number;
-  technicianPayoutCents: number;
   currency: string;
   message?: string;
 };
+
+function clientPaymentLabel(
+  paymentStatus: string,
+  t: Pick<Messages, 'payment' | 'status'>,
+): string {
+  if (paymentStatus === 'UNPAID' || paymentStatus === 'FAILED') return t.payment.statusDue;
+  if (paymentStatus === 'AUTHORIZED' || paymentStatus === 'CAPTURING') return t.payment.statusConfirmed;
+  if (paymentStatus === 'CAPTURED') return t.payment.statusPaid;
+  if (paymentStatus === 'CASH_PENDING') return t.payment.statusCash;
+  return formatStatus(paymentStatus, t.status);
+}
 
 export default function OrderDetailPage() {
   const params = useParams<{ id: string }>();
@@ -76,12 +86,9 @@ export default function OrderDetailPage() {
         method: 'POST',
         headers: { 'Idempotency-Key': intentKeyRef.current },
       }),
-    onSuccess: (data) => {
+    onSuccess: () => {
       setPayError(null);
-      setPayMessage(
-        data.message ??
-          (data.mode === 'simulation' ? t.payment.simulationReady : t.payment.stripeCreated),
-      );
+      setPayMessage(null);
     },
     onError: (err) => {
       setPayError(err instanceof ApiClientError ? err.message : t.payment.failed);
@@ -99,8 +106,8 @@ export default function OrderDetailPage() {
         { method: 'POST' },
       );
     },
-    onSuccess: async (data) => {
-      setPayMessage(data.message);
+    onSuccess: async () => {
+      setPayMessage(t.payment.stripeHeld);
       setPayError(null);
       await invalidate();
     },
@@ -143,12 +150,12 @@ export default function OrderDetailPage() {
 
   const release = useMutation({
     mutationFn: () =>
-      authFetch<{ message: string; platformFeeCents: number; technicianPayoutCents: number }>(
+      authFetch<{ paymentStatus: string }>(
         `/api/v1/orders/${params.id}/payments/release`,
         { method: 'POST', headers: { 'Idempotency-Key': releaseKeyRef.current } },
       ),
-    onSuccess: async (data) => {
-      setPayMessage(data.message);
+    onSuccess: async () => {
+      setPayMessage(t.payment.captured);
       setPayError(null);
       await invalidate();
       setReviewOpen(true);
@@ -240,18 +247,16 @@ export default function OrderDetailPage() {
           <span>{t.common.total}</span>
           <span>{formatMoney(data.totalCents, data.currency, locale)}</span>
         </div>
-        <p className="mt-2 text-xs text-muted">
-          {t.payment.platformFee} : {formatMoney(data.platformFeeCents, data.currency, locale)}
-        </p>
       </section>
 
       <section className="rounded-[var(--radius-card)] border border-champagne/30 bg-champagne/5 p-6">
-        <h2 className="font-display text-2xl text-ink">{t.payment.title}</h2>
-        <p className="mt-2 text-sm text-muted">
-          {t.payment.status} :{' '}
-          <span className="font-medium text-ink">{formatStatus(paymentStatus, t.status)}</span>
+        <p className="text-sm uppercase tracking-[0.18em] text-champagne">{t.payment.secureLabel}</p>
+        <h2 className="mt-2 font-display text-2xl text-ink">{t.payment.title}</h2>
+        <p className="mt-4 font-display text-4xl text-ink">
+          {formatMoney(data.totalCents, data.currency, locale)}
         </p>
-        <p className="mt-2 text-sm text-muted">{t.payment.escrowExplain}</p>
+        <p className="mt-2 text-sm text-ink">{clientPaymentLabel(paymentStatus, t)}</p>
+        <p className="mt-3 text-sm leading-relaxed text-muted">{t.payment.escrowExplain}</p>
 
         {!paymentAllowed && (paymentStatus === 'UNPAID' || paymentStatus === 'FAILED') ? (
           <p className="mt-4 rounded-lg border border-ink/10 bg-warm-white px-4 py-3 text-sm text-ink">
@@ -342,7 +347,7 @@ export default function OrderDetailPage() {
           <StripeCheckout
             clientSecret={stripeCheckout.clientSecret!}
             publishableKey={stripeCheckout.publishableKey!}
-            payLabel={t.payment.payHold}
+            payLabel={`${t.payment.payCard} · ${formatMoney(data.totalCents, data.currency, locale)}`}
             payingLabel={t.payment.paying}
             onSuccess={async () => {
               setPayError(null);
