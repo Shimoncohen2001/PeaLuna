@@ -62,7 +62,10 @@ export function DashboardShell({
           variant === 'pro' ? 'border-white/10 bg-[#120d0f]/80' : 'border-ink/5 bg-warm-white/80',
         )}
       >
-        <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-3 sm:h-16 sm:gap-3 sm:px-6 sm:py-0">
+        <div
+          dir="ltr"
+          className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-3 sm:h-16 sm:gap-3 sm:px-6 sm:py-0"
+        >
           <Link
             href={variant === 'pro' ? '/pro' : '/dashboard'}
             className={cn(
@@ -73,7 +76,6 @@ export function DashboardShell({
             {t.brand}
           </Link>
           <div className="ml-auto flex min-w-0 items-center justify-end gap-2 sm:gap-3">
-            <LanguageSwitcher />
             {variant === 'customer' && isAdmin ? (
               <Link
                 href="/admin"
@@ -114,6 +116,7 @@ export function DashboardShell({
             >
               {t.nav.logout}
             </Button>
+            <LanguageSwitcher />
           </div>
         </div>
       </header>

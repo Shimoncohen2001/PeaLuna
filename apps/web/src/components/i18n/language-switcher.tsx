@@ -17,6 +17,7 @@ export function LanguageSwitcher({
     <div
       role="radiogroup"
       aria-label={t.nav.language}
+      dir="ltr"
       className={cn(
         'inline-flex shrink-0 rounded-full border border-ink/10 bg-warm-white p-0.5 shadow-soft',
         className,

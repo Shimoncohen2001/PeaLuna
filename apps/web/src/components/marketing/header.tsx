@@ -9,7 +9,10 @@ export function Header() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-ink/5 bg-warm-white/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 sm:justify-between sm:px-6">
+      <div
+        dir="ltr"
+        className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 sm:justify-between sm:px-6"
+      >
         <Link href="/" className="shrink-0 font-display text-xl tracking-tight text-ink sm:text-2xl">
           {t.brand}
         </Link>
@@ -25,7 +28,6 @@ export function Header() {
           </Link>
         </nav>
         <div className="ml-auto flex min-w-0 items-center justify-end gap-2 sm:gap-3">
-          <LanguageSwitcher />
           <Link
             href="/login"
             className="hidden h-9 items-center px-3 text-sm text-ink hover:text-champagne sm:inline-flex"
@@ -38,6 +40,7 @@ export function Header() {
           >
             {t.nav.bookRepair}
           </Link>
+          <LanguageSwitcher />
         </div>
       </div>
     </header>
