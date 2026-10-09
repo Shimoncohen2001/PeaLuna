@@ -95,13 +95,27 @@ function resolveResendFrom(from: string | undefined) {
   return value;
 }
 
+function smtpHost(smtpUrl: string | undefined) {
+  if (!smtpUrl) return '';
+  try {
+    return new URL(smtpUrl).hostname;
+  } catch {
+    return '';
+  }
+}
+
 export function createMailer(env: Env): Mailer {
   if (env.RESEND_API_KEY) {
+    console.info('[mail] delivery=resend');
     return new ResendMailer(env, env.RESEND_API_KEY);
   }
-  if (env.SMTP_URL) {
+  const host = smtpHost(env.SMTP_URL);
+  const localSmtp = host === '127.0.0.1' || host === 'localhost';
+  if (env.SMTP_URL && !(env.NODE_ENV === 'production' && localSmtp)) {
+    console.info(`[mail] delivery=smtp host=${host}`);
     return new SmtpMailer(env, nodemailer.createTransport(env.SMTP_URL));
   }
+  console.warn('[mail] delivery=log-only — emails will not reach a real inbox');
   return new LoggingMailer(env.NODE_ENV === 'test');
 }
 
