@@ -105,15 +105,22 @@ export class AuthService {
     );
 
     const verificationToken = await this.issueEmailVerificationToken(user.id);
+    let mailError: { code: string; message: string } | undefined;
     try {
       await this.dispatchVerificationEmail(user.email, user.firstName, verificationToken);
     } catch (err) {
       console.error('[mail] register: confirmation email not sent', err);
+      const extra = err as { code?: string; message?: string };
+      mailError = {
+        code: typeof extra.code === 'string' ? extra.code : 'MAIL_SEND_FAILED',
+        message: extra.message || 'Could not send the confirmation email',
+      };
     }
 
     return {
       ...session,
       verificationToken: this.env.NODE_ENV === 'test' ? verificationToken : undefined,
+      mailError,
     };
   }
 

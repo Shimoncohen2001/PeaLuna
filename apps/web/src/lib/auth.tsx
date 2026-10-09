@@ -93,7 +93,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       lastName: string;
       countryCode?: string;
     }) => {
-      const res = await apiFetch<TokenResponseDto>('/api/v1/auth/register', {
+      const res = await apiFetch<
+        TokenResponseDto & { mailError?: { code: string; message: string } }
+      >('/api/v1/auth/register', {
         method: 'POST',
         body: JSON.stringify({
           ...input,
@@ -102,6 +104,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }),
       });
       applySession(res.data!);
+      if (typeof window !== 'undefined') {
+        const code = res.data?.mailError?.code;
+        if (code) window.sessionStorage.setItem('pealuna.mailError', code);
+        else window.sessionStorage.removeItem('pealuna.mailError');
+      }
     },
     [applySession],
   );

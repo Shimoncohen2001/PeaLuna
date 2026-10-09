@@ -70,12 +70,14 @@ function publicSession(result: {
     emailVerified: boolean;
   };
   verificationToken?: string;
+  mailError?: { code: string; message: string };
 }) {
   return {
     accessToken: result.accessToken,
     expiresIn: result.expiresIn,
     user: result.user,
     ...(result.verificationToken ? { verificationToken: result.verificationToken } : {}),
+    ...(result.mailError ? { mailError: result.mailError } : {}),
 
   };
 

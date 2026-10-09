@@ -296,6 +296,10 @@ export type Messages = {
     resend: string;
     resending: string;
     resent: string;
+    verifyHint: string;
+    mailTestMode: string;
+    mailBlockedRecipient: string;
+    mailSendFailed: string;
   };
   job: {
     title: string;
@@ -737,7 +741,14 @@ export const en: Messages = {
     verifyCta: 'Go to dashboard',
     resend: 'Resend email',
     resending: 'Sending…',
-    resent: 'A new link was sent.',
+    resent: 'A new link was sent. Check inbox and spam.',
+    verifyHint:
+      'Until pealuna.com is verified in Resend, mail only reaches the email on your Resend account (resend.com → Settings). Check spam too.',
+    mailTestMode:
+      'Resend refused this address: it is not the email on your Resend account. Sign up with that exact address, or add your domain in Resend → Domains.',
+    mailBlockedRecipient:
+      'Resend does not accept test addresses such as @example.com. Use a real inbox.',
+    mailSendFailed: 'The confirmation email could not be sent. Try again in a moment.',
   },
   job: {
     title: 'Appointment',
@@ -1183,7 +1194,14 @@ export const fr: Messages = {
     verifyCta: 'Aller au tableau de bord',
     resend: 'Renvoyer l’email',
     resending: 'Envoi…',
-    resent: 'Un nouveau lien a été envoyé.',
+    resent: 'Un nouveau lien a été envoyé. Vérifie la boîte et les spams.',
+    verifyHint:
+      'Tant que pealuna.com n’est pas vérifié dans Resend, le mail part uniquement vers l’email de ton compte Resend (resend.com → Settings). Regarde aussi les spams.',
+    mailTestMode:
+      'Resend a refusé cette adresse : ce n’est pas l’email de ton compte Resend. Inscris-toi avec cet email exact, ou ajoute ton domaine dans Resend → Domains.',
+    mailBlockedRecipient:
+      'Resend n’accepte pas les adresses de test (@example.com). Utilise une vraie boîte mail.',
+    mailSendFailed: 'L’email de confirmation n’a pas pu partir. Réessaie dans un instant.',
   },
   job: {
     title: 'Rendez-vous',
@@ -1622,7 +1640,14 @@ export const he: Messages = {
     verifyCta: 'ללוח הבקרה',
     resend: 'שליחה מחדש',
     resending: 'שולחת…',
-    resent: 'נשלח קישור חדש.',
+    resent: 'נשלח קישור חדש. בדקי גם בספאם.',
+    verifyHint:
+      'כל עוד pealuna.com לא מאומת ב-Resend, המייל נשלח רק לכתובת של חשבון Resend (resend.com → Settings). בדקי גם בספאם.',
+    mailTestMode:
+      'Resend דחה את הכתובת: זו לא כתובת חשבון Resend. היכנסי עם אותה כתובת בדיוק, או הוסיפי דומיין ב-Resend → Domains.',
+    mailBlockedRecipient:
+      'Resend לא מקבל כתובות בדיקה כמו @example.com. צריך תיבת דואר אמיתית.',
+    mailSendFailed: 'לא הצלחנו לשלוח את מייל האימות. נסי שוב בעוד רגע.',
   },
   job: {
     title: 'תור',

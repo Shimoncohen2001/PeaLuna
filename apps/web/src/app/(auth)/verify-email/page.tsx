@@ -8,7 +8,17 @@ import { ApiClientError, apiFetch } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
 import { postAuthPath } from '@/lib/home-path';
 import { useLocale } from '@/lib/i18n/locale';
+import type { Messages } from '@/lib/i18n/messages';
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
+
+const MAIL_ERROR_KEY = 'pealuna.mailError';
+
+function textForMailCode(code: string | null, t: Messages['auth']): string | null {
+  if (code === 'MAIL_TEST_MODE') return t.mailTestMode;
+  if (code === 'MAIL_BLOCKED_RECIPIENT') return t.mailBlockedRecipient;
+  if (code === 'MAIL_INVALID_FROM' || code === 'MAIL_SEND_FAILED') return t.mailSendFailed;
+  return null;
+}
 
 function VerifyEmailInner() {
   const params = useSearchParams();
@@ -27,6 +37,13 @@ function VerifyEmailInner() {
   }, [user?.emailVerified]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const stored = window.sessionStorage.getItem(MAIL_ERROR_KEY);
+    const mapped = textForMailCode(stored, t.auth);
+    if (mapped) setMailError(mapped);
+  }, [t.auth]);
+
+  useEffect(() => {
     if (!token) return;
     let cancelled = false;
     (async () => {
@@ -37,6 +54,7 @@ function VerifyEmailInner() {
         });
         if (!cancelled) {
           setStatus('ok');
+          if (typeof window !== 'undefined') window.sessionStorage.removeItem(MAIL_ERROR_KEY);
           try {
             await refreshSession();
           } catch {
@@ -59,11 +77,22 @@ function VerifyEmailInner() {
     setResent(false);
     setMailError(null);
     try {
-      await authFetch('/api/v1/auth/resend-verification', { method: 'POST' });
+      await authFetch('/api/v1/auth/resend-verification', {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
       setResent(true);
       setStatus('pending');
+      if (typeof window !== 'undefined') window.sessionStorage.removeItem(MAIL_ERROR_KEY);
     } catch (err) {
-      setMailError(err instanceof ApiClientError ? err.message : t.auth.verifyError);
+      const code = err instanceof ApiClientError ? err.code : null;
+      const mapped = textForMailCode(code, t.auth);
+      setMailError(
+        mapped ?? (err instanceof ApiClientError ? err.message : t.auth.verifyError),
+      );
+      if (typeof window !== 'undefined' && code) {
+        window.sessionStorage.setItem(MAIL_ERROR_KEY, code);
+      }
     } finally {
       setResending(false);
     }
@@ -87,6 +116,9 @@ function VerifyEmailInner() {
         </p>
         {user?.email ? (
           <p className="mt-2 text-sm font-medium text-ink">{user.email}</p>
+        ) : null}
+        {status !== 'ok' ? (
+          <p className="mt-3 text-sm text-muted">{t.auth.verifyHint}</p>
         ) : null}
         {resent ? <p className="mt-2 text-sm text-champagne">{t.auth.resent}</p> : null}
         {mailError ? <p className="mt-2 text-sm text-red-700">{mailError}</p> : null}
