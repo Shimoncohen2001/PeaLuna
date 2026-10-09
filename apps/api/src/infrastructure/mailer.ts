@@ -78,7 +78,7 @@ class ResendMailer implements Mailer {
       throw Object.assign(
         new Error(
           testingOnly
-            ? 'Resend is in test mode. Sign up with the same email as your Resend account, or change EMAIL_FROM to PeaLuna <beth.t@example.com>.'
+            ? 'Resend is in test mode. Sign up with the same email as your Resend account, and set EMAIL_FROM to PeaLuna <onboarding@resend.dev>.'
             : `Could not send the confirmation email (${res.status}).`,
         ),
         { statusCode: 400, code: 'MAIL_SEND_FAILED' },
@@ -87,10 +87,12 @@ class ResendMailer implements Mailer {
   }
 }
 
+const RESEND_TEST_FROM = 'PeaLuna <onboarding@resend.dev>';
+
 function resolveResendFrom(from: string | undefined) {
   const value = from?.trim() ?? '';
-  if (!value || /localhost/i.test(value)) {
-    return 'PeaLuna <beth.t@example.com>';
+  if (!value || /localhost/i.test(value) || /onboarding\.resend\.dev/i.test(value)) {
+    return RESEND_TEST_FROM;
   }
   return value;
 }
