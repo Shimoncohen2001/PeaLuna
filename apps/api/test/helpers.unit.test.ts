@@ -9,7 +9,22 @@ import {
   interpretResendError,
   RESEND_TEST_FROM,
 } from '../src/infrastructure/mailer.js';
+import { publicWebOrigin } from '../src/config/env.js';
 import { testEnv } from './helpers.js';
+
+describe('publicWebOrigin', () => {
+  it('keeps localhost in development and rewrites it in production', () => {
+    expect(publicWebOrigin(testEnv())).toBe('http://localhost:3000');
+    expect(
+      publicWebOrigin({
+        ...testEnv(),
+        NODE_ENV: 'production',
+        WEB_ORIGIN: 'http://localhost:3000',
+        CORS_ORIGIN: 'https://pealuna-web-production.up.railway.app',
+      }),
+    ).toBe('https://pealuna-web-production.up.railway.app');
+  });
+});
 
 describe('idempotency helpers', () => {
   it('hashes the same payload consistently', () => {

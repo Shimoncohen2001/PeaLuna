@@ -11,7 +11,7 @@ import {
 import { ACCESS_TOKEN_TTL_SECONDS } from '@velure/contracts';
 import { prisma, UserStatus } from '@velure/database';
 import type { Role } from '@velure/domain';
-import type { Env } from '../../config/env.js';
+import { publicWebOrigin, type Env } from '../../config/env.js';
 import { createMailer, verificationEmail, type Mailer } from '../../infrastructure/mailer.js';
 
 type SessionUser = {
@@ -392,7 +392,7 @@ export class AuthService {
   }
 
   private async dispatchVerificationEmail(email: string, firstName: string, token: string) {
-    const verifyUrl = `${this.env.WEB_ORIGIN}/verify-email?token=${encodeURIComponent(token)}`;
+    const verifyUrl = `${publicWebOrigin(this.env)}/verify-email?token=${encodeURIComponent(token)}`;
     const message = verificationEmail({ to: email, firstName, verifyUrl });
     try {
       await this.mailer.send(message);

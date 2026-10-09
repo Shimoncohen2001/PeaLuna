@@ -47,6 +47,24 @@ const envSchema = z.object({
 
 export type Env = z.infer<typeof envSchema>;
 
+function isLoopbackOrigin(url: string) {
+  try {
+    const host = new URL(url).hostname;
+    return host === 'localhost' || host === '127.0.0.1';
+  } catch {
+    return /localhost|127\.0\.0\.1/i.test(url);
+  }
+}
+
+/** Never put localhost confirmation links in production emails. */
+export function publicWebOrigin(env: Env): string {
+  const web = env.WEB_ORIGIN.replace(/\/$/, '');
+  if (env.NODE_ENV !== 'production' || !isLoopbackOrigin(web)) return web;
+  const cors = env.CORS_ORIGIN.split(',')[0]?.trim().replace(/\/$/, '') ?? '';
+  if (cors && !isLoopbackOrigin(cors)) return cors;
+  return 'https://pealuna-web-production.up.railway.app';
+}
+
 let cached: Env | null = null;
 
 export function loadEnv(): Env {
