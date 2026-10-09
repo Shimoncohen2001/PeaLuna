@@ -50,6 +50,8 @@ class SmtpMailer implements Mailer {
   }
 }
 
+export const RESEND_TEST_FROM = 'PeaLuna <onboarding@resend.dev>';
+
 class ResendMailer implements Mailer {
   constructor(
     private readonly env: Env,
@@ -57,44 +59,100 @@ class ResendMailer implements Mailer {
   ) {}
 
   async send(message: MailMessage): Promise<void> {
-    const from = resolveResendFrom(this.env.EMAIL_FROM);
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from,
-        to: [message.to],
-        subject: message.subject,
-        text: message.text,
-        html: message.html ?? message.text,
-      }),
-    });
-    if (!res.ok) {
-      const body = await res.text();
-      const testingOnly = /testing emails|verify a domain|invalid `from`/i.test(body);
-      throw Object.assign(
-        new Error(
-          testingOnly
-            ? 'Resend is in test mode. Sign up with the same email as your Resend account, and set EMAIL_FROM to PeaLuna <onboarding@resend.dev>.'
-            : `Could not send the confirmation email (${res.status}).`,
-        ),
-        { statusCode: 400, code: 'MAIL_SEND_FAILED' },
-      );
+    const preferred = resolveResendFrom(this.env.EMAIL_FROM);
+    const attempts = preferred === RESEND_TEST_FROM ? [preferred] : [preferred, RESEND_TEST_FROM];
+    let lastStatus = 0;
+    let lastBody = '';
+
+    for (const from of attempts) {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from,
+          to: [message.to],
+          subject: message.subject,
+          text: message.text,
+          html: message.html ?? message.text,
+        }),
+      });
+      if (res.ok) {
+        if (from !== preferred) {
+          console.warn(`[mail] resend accepted fallback from=${from} (rejected ${preferred})`);
+        }
+        return;
+      }
+      lastStatus = res.status;
+      lastBody = await res.text();
+      console.error(`[mail] resend failed status=${lastStatus} from=${from} to=${message.to} body=${lastBody}`);
+      if (!resendFromRejected(lastBody) || from === RESEND_TEST_FROM) {
+        break;
+      }
     }
+
+    throw Object.assign(new Error(messageFromResendBody(lastStatus, lastBody)), {
+      statusCode: 400,
+      code: resendErrorCode(lastBody),
+    });
   }
 }
 
-const RESEND_TEST_FROM = 'PeaLuna <onboarding@resend.dev>';
-
-function resolveResendFrom(from: string | undefined) {
-  const value = from?.trim() ?? '';
-  if (!value || /localhost/i.test(value) || /onboarding\.resend\.dev/i.test(value)) {
+/** Strip quotes and map Resend's unusable test senders to the current sandbox address. */
+export function resolveResendFrom(from: string | undefined) {
+  let value = from?.trim() ?? '';
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    value = value.slice(1, -1).trim();
+  }
+  if (
+    !value ||
+    /localhost/i.test(value) ||
+    /@(?:example\.com|resend\.dev)\b/i.test(value)
+  ) {
     return RESEND_TEST_FROM;
   }
   return value;
+}
+
+export function resendFromRejected(body: string) {
+  return /invalid `from`|from field|not verified|unverified domain/i.test(body);
+}
+
+function resendErrorCode(body: string) {
+  if (/testing emails|own email address/i.test(body)) return 'MAIL_TEST_MODE';
+  if (/example\.com|test\.com|not allowed/i.test(body) && /to|recipient/i.test(body)) {
+    return 'MAIL_BLOCKED_RECIPIENT';
+  }
+  if (resendFromRejected(body)) return 'MAIL_INVALID_FROM';
+  return 'MAIL_SEND_FAILED';
+}
+
+function messageFromResendBody(status: number, body: string): string {
+  let detail = body.slice(0, 280);
+  try {
+    const parsed = JSON.parse(body) as { message?: unknown };
+    if (typeof parsed.message === 'string' && parsed.message.trim()) {
+      detail = parsed.message.trim();
+    }
+  } catch {
+    /* raw text */
+  }
+
+  if (/testing emails|own email address/i.test(body)) {
+    return 'Resend is in test mode: it only delivers to the email on your Resend account. Sign up with that address, or verify your domain in Resend to email anyone.';
+  }
+  if (resendFromRejected(body)) {
+    return 'Resend rejected the sender. Set EMAIL_FROM to PeaLuna <onboarding@resend.dev>, or verify your domain in Resend.';
+  }
+  if (/example\.com|test\.com/i.test(body)) {
+    return 'Resend does not deliver to test domains such as example.com. Use a real inbox.';
+  }
+  return `Could not send the confirmation email (${status}): ${detail}`;
 }
 
 function smtpHost(smtpUrl: string | undefined) {

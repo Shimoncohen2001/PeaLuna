@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { apiFetch } from '@/lib/api-client';
+import { ApiClientError, apiFetch } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
 import { postAuthPath } from '@/lib/home-path';
 import { useLocale } from '@/lib/i18n/locale';
@@ -20,6 +20,7 @@ function VerifyEmailInner() {
   );
   const [resent, setResent] = useState(false);
   const [resending, setResending] = useState(false);
+  const [mailError, setMailError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.emailVerified) setStatus('ok');
@@ -56,12 +57,13 @@ function VerifyEmailInner() {
   async function resend() {
     setResending(true);
     setResent(false);
+    setMailError(null);
     try {
       await authFetch('/api/v1/auth/resend-verification', { method: 'POST' });
       setResent(true);
       setStatus('pending');
-    } catch {
-      setStatus('error');
+    } catch (err) {
+      setMailError(err instanceof ApiClientError ? err.message : t.auth.verifyError);
     } finally {
       setResending(false);
     }
@@ -87,6 +89,7 @@ function VerifyEmailInner() {
           <p className="mt-2 text-sm font-medium text-ink">{user.email}</p>
         ) : null}
         {resent ? <p className="mt-2 text-sm text-champagne">{t.auth.resent}</p> : null}
+        {mailError ? <p className="mt-2 text-sm text-red-700">{mailError}</p> : null}
         <div className="mt-8 flex flex-col gap-3">
           {status === 'ok' ? (
             <Link href={nextHref}>
