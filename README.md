@@ -66,6 +66,9 @@ pnpm dev
 - Web: http://localhost:3000  
 - API: http://localhost:4000  
 - Health: http://localhost:4000/health/ready  
+- Mailpit (local inbox for verification emails): http://localhost:8025  
+
+In production, set `RESEND_API_KEY` (free at [resend.com](https://resend.com)) or `SMTP_URL`, plus `EMAIL_FROM`. Accounts stay locked until the confirmation link is opened.
 
 ## Project structure
 

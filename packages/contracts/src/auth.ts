@@ -45,6 +45,7 @@ export const authUserSchema = z.object({
   firstName: z.string(),
   lastName: z.string(),
   roles: z.array(z.string()),
+  emailVerified: z.boolean(),
 });
 
 export type AuthUserDto = z.infer<typeof authUserSchema>;

@@ -10,6 +10,7 @@ export function RequireAdmin({ children }: { children: React.ReactNode }) {
   const { t } = useLocale();
   const router = useRouter();
   const isAdmin = user?.roles?.includes('ADMIN') || user?.roles?.includes('SUPER_ADMIN');
+  const needsVerify = Boolean(user && user.emailVerified === false);
 
   useEffect(() => {
     if (isLoading) return;
@@ -17,10 +18,14 @@ export function RequireAdmin({ children }: { children: React.ReactNode }) {
       router.replace('/login?next=/admin');
       return;
     }
+    if (needsVerify) {
+      router.replace('/verify-email');
+      return;
+    }
     if (!isAdmin) router.replace('/dashboard');
-  }, [isAdmin, isAuthenticated, isLoading, router]);
+  }, [isAdmin, isAuthenticated, isLoading, needsVerify, router]);
 
-  if (isLoading || !isAuthenticated || !isAdmin) {
+  if (isLoading || !isAuthenticated || needsVerify || !isAdmin) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-warm-white text-muted">
         {t.common.loading}

@@ -37,6 +37,7 @@ describe.skipIf(!hasDb)('auth integration', () => {
     const pending = await prisma.user.findUniqueOrThrow({ where: { id: session.user.id } });
     expect(pending.status).toBe('PENDING_VERIFICATION');
     expect(pending.emailVerifiedAt).toBeNull();
+    expect(session.user.emailVerified).toBe(false);
     expect(session.verificationToken).toBeTruthy();
 
     await auth.verifyEmail(session.verificationToken!);

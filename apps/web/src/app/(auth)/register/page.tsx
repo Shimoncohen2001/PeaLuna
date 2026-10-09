@@ -10,7 +10,7 @@ import { useAuth } from '@/lib/auth';
 import { useLocale } from '@/lib/i18n/locale';
 
 export default function RegisterPage() {
-  const { register, isAuthenticated, isLoading } = useAuth();
+  const { register, isAuthenticated, isLoading, user } = useAuth();
   const { t } = useLocale();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -19,9 +19,9 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && !justRegistered) {
-      router.replace('/dashboard');
+      router.replace(user?.emailVerified === false ? '/verify-email' : '/dashboard');
     }
-  }, [isAuthenticated, isLoading, router, justRegistered]);
+  }, [isAuthenticated, isLoading, router, justRegistered, user?.emailVerified]);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();

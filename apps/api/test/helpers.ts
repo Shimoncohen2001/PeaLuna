@@ -26,6 +26,9 @@ export function testEnv(): Env {
     RATE_LIMIT_MAX: 1000,
     RATE_LIMIT_WINDOW_MS: 60_000,
     PREVIEW_MODE: false,
+    RESEND_API_KEY: undefined,
+    SMTP_URL: undefined,
+    EMAIL_FROM: 'PeaLuna <noreply@localhost>',
   };
 }
 

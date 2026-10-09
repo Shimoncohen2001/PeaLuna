@@ -21,7 +21,19 @@ type SessionUser = {
   lastName: string;
   roles: Role[];
   homeRegion: string;
+  emailVerified: boolean;
 };
+
+function toPublicUser(user: SessionUser) {
+  return {
+    id: user.id,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    roles: user.roles as string[],
+    emailVerified: user.emailVerified,
+  };
+}
 
 const EMAIL_VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -86,6 +98,7 @@ export class AuthService {
         lastName: user.lastName,
         roles: this.mapRoles(user.roles),
         homeRegion: user.homeRegion,
+        emailVerified: false,
       },
       params.userAgent,
       params.ipAddress,
@@ -96,11 +109,7 @@ export class AuthService {
 
     return {
       ...session,
-      emailVerified: false,
-      verificationToken:
-        this.env.NODE_ENV === 'production' && !this.env.PREVIEW_MODE
-          ? undefined
-          : verificationToken,
+      verificationToken: this.env.NODE_ENV === 'test' ? verificationToken : undefined,
     };
   }
 
@@ -128,6 +137,7 @@ export class AuthService {
         lastName: user.lastName,
         roles: this.mapRoles(user.roles),
         homeRegion: user.homeRegion,
+        emailVerified: Boolean(user.emailVerifiedAt),
       },
       params.userAgent,
       params.ipAddress,
@@ -202,6 +212,7 @@ export class AuthService {
       lastName: user.lastName,
       roles: this.mapRoles(user.roles),
       homeRegion: user.homeRegion,
+      emailVerified: Boolean(user.emailVerifiedAt),
     };
 
     const tokens = await createTokenPair({
@@ -245,13 +256,7 @@ export class AuthService {
       accessToken: tokens.accessToken,
       expiresIn: ACCESS_TOKEN_TTL_SECONDS,
       refreshToken: tokens.refreshToken,
-      user: {
-        id: sessionUser.id,
-        email: sessionUser.email,
-        firstName: sessionUser.firstName,
-        lastName: sessionUser.lastName,
-        roles: sessionUser.roles as string[],
-      },
+      user: toPublicUser(sessionUser),
     };
   }
 
@@ -302,10 +307,7 @@ export class AuthService {
     await this.dispatchVerificationEmail(user.email, user.firstName, verificationToken);
     return {
       alreadyVerified: false as const,
-      verificationToken:
-        this.env.NODE_ENV === 'production' && !this.env.PREVIEW_MODE
-          ? undefined
-          : verificationToken,
+      verificationToken: this.env.NODE_ENV === 'test' ? verificationToken : undefined,
     };
   }
 
@@ -357,13 +359,7 @@ export class AuthService {
       accessToken: tokens.accessToken,
       expiresIn: ACCESS_TOKEN_TTL_SECONDS,
       refreshToken: tokens.refreshToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        roles: user.roles as string[],
-      },
+      user: toPublicUser(user),
     };
   }
 
@@ -387,13 +383,7 @@ export class AuthService {
   private async dispatchVerificationEmail(email: string, firstName: string, token: string) {
     const verifyUrl = `${this.env.WEB_ORIGIN}/verify-email?token=${encodeURIComponent(token)}`;
     const message = verificationEmail({ to: email, firstName, verifyUrl });
-    try {
-      await this.mailer.send(message);
-    } catch (err) {
-      if (this.env.NODE_ENV === 'production') {
-        throw err;
-      }
-    }
+    await this.mailer.send(message);
   }
 
   private mapRoles(userRoles: { role: { name: string } }[]): Role[] {

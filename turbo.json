@@ -8,7 +8,9 @@
     "JWT_REFRESH_SECRET",
     "AWS_REGION",
     "DEPLOYMENT_REGION",
-    "REQUIRE_EMAIL_VERIFICATION"
+    "REQUIRE_EMAIL_VERIFICATION",
+    "RESEND_API_KEY",
+    "SMTP_URL"
   ],
   "tasks": {
     "build": {

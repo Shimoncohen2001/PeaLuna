@@ -6,17 +6,23 @@ import { useAuth } from '@/lib/auth';
 import { useLocale } from '@/lib/i18n/locale';
 
 export function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const { t } = useLocale();
   const router = useRouter();
+  const needsVerify = Boolean(user && user.emailVerified === false);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (isLoading) return;
+    if (!isAuthenticated) {
       router.replace('/login');
+      return;
     }
-  }, [isAuthenticated, isLoading, router]);
+    if (needsVerify) {
+      router.replace('/verify-email');
+    }
+  }, [isAuthenticated, isLoading, needsVerify, router]);
 
-  if (isLoading || !isAuthenticated) {
+  if (isLoading || !isAuthenticated || needsVerify) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-warm-white text-muted">
         {t.common.loading}

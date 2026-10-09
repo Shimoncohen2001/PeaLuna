@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
 import { ApiClientError } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
-import { homePathForRoles } from '@/lib/home-path';
+import { postAuthPath } from '@/lib/home-path';
 import { useLocale } from '@/lib/i18n/locale';
 
 const DEMO_ADMIN = { email: 'admin@pealuna.demo', password: 'DemoAdmin123' };
@@ -35,11 +35,9 @@ function LoginForm() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      const next = searchParams.get('next');
-      const safeNext = next?.startsWith('/') && !next.startsWith('//') ? next : null;
-      router.replace(safeNext ?? homePathForRoles(user?.roles));
+      router.replace(postAuthPath(user, searchParams.get('next')));
     }
-  }, [isAuthenticated, isLoading, router, searchParams, user?.roles]);
+  }, [isAuthenticated, isLoading, router, searchParams, user]);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();

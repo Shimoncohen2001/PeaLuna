@@ -16,6 +16,7 @@ const envSchema = z.object({
     .transform((v) => v === 'true')
     .default('false'),
   SMTP_URL: z.preprocess((v) => (v === '' ? undefined : v), z.string().url().optional()),
+  RESEND_API_KEY: z.preprocess((v) => (v === '' ? undefined : v), z.string().min(8).optional()),
   EMAIL_FROM: z.preprocess((v) => (v === '' ? undefined : v), z.string().min(3).optional()),
   SENTRY_DSN: z.preprocess((v) => (v === '' ? undefined : v), z.string().url().optional()),
   DEPLOYMENT_REGION: z.string().default('eu-central-1'),
@@ -60,7 +61,7 @@ export function loadEnv(): Env {
       if (!env.STRIPE_SECRET_KEY) missing.push('STRIPE_SECRET_KEY');
       if (!env.STRIPE_WEBHOOK_SECRET) missing.push('STRIPE_WEBHOOK_SECRET');
       if (!env.S3_BUCKET && !env.MEDIA_DIR) missing.push('S3_BUCKET or MEDIA_DIR');
-      if (!env.SMTP_URL) missing.push('SMTP_URL');
+      if (!env.SMTP_URL && !env.RESEND_API_KEY) missing.push('SMTP_URL or RESEND_API_KEY');
       if (!env.EMAIL_FROM) missing.push('EMAIL_FROM');
     }
     if (missing.length > 0) {

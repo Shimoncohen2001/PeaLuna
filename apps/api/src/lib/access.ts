@@ -35,8 +35,7 @@ export async function requireVerifiedUser(userId: string) {
   }
 
   const mustVerify =
-    (process.env.NODE_ENV === 'production' && process.env.PREVIEW_MODE !== 'true') ||
-    process.env.REQUIRE_EMAIL_VERIFICATION === 'true';
+    process.env.NODE_ENV !== 'test' || process.env.REQUIRE_EMAIL_VERIFICATION === 'true';
   if (mustVerify && !user.emailVerifiedAt) {
     throw Object.assign(new Error('Email verification required'), {
       statusCode: 403,

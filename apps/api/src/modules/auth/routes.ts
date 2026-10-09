@@ -67,25 +67,14 @@ function publicSession(result: {
     lastName: string;
 
     roles: string[];
-
+    emailVerified: boolean;
   };
-
-  emailVerified?: boolean;
-
   verificationToken?: string;
-
 }) {
-
   return {
-
     accessToken: result.accessToken,
-
     expiresIn: result.expiresIn,
-
     user: result.user,
-
-    emailVerified: result.emailVerified,
-
     ...(result.verificationToken ? { verificationToken: result.verificationToken } : {}),
 
   };
