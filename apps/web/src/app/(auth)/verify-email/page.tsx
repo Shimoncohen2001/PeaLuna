@@ -13,11 +13,16 @@ import { LanguageSwitcher } from '@/components/i18n/language-switcher';
 
 const MAIL_ERROR_KEY = 'pealuna.mailError';
 
-function textForMailCode(code: string | null, t: Messages['auth']): string | null {
+function textForMailCode(
+  code: string | null,
+  t: Messages['auth'],
+  fallback?: string,
+): string | null {
   if (code === 'MAIL_TEST_MODE') return t.mailTestMode;
   if (code === 'MAIL_BLOCKED_RECIPIENT') return t.mailBlockedRecipient;
-  if (code === 'MAIL_INVALID_FROM' || code === 'MAIL_SEND_FAILED') return t.mailSendFailed;
-  return null;
+  if (code === 'MAIL_INVALID_FROM') return fallback || t.mailSendFailed;
+  if (code === 'MAIL_SEND_FAILED') return fallback || t.mailSendFailed;
+  return fallback ?? null;
 }
 
 function VerifyEmailInner() {
@@ -86,10 +91,12 @@ function VerifyEmailInner() {
       if (typeof window !== 'undefined') window.sessionStorage.removeItem(MAIL_ERROR_KEY);
     } catch (err) {
       const code = err instanceof ApiClientError ? err.code : null;
-      const mapped = textForMailCode(code, t.auth);
-      setMailError(
-        mapped ?? (err instanceof ApiClientError ? err.message : t.auth.verifyError),
+      const mapped = textForMailCode(
+        code,
+        t.auth,
+        err instanceof ApiClientError ? err.message : undefined,
       );
+      setMailError(mapped ?? t.auth.verifyError);
       if (typeof window !== 'undefined' && code) {
         window.sessionStorage.setItem(MAIL_ERROR_KEY, code);
       }

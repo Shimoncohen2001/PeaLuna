@@ -747,7 +747,7 @@ export const en: Messages = {
     mailTestMode:
       'Resend refused this address: it is not the email on your Resend account. Sign up with that exact address, or add your domain in Resend → Domains.',
     mailBlockedRecipient:
-      'Resend does not accept test addresses such as @example.com. Use a real inbox.',
+      'This account uses a fake address (@example.com). Create a new account with your real inbox — the same email as your Resend account.',
     mailSendFailed: 'The confirmation email could not be sent. Try again in a moment.',
   },
   job: {
@@ -1200,7 +1200,7 @@ export const fr: Messages = {
     mailTestMode:
       'Resend a refusé cette adresse : ce n’est pas l’email de ton compte Resend. Inscris-toi avec cet email exact, ou ajoute ton domaine dans Resend → Domains.',
     mailBlockedRecipient:
-      'Resend n’accepte pas les adresses de test (@example.com). Utilise une vraie boîte mail.',
+      'Ce compte utilise une fausse adresse (@example.com). Crée un nouveau compte avec ta vraie boîte mail — le même email que ton compte Resend.',
     mailSendFailed: 'L’email de confirmation n’a pas pu partir. Réessaie dans un instant.',
   },
   job: {
@@ -1646,7 +1646,7 @@ export const he: Messages = {
     mailTestMode:
       'Resend דחה את הכתובת: זו לא כתובת חשבון Resend. היכנסי עם אותה כתובת בדיוק, או הוסיפי דומיין ב-Resend → Domains.',
     mailBlockedRecipient:
-      'Resend לא מקבל כתובות בדיקה כמו @example.com. צריך תיבת דואר אמיתית.',
+      'החשבון הזה משתמש בכתובת בדיקה (@example.com). צרי חשבון חדש עם תיבת דואר אמיתית — אותה כתובת כמו חשבון Resend.',
     mailSendFailed: 'לא הצלחנו לשלוח את מייל האימות. נסי שוב בעוד רגע.',
   },
   job: {

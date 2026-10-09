@@ -6,6 +6,7 @@ import {
   clearCapturedMail,
   verificationEmail,
   resolveResendFrom,
+  interpretResendError,
   RESEND_TEST_FROM,
 } from '../src/infrastructure/mailer.js';
 import { testEnv } from './helpers.js';
@@ -74,5 +75,35 @@ describe('mailer', () => {
     } finally {
       globalThis.fetch = original;
     }
+  });
+
+  it('does not treat Resend from-format docs as a blocked example.com recipient', () => {
+    const invalidFrom = interpretResendError(
+      'shimon@gmail.com',
+      422,
+      JSON.stringify({
+        statusCode: 422,
+        name: 'invalid_from_address',
+        message:
+          'Invalid `from` field. The email address needs to follow the `email@example.com` or `Name <email@example.com>` format.',
+      }),
+    );
+    expect(invalidFrom.code).toBe('MAIL_INVALID_FROM');
+    expect(invalidFrom.message).toContain('EMAIL_FROM');
+    expect(invalidFrom.message).not.toMatch(/does not deliver to test domains/i);
+
+    const testMode = interpretResendError(
+      'other@gmail.com',
+      403,
+      JSON.stringify({
+        statusCode: 403,
+        message:
+          'You can only send testing emails to your own email address (you@gmail.com). To send emails to other recipients, please verify a domain at resend.com/domains',
+      }),
+    );
+    expect(testMode.code).toBe('MAIL_TEST_MODE');
+
+    const blocked = interpretResendError('ada@example.com', 422, '{}');
+    expect(blocked.code).toBe('MAIL_BLOCKED_RECIPIENT');
   });
 });

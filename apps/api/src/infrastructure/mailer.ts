@@ -59,6 +59,15 @@ class ResendMailer implements Mailer {
   ) {}
 
   async send(message: MailMessage): Promise<void> {
+    if (isUnmailableTestAddress(message.to)) {
+      throw Object.assign(
+        new Error(
+          'That inbox cannot receive mail (example.com / test.com). Sign up with a real address, the same one as your Resend account.',
+        ),
+        { statusCode: 400, code: 'MAIL_BLOCKED_RECIPIENT' },
+      );
+    }
+
     const preferred = resolveResendFrom(this.env.EMAIL_FROM);
     const attempts = preferred === RESEND_TEST_FROM ? [preferred] : [preferred, RESEND_TEST_FROM];
     let lastStatus = 0;
@@ -93,9 +102,10 @@ class ResendMailer implements Mailer {
       }
     }
 
-    throw Object.assign(new Error(messageFromResendBody(lastStatus, lastBody)), {
+    const interpreted = interpretResendError(message.to, lastStatus, lastBody);
+    throw Object.assign(new Error(interpreted.message), {
       statusCode: 400,
-      code: resendErrorCode(lastBody),
+      code: interpreted.code,
     });
   }
 }
@@ -119,23 +129,19 @@ export function resolveResendFrom(from: string | undefined) {
   return value;
 }
 
+export function isUnmailableTestAddress(to: string) {
+  const domain = to.split('@')[1]?.toLowerCase() ?? '';
+  return /^(example\.com|test\.com|invalid|localhost)$/.test(domain);
+}
+
 export function resendFromRejected(body: string) {
   return /invalid `from`|from field|not verified|unverified domain/i.test(body);
 }
 
-function resendErrorCode(body: string) {
-  if (/testing emails|own email address/i.test(body)) return 'MAIL_TEST_MODE';
-  if (/example\.com|test\.com|not allowed/i.test(body) && /to|recipient/i.test(body)) {
-    return 'MAIL_BLOCKED_RECIPIENT';
-  }
-  if (resendFromRejected(body)) return 'MAIL_INVALID_FROM';
-  return 'MAIL_SEND_FAILED';
-}
-
-function messageFromResendBody(status: number, body: string): string {
+export function interpretResendError(to: string, status: number, body: string) {
   let detail = body.slice(0, 280);
   try {
-    const parsed = JSON.parse(body) as { message?: unknown };
+    const parsed = JSON.parse(body) as { message?: unknown; name?: unknown };
     if (typeof parsed.message === 'string' && parsed.message.trim()) {
       detail = parsed.message.trim();
     }
@@ -143,16 +149,30 @@ function messageFromResendBody(status: number, body: string): string {
     /* raw text */
   }
 
-  if (/testing emails|own email address/i.test(body)) {
-    return 'Resend is in test mode: it only delivers to the email on your Resend account. Sign up with that address, or verify your domain in Resend to email anyone.';
+  if (isUnmailableTestAddress(to)) {
+    return {
+      code: 'MAIL_BLOCKED_RECIPIENT',
+      message:
+        'That inbox cannot receive mail (example.com / test.com). Sign up with a real address, the same one as your Resend account.',
+    };
   }
-  if (resendFromRejected(body)) {
-    return 'Resend rejected the sender. Set EMAIL_FROM to PeaLuna <onboarding@resend.dev>, or verify your domain in Resend.';
+  if (/testing emails|own email address/i.test(detail) || /testing emails|own email address/i.test(body)) {
+    return {
+      code: 'MAIL_TEST_MODE',
+      message:
+        'Resend is in test mode: it only delivers to the email on your Resend account. Sign up with that address, or verify your domain in Resend to email anyone.',
+    };
   }
-  if (/example\.com|test\.com/i.test(body)) {
-    return 'Resend does not deliver to test domains such as example.com. Use a real inbox.';
+  if (resendFromRejected(body) || resendFromRejected(detail)) {
+    return {
+      code: 'MAIL_INVALID_FROM',
+      message: `Resend rejected the sender. Set EMAIL_FROM to PeaLuna <onboarding@resend.dev>, or verify your domain. (${detail})`,
+    };
   }
-  return `Could not send the confirmation email (${status}): ${detail}`;
+  return {
+    code: 'MAIL_SEND_FAILED',
+    message: `Could not send the confirmation email (${status}): ${detail}`,
+  };
 }
 
 function smtpHost(smtpUrl: string | undefined) {
