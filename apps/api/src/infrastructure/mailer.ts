@@ -57,7 +57,7 @@ class ResendMailer implements Mailer {
   ) {}
 
   async send(message: MailMessage): Promise<void> {
-    const from = this.env.EMAIL_FROM ?? 'PeaLuna <beth.t@example.com>';
+    const from = resolveResendFrom(this.env.EMAIL_FROM);
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -74,9 +74,25 @@ class ResendMailer implements Mailer {
     });
     if (!res.ok) {
       const body = await res.text();
-      throw new Error(`Resend failed (${res.status}): ${body}`);
+      const testingOnly = /testing emails|verify a domain|invalid `from`/i.test(body);
+      throw Object.assign(
+        new Error(
+          testingOnly
+            ? 'Resend is in test mode. Sign up with the same email as your Resend account, or change EMAIL_FROM to PeaLuna <beth.t@example.com>.'
+            : `Could not send the confirmation email (${res.status}).`,
+        ),
+        { statusCode: 400, code: 'MAIL_SEND_FAILED' },
+      );
     }
   }
+}
+
+function resolveResendFrom(from: string | undefined) {
+  const value = from?.trim() ?? '';
+  if (!value || /localhost/i.test(value)) {
+    return 'PeaLuna <beth.t@example.com>';
+  }
+  return value;
 }
 
 export function createMailer(env: Env): Mailer {

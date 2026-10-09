@@ -105,7 +105,11 @@ export class AuthService {
     );
 
     const verificationToken = await this.issueEmailVerificationToken(user.id);
-    await this.dispatchVerificationEmail(user.email, user.firstName, verificationToken);
+    try {
+      await this.dispatchVerificationEmail(user.email, user.firstName, verificationToken);
+    } catch (err) {
+      console.error('[mail] register: confirmation email not sent', err);
+    }
 
     return {
       ...session,
@@ -383,7 +387,24 @@ export class AuthService {
   private async dispatchVerificationEmail(email: string, firstName: string, token: string) {
     const verifyUrl = `${this.env.WEB_ORIGIN}/verify-email?token=${encodeURIComponent(token)}`;
     const message = verificationEmail({ to: email, firstName, verifyUrl });
-    await this.mailer.send(message);
+    try {
+      await this.mailer.send(message);
+    } catch (err) {
+      console.error('[mail] verification send failed', err);
+      const extra = err as { statusCode?: number; code?: string; message?: string };
+      if (extra.statusCode && extra.statusCode < 500) {
+        throw httpError(
+          extra.message || 'Could not send the confirmation email',
+          extra.statusCode,
+          typeof extra.code === 'string' ? extra.code : 'MAIL_SEND_FAILED',
+        );
+      }
+      throw httpError(
+        'Could not send the confirmation email. Check RESEND_API_KEY and EMAIL_FROM.',
+        400,
+        'MAIL_SEND_FAILED',
+      );
+    }
   }
 
   private mapRoles(userRoles: { role: { name: string } }[]): Role[] {
