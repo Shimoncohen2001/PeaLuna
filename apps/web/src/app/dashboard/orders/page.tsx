@@ -38,9 +38,9 @@ export default function OrdersPage() {
             <li key={order.id}>
               <Link
                 href={`/dashboard/orders/${order.id}`}
-                className="flex items-center justify-between rounded-xl border border-ink/5 bg-warm-white px-4 py-4 hover:border-champagne/40"
+                className="flex flex-col gap-2 rounded-xl border border-ink/5 bg-warm-white px-4 py-4 hover:border-champagne/40 sm:flex-row sm:items-center sm:justify-between"
               >
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium text-ink">{order.orderNumber}</p>
                   <p className="text-sm text-muted">
                     {order.wigName} · {formatStatus(order.status, t.status)}

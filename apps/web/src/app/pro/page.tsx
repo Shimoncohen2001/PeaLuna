@@ -75,7 +75,7 @@ export default function ProDashboardPage() {
     const rejected = status === 'REJECTED';
     return (
       <div className="space-y-4">
-        <h1 className="font-display text-4xl text-[#e8b4a2]">{t.pro.reserved}</h1>
+        <h1 className="font-display text-3xl text-[#e8b4a2] sm:text-4xl">{t.pro.reserved}</h1>
         <p className="text-white/70">
           {rejected ? t.pro.applyRejected : pending ? t.pro.pendingReview : t.pro.reservedHint}
         </p>
@@ -92,7 +92,7 @@ export default function ProDashboardPage() {
     <div className="space-y-8">
       <div>
         <p className="text-sm uppercase tracking-[0.2em] text-[#e8b4a2]">{t.pro.eyebrow}</p>
-        <h1 className="font-display text-4xl text-[#f7efe8]">{t.pro.title}</h1>
+        <h1 className="font-display text-3xl text-[#f7efe8] sm:text-4xl">{t.pro.title}</h1>
       </div>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

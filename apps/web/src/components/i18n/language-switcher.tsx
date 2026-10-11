@@ -34,7 +34,7 @@ export function LanguageSwitcher({
             aria-label={LOCALE_LABELS[code]}
             onClick={() => setLocale(code)}
             className={cn(
-              'min-h-8 min-w-9 rounded-full px-2.5 text-[11px] font-semibold tracking-[0.08em] transition-colors',
+              'min-h-10 min-w-8 rounded-full px-2 text-[11px] font-semibold tracking-[0.08em] transition-colors sm:min-h-8 sm:min-w-9 sm:px-2.5',
               selected ? 'bg-ink text-warm-white' : 'text-muted hover:text-ink',
             )}
           >

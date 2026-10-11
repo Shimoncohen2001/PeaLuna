@@ -61,7 +61,7 @@ export default function ProOrdersPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-4xl text-[#e8b4a2]">{t.nav.proOrders}</h1>
+      <h1 className="font-display text-3xl text-[#e8b4a2] sm:text-4xl">{t.nav.proOrders}</h1>
       {error ? <p className="text-sm text-red-300">{error}</p> : null}
       {orders.isLoading ? (
         <p className="text-white/50">{t.common.loading}</p>

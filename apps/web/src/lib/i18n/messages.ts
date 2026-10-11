@@ -27,6 +27,8 @@ export type Messages = {
     signIn: string;
     bookRepair: string;
     language: string;
+    menu: string;
+    closeMenu: string;
     overview: string;
     book: string;
     myWigs: string;
@@ -485,6 +487,8 @@ export const en: Messages = {
     signIn: 'Sign in',
     bookRepair: 'Book a repair',
     language: 'Language',
+    menu: 'Menu',
+    closeMenu: 'Close',
     overview: 'Overview',
     book: 'Book',
     myWigs: 'My wigs',
@@ -954,6 +958,8 @@ export const fr: Messages = {
     signIn: 'Connexion',
     bookRepair: 'Réserver un soin',
     language: 'Langue',
+    menu: 'Menu',
+    closeMenu: 'Fermer',
     overview: 'Vue d’ensemble',
     book: 'Réserver',
     myWigs: 'Mes perruques',
@@ -1427,6 +1433,8 @@ export const he: Messages = {
     signIn: 'התחברות',
     bookRepair: 'הזמנת תיקון',
     language: 'שפה',
+    menu: 'תפריט',
+    closeMenu: 'סגירה',
     overview: 'סקירה',
     book: 'הזמנה',
     myWigs: 'הפאות שלי',
