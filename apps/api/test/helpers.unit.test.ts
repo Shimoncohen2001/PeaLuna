@@ -69,22 +69,19 @@ describe('mailer', () => {
     expect(resolveResendFrom('PeaLuna <hello@pealuna.com>')).toBe('PeaLuna <hello@pealuna.com>');
   });
 
-  it('retries with the Resend test sender when a custom from is rejected', async () => {
+  it('does not fall back to the Resend test sender when a custom from is rejected', async () => {
     const froms: string[] = [];
     const original = globalThis.fetch;
     globalThis.fetch = (async (_url, init) => {
       const body = JSON.parse(String((init as RequestInit).body)) as { from: string };
       froms.push(body.from);
-      if (body.from.includes('pealuna.com')) {
-        return new Response(
-          JSON.stringify({
-            statusCode: 403,
-            message: 'The pealuna.com domain is not verified. Please, add and verify your domain',
-          }),
-          { status: 403 },
-        );
-      }
-      return new Response(JSON.stringify({ id: 'email_ok' }), { status: 200 });
+      return new Response(
+        JSON.stringify({
+          statusCode: 403,
+          message: 'The pealuna.com domain is not verified. Please, add and verify your domain',
+        }),
+        { status: 403 },
+      );
     }) as typeof fetch;
     try {
       const mailer = createMailer({
@@ -92,8 +89,10 @@ describe('mailer', () => {
         RESEND_API_KEY: 're_test_key_xxxxxxxx',
         EMAIL_FROM: 'PeaLuna <hello@pealuna.com>',
       });
-      await mailer.send({ to: 'owner@gmail.com', subject: 'Hi', text: 'Hi' });
-      expect(froms).toEqual(['PeaLuna <hello@pealuna.com>', RESEND_TEST_FROM]);
+      await expect(
+        mailer.send({ to: 'owner@gmail.com', subject: 'Hi', text: 'Hi' }),
+      ).rejects.toMatchObject({ code: 'MAIL_INVALID_FROM' });
+      expect(froms).toEqual(['PeaLuna <hello@pealuna.com>']);
     } finally {
       globalThis.fetch = original;
     }

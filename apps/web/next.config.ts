@@ -12,6 +12,19 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
+        ],
+      },
+    ];
+  },
   async rewrites() {
     const apiUrl = (process.env.API_URL ?? 'https://pealuna-api-production.up.railway.app').replace(
       /\/$/,

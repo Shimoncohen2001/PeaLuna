@@ -759,7 +759,7 @@ export const en: Messages = {
     resending: 'Sending…',
     resent: 'A new link was sent. Check inbox and spam.',
     verifyHint:
-      'Until pealuna.com is verified in Resend, mail only reaches the email on your Resend account (resend.com → Settings). Check spam too.',
+      'Check inbox and spam. The first email can take a minute — use Resend only if nothing arrives.',
     mailTestMode:
       'Resend refused this address: it is not the email on your Resend account. Sign up with that exact address, or add your domain in Resend → Domains.',
     mailBlockedRecipient:
@@ -1232,7 +1232,7 @@ export const fr: Messages = {
     resending: 'Envoi…',
     resent: 'Un nouveau lien a été envoyé. Vérifie la boîte et les spams.',
     verifyHint:
-      'Tant que pealuna.com n’est pas vérifié dans Resend, le mail part uniquement vers l’email de ton compte Resend (resend.com → Settings). Regarde aussi les spams.',
+      'Regarde ta boîte mail et les spams. Le premier email peut mettre une minute — clique « Renvoyer » seulement si rien n’arrive.',
     mailTestMode:
       'Resend a refusé cette adresse : ce n’est pas l’email de ton compte Resend. Inscris-toi avec cet email exact, ou ajoute ton domaine dans Resend → Domains.',
     mailBlockedRecipient:
@@ -1698,7 +1698,7 @@ export const he: Messages = {
     resending: 'שולחת…',
     resent: 'נשלח קישור חדש. בדקי גם בספאם.',
     verifyHint:
-      'כל עוד pealuna.com לא מאומת ב-Resend, המייל נשלח רק לכתובת של חשבון Resend (resend.com → Settings). בדקי גם בספאם.',
+      'בדקי את תיבת הדואר ואת הספאם. המייל הראשון יכול לקחת עד דקה — שלחי מחדש רק אם כלום לא הגיע.',
     mailTestMode:
       'Resend דחה את הכתובת: זו לא כתובת חשבון Resend. היכנסי עם אותה כתובת בדיוק, או הוסיפי דומיין ב-Resend → Domains.',
     mailBlockedRecipient:

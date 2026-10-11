@@ -102,6 +102,8 @@ export class AuthService {
       },
     });
 
+    const verificationToken = await this.issueEmailVerificationToken(user.id);
+    const mailTask = this.dispatchVerificationEmail(user.email, user.firstName, verificationToken);
     const session = await this.issueSession(
       {
         id: user.id,
@@ -115,11 +117,9 @@ export class AuthService {
       params.userAgent,
       params.ipAddress,
     );
-
-    const verificationToken = await this.issueEmailVerificationToken(user.id);
     let mailError: { code: string; message: string } | undefined;
     try {
-      await this.dispatchVerificationEmail(user.email, user.firstName, verificationToken);
+      await mailTask;
     } catch (err) {
       console.error('[mail] register: confirmation email not sent', err);
       const extra = err as { code?: string; message?: string };

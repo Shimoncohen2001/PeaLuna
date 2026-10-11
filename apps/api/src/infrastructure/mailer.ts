@@ -68,12 +68,11 @@ class ResendMailer implements Mailer {
       );
     }
 
-    const preferred = resolveResendFrom(this.env.EMAIL_FROM);
-    const attempts = preferred === RESEND_TEST_FROM ? [preferred] : [preferred, RESEND_TEST_FROM];
+    const from = resolveResendFrom(this.env.EMAIL_FROM);
     let lastStatus = 0;
     let lastBody = '';
 
-    for (const from of attempts) {
+    for (let attempt = 0; attempt < 2; attempt++) {
       const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
@@ -88,18 +87,11 @@ class ResendMailer implements Mailer {
           html: message.html ?? message.text,
         }),
       });
-      if (res.ok) {
-        if (from !== preferred) {
-          console.warn(`[mail] resend accepted fallback from=${from} (rejected ${preferred})`);
-        }
-        return;
-      }
+      if (res.ok) return;
       lastStatus = res.status;
       lastBody = await res.text();
       console.error(`[mail] resend failed status=${lastStatus} from=${from} to=${message.to} body=${lastBody}`);
-      if (!resendFromRejected(lastBody) || from === RESEND_TEST_FROM) {
-        break;
-      }
+      if (lastStatus !== 429 && lastStatus < 500) break;
     }
 
     const interpreted = interpretResendError(message.to, lastStatus, lastBody);

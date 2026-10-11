@@ -30,6 +30,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://pealuna.com'),
   title: {
     default: 'PeaLuna — Premium Wig Repair & Care',
     template: '%s | PeaLuna',
