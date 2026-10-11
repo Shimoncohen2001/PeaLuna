@@ -65,6 +65,13 @@ export type Messages = {
     howStep2: string;
     howStep3: string;
     howStep4: string;
+    servicesTitle: string;
+    serviceRepairTitle: string;
+    serviceRepairDesc: string;
+    serviceCareTitle: string;
+    serviceCareDesc: string;
+    serviceDesignTitle: string;
+    serviceDesignDesc: string;
     footer: string;
   };
   common: {
@@ -526,6 +533,13 @@ export const en: Messages = {
     howStep2: 'Receive an estimate and matched specialist',
     howStep3: 'Schedule pickup — track every repair stage',
     howStep4: 'Pay securely and confirm once the care is complete',
+    servicesTitle: 'Wig repair, care & hair design',
+    serviceRepairTitle: 'Wig repair',
+    serviceRepairDesc: 'Professional repair of damaged wigs — ventilation, restitching, and restoration.',
+    serviceCareTitle: 'Wig care',
+    serviceCareDesc: 'Wash, condition, and long-term maintenance tracked on your wig profile.',
+    serviceDesignTitle: 'Hair design',
+    serviceDesignDesc: 'Cut, restyle, and colour work by specialists near you in Israel.',
     footer: 'EU-hosted · GDPR-ready architecture.',
   },
   common: {
@@ -999,6 +1013,13 @@ export const fr: Messages = {
     howStep2: 'Trouvez une experte près de chez vous',
     howStep3: 'Réservez un créneau — suivez chaque étape',
     howStep4: 'Payez en toute sécurité, puis confirmez une fois le soin terminé',
+    servicesTitle: 'Réparation de perruques, soin et hair design',
+    serviceRepairTitle: 'Réparation de perruques',
+    serviceRepairDesc: 'Réparation professionnelle : ventilation, couture, restauration de perruques abîmées.',
+    serviceCareTitle: 'Soin de perruques',
+    serviceCareDesc: 'Lavage, entretien et suivi durable sur le profil de ta perruque.',
+    serviceDesignTitle: 'Hair design',
+    serviceDesignDesc: 'Coupe, restyle et couleur par des expertes près de chez toi en Israël.',
     footer: 'Hébergé en UE · Architecture prête RGPD.',
   },
   common: {
@@ -1472,6 +1493,13 @@ export const he: Messages = {
     howStep2: 'מצאי מומחית קרובה אליך',
     howStep3: 'קבעי תור — עקבי אחרי כל שלב',
     howStep4: 'שלמי בצורה מאובטחת ואשרי כשהטיפול מסתיים',
+    servicesTitle: 'תיקון פאות, טיפול ועיצוב שיער',
+    serviceRepairTitle: 'תיקון פאות',
+    serviceRepairDesc: 'תיקון מקצועי לפאות פגועות — ונטילציה, תפירה ושחזור.',
+    serviceCareTitle: 'טיפול בפאות',
+    serviceCareDesc: 'שטיפה, תחזוקה ומעקב ארוך טווח בפרופיל הפאה.',
+    serviceDesignTitle: 'עיצוב שיער',
+    serviceDesignDesc: 'גזרה, עיצוב וצבע אצל מומחיות קרובות אליך בישראל.',
     footer: 'מאוחסן באיחוד האירופי · מוכן ל-GDPR.',
   },
   common: {

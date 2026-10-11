@@ -87,6 +87,29 @@ export default function HomePage() {
           </div>
         </section>
 
+        <section id="services" className="border-t border-ink/5 px-4 py-16 sm:px-6 sm:py-24">
+          <div className="mx-auto max-w-6xl">
+            <h2 className="text-center font-display text-3xl text-ink sm:text-4xl">
+              {t.home.servicesTitle}
+            </h2>
+            <div className="mt-12 grid gap-6 md:grid-cols-3">
+              {[
+                { title: t.home.serviceRepairTitle, desc: t.home.serviceRepairDesc },
+                { title: t.home.serviceCareTitle, desc: t.home.serviceCareDesc },
+                { title: t.home.serviceDesignTitle, desc: t.home.serviceDesignDesc },
+              ].map((item) => (
+                <article
+                  key={item.title}
+                  className="rounded-[var(--radius-card)] border border-ink/5 bg-warm-white p-6 shadow-soft"
+                >
+                  <h3 className="font-display text-xl text-ink">{item.title}</h3>
+                  <p className="mt-2 text-sm text-muted">{item.desc}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section id="how-it-works" className="px-4 py-16 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="font-display text-3xl text-ink sm:text-4xl">{t.home.howTitle}</h2>

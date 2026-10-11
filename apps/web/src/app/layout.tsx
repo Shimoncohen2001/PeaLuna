@@ -29,14 +29,71 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 };
 
+const SITE_URL = 'https://pealuna.com';
+const SITE_TITLE = 'PeaLuna — Wig repair, perruques & תיקון פאות | Israel';
+const SITE_DESCRIPTION =
+  'PeaLuna connects you with wig repair and hair-design specialists in Israel. Réparation de perruques, soin, hair design — תיקון וטיפול בפאות.';
+
 export const metadata: Metadata = {
-  metadataBase: new URL('https://pealuna.com'),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: 'PeaLuna — Premium Wig Repair & Care',
+    default: SITE_TITLE,
     template: '%s | PeaLuna',
   },
-  description:
-    'The leading marketplace for professional wig repair, care, and transformation. Trusted specialists, full lifecycle tracking.',
+  description: SITE_DESCRIPTION,
+  applicationName: 'PeaLuna',
+  keywords: [
+    'PeaLuna',
+    'wig repair',
+    'wig care',
+    'perruque',
+    'réparation de perruques',
+    'hair design',
+    'תיקון פאות',
+    'טיפול בפאות',
+    'Israel',
+  ],
+  alternates: { canonical: SITE_URL },
+  openGraph: {
+    type: 'website',
+    locale: 'he_IL',
+    alternateLocale: ['fr_FR', 'en_GB'],
+    url: SITE_URL,
+    siteName: 'PeaLuna',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: 'summary',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/#organization`,
+      name: 'PeaLuna',
+      url: SITE_URL,
+      areaServed: { '@type': 'Country', name: 'Israel' },
+      description: SITE_DESCRIPTION,
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: 'PeaLuna',
+      inLanguage: ['he', 'fr', 'en'],
+      publisher: { '@id': `${SITE_URL}/#organization` },
+    },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -48,6 +105,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
     >
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var l=localStorage.getItem('pealuna.locale');if(l==='fr'||l==='en'){document.documentElement.lang=l;document.documentElement.dir='ltr';}else{document.documentElement.lang='he';document.documentElement.dir='rtl';}}catch(e){}})();`,
