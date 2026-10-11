@@ -224,7 +224,7 @@ enum WorkflowStepInputKind {
 model User {
   id           String     @id @default(uuid()) @db.Uuid
   email        String     @unique @db.VarChar(255)
-  passwordHash String     @map("password_hash") @db.VarChar(255)
+  passwordHash String?    @map("password_hash") @db.VarChar(255)
   firstName    String     @map("first_name") @db.VarChar(100)
   lastName     String     @map("last_name") @db.VarChar(100)
   status       UserStatus @default(PENDING_VERIFICATION)
@@ -241,6 +241,7 @@ model User {
   roles            UserRole[]
   refreshTokens    RefreshToken[]
   emailVerificationTokens EmailVerificationToken[]
+  authIdentities   AuthIdentity[]
   customerProfile  CustomerProfile?
   technicianProfile TechnicianProfile?
   sentMessages     Message[]          @relation("MessageSender")
@@ -332,6 +333,21 @@ model RefreshToken {
   @@index([familyId])
   @@index([expiresAt])
   @@map("refresh_tokens")
+}
+
+model AuthIdentity {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  provider        String   @db.VarChar(32)
+  providerSubject String   @map("provider_subject") @db.VarChar(255)
+  email           String   @db.VarChar(255)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerSubject])
+  @@index([userId])
+  @@map("auth_identities")
 }
 
 model EmailVerificationToken {

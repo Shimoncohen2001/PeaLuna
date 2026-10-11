@@ -38,7 +38,12 @@ export async function registerSecurity(app: AppInstance, env: Env): Promise<void
   await app.register(rateLimit, {
     max: (request) => {
       const url = request.url.split('?')[0] ?? '';
-      if (url.endsWith('/auth/login') || url.endsWith('/auth/register')) return 10;
+      if (
+        url.endsWith('/auth/login') ||
+        url.endsWith('/auth/register') ||
+        url.endsWith('/auth/google')
+      )
+        return 10;
       if (url.endsWith('/auth/refresh')) return 30;
       return env.RATE_LIMIT_MAX;
     },

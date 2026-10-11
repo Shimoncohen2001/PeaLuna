@@ -128,4 +128,54 @@ describe.skipIf(!hasDb)('auth integration', () => {
     const next = await auth.refresh({ refreshToken: winner.refreshToken });
     expect(next.accessToken).toBeTruthy();
   });
+
+  it('creates a verified customer from Google and reuses the same account', async () => {
+    const email = uniqueEmail('google');
+    const googleAuth = new AuthService(testEnv(), undefined, {
+      async verify() {
+        return {
+          subject: `sub-${email}`,
+          email,
+          emailVerified: true,
+          firstName: 'Gita',
+          lastName: 'Cohen',
+        };
+      },
+    });
+    const session = await googleAuth.loginWithGoogle({ idToken: 'google-id-token-placeholder' });
+    userIds.push(session.user.id);
+    expect(session.user.emailVerified).toBe(true);
+    expect(session.user.email).toBe(email);
+
+    const again = await googleAuth.loginWithGoogle({ idToken: 'google-id-token-placeholder' });
+    expect(again.user.id).toBe(session.user.id);
+  });
+
+  it('links Google to an existing password account and confirms the email', async () => {
+    const email = uniqueEmail('link-g');
+    const session = await auth.register({
+      email,
+      password: TEST_PASSWORD,
+      firstName: 'Ada',
+      lastName: 'Link',
+      countryCode: 'IL',
+    });
+    userIds.push(session.user.id);
+    expect(session.user.emailVerified).toBe(false);
+
+    const googleAuth = new AuthService(testEnv(), undefined, {
+      async verify() {
+        return {
+          subject: `sub-link-${email}`,
+          email,
+          emailVerified: true,
+          firstName: 'Ada',
+          lastName: 'Link',
+        };
+      },
+    });
+    const linked = await googleAuth.loginWithGoogle({ idToken: 'google-id-token-placeholder' });
+    expect(linked.user.id).toBe(session.user.id);
+    expect(linked.user.emailVerified).toBe(true);
+  });
 });

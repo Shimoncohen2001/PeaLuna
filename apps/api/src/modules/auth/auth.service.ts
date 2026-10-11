@@ -13,6 +13,10 @@ import { prisma, UserStatus } from '@velure/database';
 import type { Role } from '@velure/domain';
 import { publicWebOrigin, type Env } from '../../config/env.js';
 import { createMailer, verificationEmail, type Mailer } from '../../infrastructure/mailer.js';
+import {
+  createGoogleVerifier,
+  type GoogleTokenVerifier,
+} from '../../infrastructure/google-identity.js';
 
 type SessionUser = {
   id: string;
@@ -43,12 +47,20 @@ function httpError(message: string, statusCode: number, code: string) {
 
 export class AuthService {
   private readonly mailer: Mailer;
+  private readonly google: GoogleTokenVerifier | null;
 
   constructor(
     private readonly env: Env,
     mailer?: Mailer,
+    google?: GoogleTokenVerifier | null,
   ) {
     this.mailer = mailer ?? createMailer(env);
+    this.google =
+      google === undefined
+        ? this.env.GOOGLE_CLIENT_ID
+          ? createGoogleVerifier(this.env.GOOGLE_CLIENT_ID)
+          : null
+        : google;
   }
 
   async register(params: {
@@ -135,7 +147,7 @@ export class AuthService {
       throw httpError('Invalid credentials', 401, 'INVALID_CREDENTIALS');
     }
 
-    const valid = await verifyPassword(params.password, user.passwordHash);
+    const valid = await verifyPassword(params.password, user.passwordHash ?? '');
     if (!valid) {
       throw httpError('Invalid credentials', 401, 'INVALID_CREDENTIALS');
     }
@@ -149,6 +161,107 @@ export class AuthService {
         roles: this.mapRoles(user.roles),
         homeRegion: user.homeRegion,
         emailVerified: Boolean(user.emailVerifiedAt),
+      },
+      params.userAgent,
+      params.ipAddress,
+    );
+  }
+
+  async loginWithGoogle(params: { idToken: string; userAgent?: string; ipAddress?: string }) {
+    if (!this.google) {
+      throw httpError('Google sign-in is not configured', 503, 'GOOGLE_NOT_CONFIGURED');
+    }
+    const profile = await this.google.verify(params.idToken);
+
+    const existingIdentity = await prisma.authIdentity.findUnique({
+      where: {
+        provider_providerSubject: {
+          provider: 'google',
+          providerSubject: profile.subject,
+        },
+      },
+      include: { user: { include: { roles: { include: { role: true } } } } },
+    });
+
+    let user = existingIdentity?.user ?? null;
+    if (!user) {
+      user = await prisma.user.findFirst({
+        where: { email: { equals: profile.email, mode: 'insensitive' } },
+        include: { roles: { include: { role: true } } },
+      });
+    }
+
+    if (user && (user.status === UserStatus.SUSPENDED || user.status === UserStatus.DELETED)) {
+      throw httpError('Invalid credentials', 401, 'INVALID_CREDENTIALS');
+    }
+
+    if (!user) {
+      const customerRole = await prisma.role.findUniqueOrThrow({
+        where: { name: 'CUSTOMER' },
+      });
+      user = await prisma.user.create({
+        data: {
+          email: profile.email,
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          countryCode: 'IL',
+          locale: 'he-IL',
+          timezone: 'Asia/Jerusalem',
+          homeRegion: this.env.DEPLOYMENT_REGION,
+          status: UserStatus.ACTIVE,
+          emailVerifiedAt: new Date(),
+          roles: { create: { roleId: customerRole.id } },
+          customerProfile: { create: {} },
+          authIdentities: {
+            create: {
+              provider: 'google',
+              providerSubject: profile.subject,
+              email: profile.email,
+            },
+          },
+        },
+        include: { roles: { include: { role: true } } },
+      });
+    } else {
+      if (!user.emailVerifiedAt || user.status === UserStatus.PENDING_VERIFICATION) {
+        const verifiedAt = user.emailVerifiedAt ?? new Date();
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            status: UserStatus.ACTIVE,
+            emailVerifiedAt: verifiedAt,
+          },
+        });
+        user = { ...user, status: UserStatus.ACTIVE, emailVerifiedAt: verifiedAt };
+      }
+      if (!existingIdentity) {
+        await prisma.authIdentity.upsert({
+          where: {
+            provider_providerSubject: {
+              provider: 'google',
+              providerSubject: profile.subject,
+            },
+          },
+          create: {
+            userId: user.id,
+            provider: 'google',
+            providerSubject: profile.subject,
+            email: profile.email,
+          },
+          update: { email: profile.email },
+        });
+      }
+    }
+
+    return this.issueSession(
+      {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        roles: this.mapRoles(user.roles),
+        homeRegion: user.homeRegion,
+        emailVerified: true,
       },
       params.userAgent,
       params.ipAddress,

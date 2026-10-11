@@ -10,6 +10,8 @@ import {
 
 import {
 
+  googleLoginSchema,
+
   loginSchema,
 
   refreshBodySchema,
@@ -150,6 +152,51 @@ export async function authRoutes(app: AppInstance, env: Env): Promise<void> {
       const result = await authService.login({
 
         ...request.body,
+
+        userAgent: request.headers['user-agent'],
+
+        ipAddress: request.ip,
+
+      });
+
+
+
+      reply.header('Set-Cookie', buildRefreshCookie(result.refreshToken, cookieOptions(env)));
+
+
+
+      return reply.send(successResponse(publicSession(result), request.requestId));
+
+    },
+
+  );
+
+
+  app.get(`${API_PREFIX}/auth/sso`, async (request, reply) => {
+    return reply.send(
+      successResponse({ googleClientId: env.GOOGLE_CLIENT_ID ?? null }, request.requestId),
+    );
+  });
+
+  app.post(
+
+    `${API_PREFIX}/auth/google`,
+
+    {
+
+      schema: {
+
+        body: googleLoginSchema,
+
+      },
+
+    },
+
+    async (request, reply) => {
+
+      const result = await authService.loginWithGoogle({
+
+        idToken: request.body.idToken,
 
         userAgent: request.headers['user-agent'],
 

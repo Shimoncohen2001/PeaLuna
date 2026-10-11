@@ -11,7 +11,8 @@ export async function hashPassword(plain: string): Promise<string> {
   return argon2.hash(plain, ARGON2_OPTIONS);
 }
 
-export async function verifyPassword(plain: string, hash: string): Promise<boolean> {
+export async function verifyPassword(plain: string, hash: string | null | undefined): Promise<boolean> {
+  if (!hash) return false;
   try {
     return await argon2.verify(hash, plain);
   } catch {

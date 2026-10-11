@@ -300,6 +300,10 @@ export type Messages = {
     mailTestMode: string;
     mailBlockedRecipient: string;
     mailSendFailed: string;
+    continueWithGoogle: string;
+    orEmail: string;
+    googleError: string;
+    googleTerms: string;
   };
   job: {
     title: string;
@@ -761,6 +765,10 @@ export const en: Messages = {
     mailBlockedRecipient:
       'This account uses a fake address (@example.com). Create a new account with your real inbox — the same email as your Resend account.',
     mailSendFailed: 'The confirmation email could not be sent. Try again in a moment.',
+    continueWithGoogle: 'Continue with Google',
+    orEmail: 'or email',
+    googleError: 'Google sign-in failed. Try again.',
+    googleTerms: 'By continuing with Google you accept the terms of use.',
   },
   job: {
     title: 'Appointment',
@@ -1230,6 +1238,10 @@ export const fr: Messages = {
     mailBlockedRecipient:
       'Ce compte utilise une fausse adresse (@example.com). Crée un nouveau compte avec ta vraie boîte mail — le même email que ton compte Resend.',
     mailSendFailed: 'L’email de confirmation n’a pas pu partir. Réessaie dans un instant.',
+    continueWithGoogle: 'Continuer avec Google',
+    orEmail: 'ou par email',
+    googleError: 'La connexion Google a échoué. Réessaie.',
+    googleTerms: 'En continuant avec Google, tu acceptes les conditions d’utilisation.',
   },
   job: {
     title: 'Rendez-vous',
@@ -1692,6 +1704,10 @@ export const he: Messages = {
     mailBlockedRecipient:
       'החשבון הזה משתמש בכתובת בדיקה (@example.com). צרי חשבון חדש עם תיבת דואר אמיתית — אותה כתובת כמו חשבון Resend.',
     mailSendFailed: 'לא הצלחנו לשלוח את מייל האימות. נסי שוב בעוד רגע.',
+    continueWithGoogle: 'המשך עם Google',
+    orEmail: 'או עם אימייל',
+    googleError: 'ההתחברות עם Google נכשלה. נסי שוב.',
+    googleTerms: 'בהמשך עם Google את מאשרת את תנאי השימוש.',
   },
   job: {
     title: 'תור',

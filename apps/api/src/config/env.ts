@@ -22,6 +22,11 @@ const envSchema = z.object({
     return trimmed === '' ? undefined : trimmed;
   }, z.string().min(8).optional()),
   EMAIL_FROM: z.preprocess((v) => (v === '' ? undefined : v), z.string().min(3).optional()),
+  GOOGLE_CLIENT_ID: z.preprocess((v) => {
+    if (typeof v !== 'string') return undefined;
+    const trimmed = v.trim();
+    return trimmed === '' ? undefined : trimmed;
+  }, z.string().min(8).optional()),
   SENTRY_DSN: z.preprocess((v) => (v === '' ? undefined : v), z.string().url().optional()),
   DEPLOYMENT_REGION: z.string().default('eu-central-1'),
   AWS_REGION: z.string().default('eu-central-1'),

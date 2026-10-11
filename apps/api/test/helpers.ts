@@ -29,6 +29,7 @@ export function testEnv(): Env {
     RESEND_API_KEY: undefined,
     SMTP_URL: undefined,
     EMAIL_FROM: 'PeaLuna <noreply@localhost>',
+    GOOGLE_CLIENT_ID: undefined,
   };
 }
 

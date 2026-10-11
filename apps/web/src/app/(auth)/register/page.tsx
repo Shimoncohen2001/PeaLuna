@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { GoogleSignInButton } from '@/components/auth/google-sign-in';
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
 import { ApiClientError } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
@@ -53,7 +54,10 @@ export default function RegisterPage() {
         </div>
         <h1 className="font-display text-3xl text-ink">{t.auth.joinTitle}</h1>
         <p className="mt-2 text-sm text-muted">{t.auth.joinSubtitle}</p>
-        <form className="mt-8 space-y-4" onSubmit={onSubmit}>
+        <div className="mt-8">
+          <GoogleSignInButton onError={setError} />
+        </div>
+        <form className="space-y-4" onSubmit={onSubmit}>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="firstName" className="block text-sm font-medium">

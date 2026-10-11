@@ -20,6 +20,7 @@ type AuthContextValue = {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
   register: (input: {
     email: string;
     password: string;
@@ -81,6 +82,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email, password }),
       });
       applySession(res.data!);
+    },
+    [applySession],
+  );
+
+  const loginWithGoogle = useCallback(
+    async (idToken: string) => {
+      const res = await apiFetch<TokenResponseDto>('/api/v1/auth/google', {
+        method: 'POST',
+        body: JSON.stringify({ idToken }),
+      });
+      applySession(res.data!);
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.removeItem('pealuna.mailError');
+      }
     },
     [applySession],
   );
@@ -155,12 +170,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading,
       isAuthenticated: Boolean(user && accessToken),
       login,
+      loginWithGoogle,
       register,
       logout,
       refreshSession,
       authFetch,
     }),
-    [user, accessToken, isLoading, login, register, logout, refreshSession, authFetch],
+    [user, accessToken, isLoading, login, loginWithGoogle, register, logout, refreshSession, authFetch],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

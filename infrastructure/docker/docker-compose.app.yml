@@ -24,6 +24,7 @@ services:
       SMTP_URL: ${SMTP_URL}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       EMAIL_FROM: ${EMAIL_FROM}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       PREVIEW_MODE: ${PREVIEW_MODE:-false}
     ports:
       - '4000:4000'

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { FormEvent, Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { GoogleSignInButton } from '@/components/auth/google-sign-in';
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
 import { ApiClientError } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
@@ -60,7 +61,10 @@ function LoginForm() {
         </div>
         <h1 className="font-display text-3xl text-ink">{t.auth.title}</h1>
         <p className="mt-2 text-sm text-muted">{t.auth.subtitle}</p>
-        <form className="mt-8 space-y-4" onSubmit={onSubmit}>
+        <div className="mt-8">
+          <GoogleSignInButton onError={setError} />
+        </div>
+        <form className="space-y-4" onSubmit={onSubmit}>
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-ink">
               {t.auth.email}

@@ -34,6 +34,12 @@ export const verifyEmailSchema = z.object({
   token: z.string().min(16).max(128),
 });
 
+export const googleLoginSchema = z.object({
+  idToken: z.string().min(20).max(4096),
+});
+
+export type GoogleLoginInput = z.infer<typeof googleLoginSchema>;
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RefreshBody = z.infer<typeof refreshBodySchema>;
