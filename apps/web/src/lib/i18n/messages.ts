@@ -458,6 +458,18 @@ export type Messages = {
     newBooking: string;
     empty: string;
   };
+  cookies: {
+    title: string;
+    message: string;
+    accept: string;
+    learnMore: string;
+    policyTitle: string;
+    policyIntro: string;
+    essentialTitle: string;
+    essentialBody: string;
+    optionalTitle: string;
+    optionalBody: string;
+  };
 };
 
 export const en: Messages = {
@@ -906,6 +918,22 @@ export const en: Messages = {
     subtitle: 'Track every booking from request to completion.',
     newBooking: 'New booking',
     empty: 'No appointments yet.',
+  },
+  cookies: {
+    title: 'Cookies',
+    message:
+      'We only use essential cookies to keep you signed in and remember your language. No ads, no trackers.',
+    accept: 'Accept',
+    learnMore: 'Learn more',
+    policyTitle: 'Cookie policy',
+    policyIntro:
+      'PeaLuna uses as few cookies as possible. You can use the site after accepting this notice.',
+    essentialTitle: 'Essential',
+    essentialBody:
+      'A secure session cookie keeps you logged in. Your language choice is stored on this device. These are required for the site to work.',
+    optionalTitle: 'Optional',
+    optionalBody:
+      'We do not set advertising or analytics cookies today. If that changes, we will ask again.',
   },
 };
 
@@ -1360,6 +1388,22 @@ export const fr: Messages = {
     newBooking: 'Nouvelle réservation',
     empty: 'Aucun rendez-vous pour le moment.',
   },
+  cookies: {
+    title: 'Cookies',
+    message:
+      'On utilise uniquement des cookies essentiels pour te connecter et retenir ta langue. Pas de pub, pas de trackers.',
+    accept: 'Accepter',
+    learnMore: 'En savoir plus',
+    policyTitle: 'Politique cookies',
+    policyIntro:
+      'PeaLuna utilise le moins de cookies possible. Tu peux continuer après avoir accepté ce message.',
+    essentialTitle: 'Essentiels',
+    essentialBody:
+      'Un cookie de session sécurisé te garde connectée. Ton choix de langue est enregistré sur cet appareil. Ils sont nécessaires au fonctionnement du site.',
+    optionalTitle: 'Optionnels',
+    optionalBody:
+      'Aujourd’hui on ne pose ni cookie pub ni cookie analytics. Si ça change, on te redemandera.',
+  },
 };
 
 export const he: Messages = {
@@ -1805,6 +1849,22 @@ export const he: Messages = {
     subtitle: 'מעקב אחרי כל הזמנה מהבקשה ועד הסיום.',
     newBooking: 'הזמנה חדשה',
     empty: 'אין תורים עדיין.',
+  },
+  cookies: {
+    title: 'עוגיות',
+    message:
+      'אנחנו משתמשות רק בעוגיות חיוניות כדי להשאיר אותך מחוברת ולזכור את השפה. בלי פרסומות ובלי מעקב.',
+    accept: 'אישור',
+    learnMore: 'מידע נוסף',
+    policyTitle: 'מדיניות עוגיות',
+    policyIntro:
+      'PeaLuna משתמשת בכמה שפחות עוגיות. אפשר להמשיך אחרי אישור ההודעה הזו.',
+    essentialTitle: 'חיוניות',
+    essentialBody:
+      'עוגיית התחברות מאובטחת שומרת אותך מחוברת. בחירת השפה נשמרת במכשיר. זה נחוץ לפעולת האתר.',
+    optionalTitle: 'אופציונליות',
+    optionalBody:
+      'כרגע אין עוגיות פרסום או אנליטיקס. אם זה ישתנה, נבקש שוב.',
   },
 };
 

@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Sparkles, Shield, Truck } from 'lucide-react';
+import Link from 'next/link';
 import { Header } from '@/components/marketing/header';
 import { Button } from '@/components/ui/button';
 import { useLocale } from '@/lib/i18n/locale';
@@ -103,7 +104,10 @@ export default function HomePage() {
         </section>
       </main>
       <footer className="border-t border-ink/5 px-4 py-8 text-center text-sm text-muted sm:px-6">
-        © {new Date().getFullYear()} {t.brand} · Israel
+        © {new Date().getFullYear()} {t.brand} · Israel ·{' '}
+        <Link href="/cookies" className="text-champagne hover:underline">
+          {t.cookies.title}
+        </Link>
       </footer>
     </>
   );

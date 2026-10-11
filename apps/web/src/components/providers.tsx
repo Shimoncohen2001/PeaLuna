@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
+import { CookieBanner } from '@/components/cookies/cookie-banner';
 import { ConfirmProvider } from '@/components/ui/confirm-dialog';
 import { AuthProvider } from '@/lib/auth';
 import { LocaleProvider } from '@/lib/i18n/locale';
@@ -24,7 +25,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <LocaleProvider>
         <ConfirmProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            {children}
+            <CookieBanner />
+          </AuthProvider>
         </ConfirmProvider>
       </LocaleProvider>
     </QueryClientProvider>
