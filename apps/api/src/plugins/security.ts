@@ -3,7 +3,7 @@ import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import cookie from '@fastify/cookie';
 import type { AppInstance } from '../types/app.js';
-import type { Env } from '../config/env.js';
+import { corsOrigins, type Env } from '../config/env.js';
 import { getRedis } from '../infrastructure/redis.js';
 
 export async function registerSecurity(app: AppInstance, env: Env): Promise<void> {
@@ -12,7 +12,7 @@ export async function registerSecurity(app: AppInstance, env: Env): Promise<void
   });
 
   await app.register(cors, {
-    origin: env.CORS_ORIGIN.split(',').map((o) => o.trim()),
+    origin: corsOrigins(env),
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id', 'Idempotency-Key'],

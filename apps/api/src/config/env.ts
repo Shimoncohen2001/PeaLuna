@@ -52,6 +52,12 @@ const envSchema = z.object({
 
 export type Env = z.infer<typeof envSchema>;
 
+export const CANONICAL_WEB_ORIGINS = [
+  'https://pealuna.com',
+  'https://www.pealuna.com',
+  'https://pealuna-web-production.up.railway.app',
+] as const;
+
 function isLoopbackOrigin(url: string) {
   try {
     const host = new URL(url).hostname;
@@ -61,13 +67,24 @@ function isLoopbackOrigin(url: string) {
   }
 }
 
-/** Never put localhost confirmation links in production emails. */
+function isTemporaryHostingOrigin(url: string) {
+  return isLoopbackOrigin(url) || /up\.railway\.app/i.test(url);
+}
+
+export function corsOrigins(env: Env): string[] {
+  const fromEnv = env.CORS_ORIGIN.split(',')
+    .map((origin) => origin.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+  if (env.NODE_ENV !== 'production') return fromEnv;
+  return [...new Set([...fromEnv, ...CANONICAL_WEB_ORIGINS])];
+}
+
+/** Public site URL for emails and Stripe returns. Prefer pealuna.com in production. */
 export function publicWebOrigin(env: Env): string {
   const web = env.WEB_ORIGIN.replace(/\/$/, '');
-  if (env.NODE_ENV !== 'production' || !isLoopbackOrigin(web)) return web;
-  const cors = env.CORS_ORIGIN.split(',')[0]?.trim().replace(/\/$/, '') ?? '';
-  if (cors && !isLoopbackOrigin(cors)) return cors;
-  return 'https://pealuna-web-production.up.railway.app';
+  if (env.NODE_ENV !== 'production') return web;
+  if (!isTemporaryHostingOrigin(web)) return web;
+  return 'https://pealuna.com';
 }
 
 let cached: Env | null = null;

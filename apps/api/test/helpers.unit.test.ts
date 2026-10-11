@@ -13,7 +13,7 @@ import { publicWebOrigin } from '../src/config/env.js';
 import { testEnv } from './helpers.js';
 
 describe('publicWebOrigin', () => {
-  it('keeps localhost in development and rewrites it in production', () => {
+  it('keeps localhost in development and uses pealuna.com in production', () => {
     expect(publicWebOrigin(testEnv())).toBe('http://localhost:3000');
     expect(
       publicWebOrigin({
@@ -22,7 +22,14 @@ describe('publicWebOrigin', () => {
         WEB_ORIGIN: 'http://localhost:3000',
         CORS_ORIGIN: 'https://pealuna-web-production.up.railway.app',
       }),
-    ).toBe('https://pealuna-web-production.up.railway.app');
+    ).toBe('https://pealuna.com');
+    expect(
+      publicWebOrigin({
+        ...testEnv(),
+        NODE_ENV: 'production',
+        WEB_ORIGIN: 'https://pealuna-web-production.up.railway.app',
+      }),
+    ).toBe('https://pealuna.com');
   });
 });
 
