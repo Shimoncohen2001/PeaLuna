@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { MapContainer, Marker, Popup, TileLayer, CircleMarker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { MAP_ATTRIBUTION, MAP_TILES, mapPin, mapPinSelected } from './pealuna-map';
 
 export type MapTechnician = {
   id: string;
@@ -14,25 +15,6 @@ export type MapTechnician = {
   ratingAvg: number;
   selected?: boolean;
 };
-
-const pin = new L.Icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
-
-const pinSelected = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-gold.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
 
 function FitBounds({ points }: { points: { lat: number; lng: number }[] }) {
   const map = useMap();
@@ -83,8 +65,9 @@ export function ExpertsMap({
         className="h-full w-full"
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution={MAP_ATTRIBUTION}
+          url={MAP_TILES.light}
+          subdomains="abcd"
         />
         <FitBounds points={points} />
         {userPosition ? (
@@ -98,7 +81,7 @@ export function ExpertsMap({
           <Marker
             key={t.id}
             position={[t.latitude, t.longitude]}
-            icon={t.selected ? pinSelected : pin}
+            icon={t.selected ? mapPinSelected : mapPin}
             eventHandlers={{
               click: () => onSelect?.(t.id),
             }}

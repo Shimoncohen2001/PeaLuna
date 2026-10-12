@@ -76,3 +76,24 @@
     @apply w-full;
   }
 }
+
+.pealuna-map-pin {
+  background: none !important;
+  border: none !important;
+}
+
+.leaflet-container {
+  font-family: inherit;
+  background: #e8e0d5;
+}
+
+.leaflet-control-zoom a {
+  border: none !important;
+  color: #0a0a0a !important;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  border-radius: 12px;
+  box-shadow: 0 12px 40px -8px rgb(10 10 10 / 0.12);
+}

@@ -2,20 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
-import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { GeoSuggestionDto } from '@velure/contracts';
 import { ApiClientError } from '@/lib/api-client';
-
-const pin = new L.Icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
+import { MAP_ATTRIBUTION, MAP_TILES, mapPin } from './pealuna-map';
 
 const TEL_AVIV: [number, number] = [32.0853, 34.7818];
 
@@ -216,17 +206,21 @@ export function AddressPicker({
       </div>
       {hint ? <p className={`text-sm ${muted}`}>{hint}</p> : null}
 
-      <div dir="ltr" className="h-56 overflow-hidden rounded-xl border border-ink/10">
+      <div
+        dir="ltr"
+        className={`h-56 overflow-hidden rounded-xl border ${tone === 'dark' ? 'border-white/10' : 'border-ink/10'}`}
+      >
         <MapContainer center={[lat, lng]} zoom={13} className="h-full w-full" scrollWheelZoom={false}>
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution={MAP_ATTRIBUTION}
+            url={tone === 'dark' ? MAP_TILES.dark : MAP_TILES.light}
+            subdomains="abcd"
           />
           <Recenter lat={lat} lng={lng} />
           <MapClicks onPick={(nextLat, nextLng) => void applyCoords(nextLat, nextLng)} />
           <Marker
             position={[lat, lng]}
-            icon={pin}
+            icon={mapPin}
             draggable
             eventHandlers={{
               dragend: (event) => {
