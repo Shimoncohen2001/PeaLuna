@@ -77,23 +77,13 @@
   }
 }
 
-.pealuna-map-pin {
-  background: none !important;
-  border: none !important;
-}
-
-.leaflet-container {
+.maplibregl-map {
   font-family: inherit;
-  background: #e8e0d5;
+  font: inherit;
 }
 
-.leaflet-control-zoom a {
-  border: none !important;
-  color: #0a0a0a !important;
-}
-
-.leaflet-popup-content-wrapper,
-.leaflet-popup-tip {
+.maplibregl-popup-content {
   border-radius: 12px;
+  padding: 10px 12px;
   box-shadow: 0 12px 40px -8px rgb(10 10 10 / 0.12);
 }

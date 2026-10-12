@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
+import Map, { Marker, NavigationControl, type MapRef } from 'react-map-gl/maplibre';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import type { GeoSuggestionDto } from '@velure/contracts';
 import { ApiClientError } from '@/lib/api-client';
-import { MAP_ATTRIBUTION, MAP_TILES, mapPin } from './pealuna-map';
+import { MAP_STYLES, MapPin } from './pealuna-map';
 
 const TEL_AVIV: [number, number] = [32.0853, 34.7818];
 
@@ -32,23 +32,6 @@ type AddressPickerProps = {
   tone?: 'light' | 'dark';
 };
 
-function Recenter({ lat, lng }: { lat: number; lng: number }) {
-  const map = useMap();
-  useEffect(() => {
-    map.setView([lat, lng], 15);
-  }, [lat, lng, map]);
-  return null;
-}
-
-function MapClicks({ onPick }: { onPick: (lat: number, lng: number) => void }) {
-  useMapEvents({
-    click(event) {
-      onPick(event.latlng.lat, event.latlng.lng);
-    },
-  });
-  return null;
-}
-
 export function AddressPicker({
   value,
   onChange,
@@ -56,6 +39,7 @@ export function AddressPicker({
   labels,
   tone = 'light',
 }: AddressPickerProps) {
+  const mapRef = useRef<MapRef>(null);
   const [query, setQuery] = useState(value.label);
   const [hints, setHints] = useState<GeoSuggestionDto[]>([]);
   const [open, setOpen] = useState(false);
@@ -109,6 +93,13 @@ export function AddressPicker({
     return () => clearTimeout(timer);
   }, [authFetch, labels.noResults, labels.unavailable, query]);
 
+  const lat = value.lat ?? TEL_AVIV[0];
+  const lng = value.lng ?? TEL_AVIV[1];
+
+  useEffect(() => {
+    mapRef.current?.jumpTo({ center: [lng, lat], zoom: 15 });
+  }, [lat, lng]);
+
   function applySuggestion(item: GeoSuggestionDto) {
     skipSearch.current = true;
     setOpen(false);
@@ -123,23 +114,23 @@ export function AddressPicker({
     });
   }
 
-  async function applyCoords(lat: number, lng: number, fallbackLabel?: string) {
+  async function applyCoords(nextLat: number, nextLng: number, fallbackLabel?: string) {
     setBusy(true);
     try {
       const item = await authFetch<GeoSuggestionDto | null>(
-        `/api/v1/geo/reverse?lat=${lat}&lon=${lng}`,
+        `/api/v1/geo/reverse?lat=${nextLat}&lon=${nextLng}`,
       );
       skipSearch.current = true;
       onChange({
-        label: item?.label ?? fallbackLabel ?? `${lat.toFixed(5)}, ${lng.toFixed(5)}`,
+        label: item?.label ?? fallbackLabel ?? `${nextLat.toFixed(5)}, ${nextLng.toFixed(5)}`,
         city: item?.city ?? value.city,
         postalCode: item?.postalCode ?? value.postalCode,
-        lat,
-        lng,
+        lat: nextLat,
+        lng: nextLng,
       });
       setHint(null);
     } catch (err) {
-      onChange({ ...value, lat, lng, label: fallbackLabel ?? value.label });
+      onChange({ ...value, lat: nextLat, lng: nextLng, label: fallbackLabel ?? value.label });
       setHint(err instanceof ApiClientError ? err.message : labels.unavailable);
     } finally {
       setBusy(false);
@@ -161,9 +152,6 @@ export function AddressPicker({
       { enableHighAccuracy: false, timeout: 8000, maximumAge: 60_000 },
     );
   }
-
-  const lat = value.lat ?? TEL_AVIV[0];
-  const lng = value.lng ?? TEL_AVIV[1];
 
   return (
     <div className="space-y-3">
@@ -210,26 +198,29 @@ export function AddressPicker({
         dir="ltr"
         className={`h-56 overflow-hidden rounded-xl border ${tone === 'dark' ? 'border-white/10' : 'border-ink/10'}`}
       >
-        <MapContainer center={[lat, lng]} zoom={13} className="h-full w-full" scrollWheelZoom={false}>
-          <TileLayer
-            attribution={MAP_ATTRIBUTION}
-            url={tone === 'dark' ? MAP_TILES.dark : MAP_TILES.light}
-            subdomains="abcd"
-          />
-          <Recenter lat={lat} lng={lng} />
-          <MapClicks onPick={(nextLat, nextLng) => void applyCoords(nextLat, nextLng)} />
+        <Map
+          ref={mapRef}
+          initialViewState={{ latitude: lat, longitude: lng, zoom: 13 }}
+          mapStyle={tone === 'dark' ? MAP_STYLES.dark : MAP_STYLES.light}
+          scrollZoom={false}
+          style={{ width: '100%', height: '100%' }}
+          onClick={(event) => {
+            if (event.lngLat) void applyCoords(event.lngLat.lat, event.lngLat.lng);
+          }}
+        >
+          <NavigationControl position="top-right" showCompass={false} />
           <Marker
-            position={[lat, lng]}
-            icon={mapPin}
+            longitude={lng}
+            latitude={lat}
+            anchor="bottom"
             draggable
-            eventHandlers={{
-              dragend: (event) => {
-                const next = event.target.getLatLng();
-                void applyCoords(next.lat, next.lng);
-              },
+            onDragEnd={(event) => {
+              void applyCoords(event.lngLat.lat, event.lngLat.lng);
             }}
-          />
-        </MapContainer>
+          >
+            <MapPin />
+          </Marker>
+        </Map>
       </div>
     </div>
   );
