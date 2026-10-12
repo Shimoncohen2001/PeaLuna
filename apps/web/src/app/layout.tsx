@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Cormorant_Garamond, DM_Sans, Noto_Sans_Hebrew } from 'next/font/google';
 import { Providers } from '@/components/providers';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import './globals.css';
 
 const cormorant = Cormorant_Garamond({

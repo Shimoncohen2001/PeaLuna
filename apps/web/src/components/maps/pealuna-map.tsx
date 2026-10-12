@@ -1,7 +1,47 @@
+import type { StyleSpecification } from 'maplibre-gl';
+
+function rasterStyle(tiles: string[], attribution: string): StyleSpecification {
+  return {
+    version: 8,
+    sources: {
+      basemap: {
+        type: 'raster',
+        tiles,
+        tileSize: 256,
+        attribution,
+        maxzoom: 20,
+      },
+    },
+    layers: [{ id: 'basemap', type: 'raster', source: 'basemap' }],
+  };
+}
+
+const CARTO =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
+const ESRI = '© Esri';
+
 export const MAP_STYLES = {
-  light: 'https://tiles.openfreemap.org/styles/liberty',
-  dark: 'https://tiles.openfreemap.org/styles/dark',
-} as const;
+  light: rasterStyle(
+    ['https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png'],
+    CARTO,
+  ),
+  dark: rasterStyle(['https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'], CARTO),
+};
+
+export const MAP_STYLES_FALLBACK = {
+  light: rasterStyle(
+    [
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+    ],
+    ESRI,
+  ),
+  dark: rasterStyle(
+    [
+      'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    ],
+    ESRI,
+  ),
+};
 
 export function MapPin({ selected = false }: { selected?: boolean }) {
   const fill = selected ? '#1a1214' : '#c9a962';

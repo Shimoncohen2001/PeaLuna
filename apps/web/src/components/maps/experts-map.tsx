@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Map, { Marker, NavigationControl, Popup, type MapRef } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { MAP_STYLES, MapPin } from './pealuna-map';
+import { MAP_STYLES, MAP_STYLES_FALLBACK, MapPin } from './pealuna-map';
 
 export type MapTechnician = {
   id: string;
@@ -32,6 +32,8 @@ export function ExpertsMap({
 }) {
   const mapRef = useRef<MapRef>(null);
   const [popupId, setPopupId] = useState<string | null>(null);
+  const [style, setStyle] = useState(MAP_STYLES.light);
+  const usedFallback = useRef(false);
 
   const withCoords = technicians.filter(
     (t): t is MapTechnician & { latitude: number; longitude: number } =>
@@ -79,9 +81,15 @@ export function ExpertsMap({
       <Map
         ref={mapRef}
         initialViewState={initial}
-        mapStyle={MAP_STYLES.light}
+        mapStyle={style}
         scrollZoom={false}
         style={{ width: '100%', height: '100%' }}
+        onLoad={() => mapRef.current?.resize()}
+        onError={() => {
+          if (usedFallback.current) return;
+          usedFallback.current = true;
+          setStyle(MAP_STYLES_FALLBACK.light);
+        }}
       >
         <NavigationControl position="top-right" showCompass={false} />
         {userPosition ? (

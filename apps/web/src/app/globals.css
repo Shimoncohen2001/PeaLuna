@@ -77,9 +77,11 @@
   }
 }
 
-.maplibregl-map {
-  font-family: inherit;
-  font: inherit;
+.maplibregl-map,
+.maplibregl-canvas-container,
+.maplibregl-canvas {
+  width: 100%;
+  height: 100%;
 }
 
 .maplibregl-popup-content {
