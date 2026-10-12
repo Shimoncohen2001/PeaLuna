@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@prisma/client": "^6.8.2",
-    "argon2": "^0.43.0"
+    "argon2": "^0.45.1"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
