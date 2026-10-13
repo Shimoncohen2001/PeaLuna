@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { SparkArea } from '@/components/charts/spark-area';
 import { useAuth } from '@/lib/auth';
 import { useLocale } from '@/lib/i18n/locale';
+import { ApiClientError } from '@/lib/api-client';
 import { formatMoney, formatStatus, intlLocale } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
@@ -111,7 +112,9 @@ export default function AdminDashboardPage() {
       </div>
 
       {dashboard.isError ? (
-        <p className="text-sm text-red-700">{t.admin.actionFailed}</p>
+        <p className="text-sm text-red-700">
+          {dashboard.error instanceof ApiClientError ? dashboard.error.message : copy.loadFailed}
+        </p>
       ) : null}
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -158,7 +161,7 @@ export default function AdminDashboardPage() {
         <div className="mt-5">
           {dashboard.isLoading ? (
             <p className="text-sm text-muted">{t.common.loading}</p>
-          ) : data && data.bookingsTotal > 0 ? (
+          ) : dashboard.isError ? null : data && data.bookingsTotal > 0 ? (
             <>
               <div className="flex h-3 overflow-hidden rounded-full bg-beige">
                 {statusParts
@@ -190,7 +193,7 @@ export default function AdminDashboardPage() {
           <h2 className="font-display text-xl text-ink">{copy.bookingsOverTime}</h2>
           {dashboard.isLoading ? (
             <p className="mt-6 text-sm text-muted">{t.common.loading}</p>
-          ) : hasBookingTrend ? (
+          ) : dashboard.isError ? null : hasBookingTrend ? (
             <div className="mt-4">
               <SparkArea points={bookingPoints} />
             </div>
@@ -202,7 +205,7 @@ export default function AdminDashboardPage() {
           <h2 className="font-display text-xl text-ink">{copy.revenueOverTime}</h2>
           {dashboard.isLoading ? (
             <p className="mt-6 text-sm text-muted">{t.common.loading}</p>
-          ) : hasRevenueTrend ? (
+          ) : dashboard.isError ? null : hasRevenueTrend ? (
             <div className="mt-4">
               <SparkArea points={revenuePoints} color="#c9a962" />
             </div>

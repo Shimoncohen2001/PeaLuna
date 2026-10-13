@@ -52,7 +52,7 @@ export class AdminService {
         by: ['status'],
         where: {
           status: { in: BOOKING_STATUSES },
-          createdAt: period === 'all' ? undefined : { gte: requestedSince },
+          ...(period === 'all' ? {} : { createdAt: { gte: requestedSince } }),
         },
         _count: { _all: true },
       }),
@@ -195,7 +195,7 @@ export class AdminService {
       SELECT to_char(created_at AT TIME ZONE 'UTC', ${fmt}) AS bucket,
              count(*)::bigint AS value
       FROM repair_orders
-      WHERE status IN (${Prisma.join(BOOKING_STATUSES)})
+      WHERE status::text IN (${statusListSql()})
         AND created_at >= ${since}
       GROUP BY 1
       ORDER BY 1
@@ -226,6 +226,10 @@ export class AdminService {
 
 function daysAgo(now: Date, days: number): Date {
   return new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+}
+
+function statusListSql() {
+  return Prisma.join(BOOKING_STATUSES.map((status) => Prisma.sql`${status}`));
 }
 
 function bucketFormatSql(grain: ReturnType<typeof grainForPeriod>) {

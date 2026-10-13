@@ -299,6 +299,7 @@ export type Messages = {
       revenueOverTime: string;
       bookingsOverTime: string;
       noChartData: string;
+      loadFailed: string;
       recent: string;
       expertsApproved: string;
       expertsReview: string;
@@ -802,6 +803,7 @@ export const en: Messages = {
       revenueOverTime: 'Volume over time',
       bookingsOverTime: 'Bookings over time',
       noChartData: 'No activity in this period yet.',
+      loadFailed: 'Could not load these figures. Try again in a moment.',
       recent: 'Latest bookings',
       expertsApproved: 'Approved experts',
       expertsReview: 'Experts to review',
@@ -1316,6 +1318,7 @@ export const fr: Messages = {
       revenueOverTime: 'Évolution du volume',
       bookingsOverTime: 'Évolution des réservations',
       noChartData: 'Aucune activité sur cette période.',
+      loadFailed: 'Impossible de charger les chiffres. Réessaie dans un instant.',
       recent: 'Dernières réservations',
       expertsApproved: 'Expertes approuvées',
       expertsReview: 'Expertes à valider',
@@ -1823,6 +1826,7 @@ export const he: Messages = {
       revenueOverTime: 'התפתחות המחזור',
       bookingsOverTime: 'התפתחות ההזמנות',
       noChartData: 'אין פעילות בתקופה זו.',
+      loadFailed: 'לא ניתן לטעון את הנתונים. נסי שוב בעוד רגע.',
       recent: 'הזמנות אחרונות',
       expertsApproved: 'מומחיות מאושרות',
       expertsReview: 'מומחיות לבדיקה',
