@@ -32,6 +32,7 @@ export function DashboardShell({
     { href: '/dashboard/orders', label: t.nav.myAppointments },
     ...(isAdmin
       ? [
+          { href: '/admin', label: t.nav.adminHome },
           { href: '/admin/technicians', label: t.nav.adminExperts },
           { href: '/admin/services', label: t.admin.services },
           { href: '/admin/skills', label: t.nav.adminSkills },
@@ -190,7 +191,7 @@ export function DashboardShell({
                 </Link>
               ) : null}
               {nav.map((item) => {
-                const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                const active = isNavActive(pathname, item.href);
                 return (
                   <Link key={item.href} href={item.href} className={navItemClass(active, isProTheme)}>
                     {item.label}
@@ -217,7 +218,7 @@ export function DashboardShell({
           aria-label="Dashboard"
         >
           {nav.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const active = isNavActive(pathname, item.href);
             return (
               <Link key={item.href} href={item.href} className={navItemClass(active, isProTheme)}>
                 {item.label}
@@ -229,6 +230,13 @@ export function DashboardShell({
       </div>
     </div>
   );
+}
+
+function isNavActive(pathname: string, href: string) {
+  if (href === '/admin' || href === '/dashboard' || href === '/pro') {
+    return pathname === href;
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 function navItemClass(active: boolean, isProTheme: boolean) {

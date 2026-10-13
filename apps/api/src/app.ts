@@ -23,6 +23,7 @@ import { reviewRoutes } from './modules/reviews/routes.js';
 import { careReportRoutes } from './modules/care-reports/routes.js';
 import { geoRoutes } from './modules/geo/routes.js';
 import { catalogRoutes } from './modules/catalog/routes.js';
+import { adminRoutes } from './modules/admin/routes.js';
 import type { AppInstance } from './types/app.js';
 
 export async function buildApp() {
@@ -58,6 +59,7 @@ export async function buildApp() {
   await careReportRoutes(app, env);
   await geoRoutes(app, env);
   await catalogRoutes(app);
+  await adminRoutes(app);
 
   app.get('/', async (_request, reply) => {
     return reply.send({

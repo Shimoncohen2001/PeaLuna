@@ -42,6 +42,7 @@ export type Messages = {
     myProfile: string;
     reviews: string;
     admin: string;
+    adminHome: string;
     adminExperts: string;
     adminSkills: string;
     adminWorkflow: string;
@@ -272,6 +273,37 @@ export type Messages = {
       review: string;
       approved: string;
       rejected: string;
+    };
+    overview: {
+      title: string;
+      subtitle: string;
+      period7: string;
+      period30: string;
+      period90: string;
+      periodYear: string;
+      periodAll: string;
+      customers: string;
+      customersHint: string;
+      new7: string;
+      new30: string;
+      bookings: string;
+      pending: string;
+      confirmed: string;
+      completed: string;
+      cancelled: string;
+      gmv: string;
+      gmvHint: string;
+      commission: string;
+      averageBasket: string;
+      cancellationRate: string;
+      revenueOverTime: string;
+      bookingsOverTime: string;
+      noChartData: string;
+      recent: string;
+      expertsApproved: string;
+      expertsReview: string;
+      noneRecent: string;
+      paidOrders: string;
     };
   };
   auth: {
@@ -509,6 +541,7 @@ export const en: Messages = {
     myProfile: 'My profile',
     reviews: 'Reviews',
     admin: 'Admin',
+    adminHome: 'Overview',
     adminExperts: 'Experts',
     adminSkills: 'Skills',
     adminWorkflow: 'Steps',
@@ -743,6 +776,37 @@ export const en: Messages = {
       review: 'Under review',
       approved: 'Approved',
       rejected: 'Rejected',
+    },
+    overview: {
+      title: 'Dashboard',
+      subtitle: 'Live figures from PeaLuna bookings, clients and captured payments.',
+      period7: '7 days',
+      period30: '30 days',
+      period90: '90 days',
+      periodYear: '12 months',
+      periodAll: 'All time',
+      customers: 'Registered clients',
+      customersHint: 'Customer accounts, excluding deleted profiles',
+      new7: 'New in 7 days',
+      new30: 'New in 30 days',
+      bookings: 'Bookings',
+      pending: 'Pending',
+      confirmed: 'Confirmed',
+      completed: 'Completed',
+      cancelled: 'Cancelled',
+      gmv: 'Gross volume',
+      gmvHint: 'Captured payments only',
+      commission: 'Platform commission',
+      averageBasket: 'Average basket',
+      cancellationRate: 'Cancellation rate',
+      revenueOverTime: 'Volume over time',
+      bookingsOverTime: 'Bookings over time',
+      noChartData: 'No activity in this period yet.',
+      recent: 'Latest bookings',
+      expertsApproved: 'Approved experts',
+      expertsReview: 'Experts to review',
+      noneRecent: 'No bookings yet.',
+      paidOrders: 'Paid bookings',
     },
   },
   auth: {
@@ -987,6 +1051,7 @@ export const fr: Messages = {
     myProfile: 'Mon profil',
     reviews: 'Avis',
     admin: 'Admin',
+    adminHome: 'Tableau de bord',
     adminExperts: 'Expertes',
     adminSkills: 'Compétences',
     adminWorkflow: 'Étapes',
@@ -1225,6 +1290,37 @@ export const fr: Messages = {
       review: 'En revue',
       approved: 'Approuvées',
       rejected: 'Refusées',
+    },
+    overview: {
+      title: 'Tableau de bord',
+      subtitle: 'Chiffres réels des clientes, réservations et paiements encaissés sur PeaLuna.',
+      period7: '7 jours',
+      period30: '30 jours',
+      period90: '90 jours',
+      periodYear: '12 mois',
+      periodAll: 'Tout',
+      customers: 'Clientes inscrites',
+      customersHint: 'Comptes cliente, hors profils supprimés',
+      new7: 'Nouvelles sur 7 jours',
+      new30: 'Nouvelles sur 30 jours',
+      bookings: 'Réservations',
+      pending: 'En attente',
+      confirmed: 'Confirmées',
+      completed: 'Terminées',
+      cancelled: 'Annulées',
+      gmv: 'Chiffre d’affaires',
+      gmvHint: 'Paiements encaissés uniquement',
+      commission: 'Commission plateforme',
+      averageBasket: 'Panier moyen',
+      cancellationRate: 'Taux d’annulation',
+      revenueOverTime: 'Évolution du volume',
+      bookingsOverTime: 'Évolution des réservations',
+      noChartData: 'Aucune activité sur cette période.',
+      recent: 'Dernières réservations',
+      expertsApproved: 'Expertes approuvées',
+      expertsReview: 'Expertes à valider',
+      noneRecent: 'Aucune réservation pour le moment.',
+      paidOrders: 'Réservations payées',
     },
   },
   auth: {
@@ -1469,6 +1565,7 @@ export const he: Messages = {
     myProfile: 'הפרופיל שלי',
     reviews: 'ביקורות',
     admin: 'ניהול',
+    adminHome: 'לוח בקרה',
     adminExperts: 'מומחיות',
     adminSkills: 'כישורים',
     adminWorkflow: 'שלבים',
@@ -1700,6 +1797,37 @@ export const he: Messages = {
       review: 'בבדיקה',
       approved: 'מאושרות',
       rejected: 'נדחו',
+    },
+    overview: {
+      title: 'לוח בקרה',
+      subtitle: 'נתונים חיים מההזמנות, הלקוחות והתשלומים שנגבו ב-PeaLuna.',
+      period7: '7 ימים',
+      period30: '30 ימים',
+      period90: '90 ימים',
+      periodYear: '12 חודשים',
+      periodAll: 'הכול',
+      customers: 'לקוחות רשומות',
+      customersHint: 'חשבונות לקוחה, ללא פרופילים שנמחקו',
+      new7: 'חדשות ב-7 ימים',
+      new30: 'חדשות ב-30 ימים',
+      bookings: 'הזמנות',
+      pending: 'ממתינות',
+      confirmed: 'מאושרות',
+      completed: 'הושלמו',
+      cancelled: 'בוטלו',
+      gmv: 'מחזור',
+      gmvHint: 'תשלומים שנגבו בלבד',
+      commission: 'עמלת פלטפורמה',
+      averageBasket: 'סל ממוצע',
+      cancellationRate: 'שיעור ביטולים',
+      revenueOverTime: 'התפתחות המחזור',
+      bookingsOverTime: 'התפתחות ההזמנות',
+      noChartData: 'אין פעילות בתקופה זו.',
+      recent: 'הזמנות אחרונות',
+      expertsApproved: 'מומחיות מאושרות',
+      expertsReview: 'מומחיות לבדיקה',
+      noneRecent: 'עדיין אין הזמנות.',
+      paidOrders: 'הזמנות ששולמו',
     },
   },
   auth: {

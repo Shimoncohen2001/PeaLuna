@@ -12,3 +12,4 @@ export * from './reviews.js';
 export * from './care-reports.js';
 export * from './geo.js';
 export * from './catalog.js';
+export * from './admin.js';

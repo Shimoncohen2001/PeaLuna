@@ -11,10 +11,15 @@ export function SparkArea({
   color?: string;
   height?: number;
 }) {
+  if (points.length === 0) {
+    return <div className="h-40 w-full" role="img" aria-label="Courbe" />;
+  }
+
   const width = 560;
   const padX = 8;
   const padY = 12;
   const max = Math.max(...points.map((p) => p.value), 1);
+  const showDots = points.length <= 24;
   const coords = points.map((p, i) => {
     const x =
       points.length === 1
@@ -31,9 +36,9 @@ export function SparkArea({
     <svg viewBox={`0 0 ${width} ${height}`} className="h-40 w-full" role="img" aria-label="Courbe">
       <path d={area} fill={color} opacity={0.18} />
       <path d={line} fill="none" stroke={color} strokeWidth={2.5} strokeLinejoin="round" />
-      {coords.map((c) => (
-        <circle key={c.label} cx={c.x} cy={c.y} r={3} fill={color} />
-      ))}
+      {showDots
+        ? coords.map((c) => <circle key={c.label} cx={c.x} cy={c.y} r={3} fill={color} />)
+        : null}
     </svg>
   );
 }
