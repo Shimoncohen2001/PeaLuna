@@ -37,6 +37,11 @@ const AddressPicker = dynamic(
   { ssr: false },
 );
 
+const LocationMap = dynamic(
+  () => import('@/components/maps/pealuna-map').then((m) => m.LocationMap),
+  { ssr: false },
+);
+
 type TechnicianCard = {
   id: string;
   displayName: string;
@@ -397,7 +402,7 @@ export default function BookPage() {
             </ul>
 
             <ExpertsMap
-              className="h-80 w-full overflow-hidden rounded-xl border border-ink/10 lg:h-full lg:min-h-80"
+              className="h-80 w-full overflow-hidden rounded-xl border border-ink/10 lg:h-[28rem]"
               center={filterByGps && userLat != null && userLng != null ? [userLat, userLng] : undefined}
               userPosition={
                 filterByGps && userLat != null && userLng != null ? [userLat, userLng] : null
@@ -430,6 +435,13 @@ export default function BookPage() {
               required
             />
           </div>
+          {venueType === 'SALON' && selectedTech?.latitude != null && selectedTech.longitude != null ? (
+            <LocationMap
+              latitude={selectedTech.latitude}
+              longitude={selectedTech.longitude}
+              className="h-64 overflow-hidden rounded-xl border border-ink/10"
+            />
+          ) : null}
           {venueType === 'HOME' ? (
             <div className="space-y-4">
               <AddressPicker

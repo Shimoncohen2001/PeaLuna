@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -13,6 +14,11 @@ import { useLocale } from '@/lib/i18n/locale';
 import { formatMoney, formatStatus, intlLocale } from '@/lib/format';
 import { BookingStatusTracker } from '@/components/booking/booking-status-tracker';
 import { catalogServiceName } from '@/lib/i18n/catalog';
+
+const LocationMap = dynamic(
+  () => import('@/components/maps/pealuna-map').then((m) => m.LocationMap),
+  { ssr: false },
+);
 
 type JobMedia = {
   id: string;
@@ -38,6 +44,8 @@ type JobDetail = {
   serviceAddressLine: string | null;
   serviceCity: string | null;
   servicePostalCode: string | null;
+  serviceLatitude: number | null;
+  serviceLongitude: number | null;
   customerNotes: string | null;
   canComplete: boolean;
   canRespond: boolean;
@@ -211,6 +219,14 @@ export default function ProOrderDetailPage() {
           <p className="mt-1 text-sm text-white/70">
             {t.job.address} : {address}
           </p>
+        ) : null}
+        {data.serviceLatitude != null && data.serviceLongitude != null ? (
+          <LocationMap
+            tone="dark"
+            latitude={data.serviceLatitude}
+            longitude={data.serviceLongitude}
+            className="mt-4 h-64 overflow-hidden rounded-xl border border-white/10"
+          />
         ) : null}
       </section>
 

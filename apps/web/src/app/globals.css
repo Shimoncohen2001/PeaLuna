@@ -77,6 +77,13 @@
   }
 }
 
+.pealuna-map {
+  position: relative;
+  width: 100%;
+  min-height: 14rem;
+}
+
+.pealuna-map .maplibregl-map,
 .maplibregl-map,
 .maplibregl-canvas-container,
 .maplibregl-canvas {

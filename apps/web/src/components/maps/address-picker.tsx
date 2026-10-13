@@ -1,11 +1,10 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Map, { Marker, NavigationControl, type MapRef } from 'react-map-gl/maplibre';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import { Marker, type MapRef } from 'react-map-gl/maplibre';
 import type { GeoSuggestionDto } from '@velure/contracts';
 import { ApiClientError } from '@/lib/api-client';
-import { MAP_STYLES, MAP_STYLES_FALLBACK, MapPin } from './pealuna-map';
+import { MapPin, PealunaMap } from './pealuna-map';
 
 const TEL_AVIV: [number, number] = [32.0853, 34.7818];
 
@@ -40,14 +39,13 @@ export function AddressPicker({
   tone = 'light',
 }: AddressPickerProps) {
   const mapRef = useRef<MapRef>(null);
+  const [ready, setReady] = useState(false);
   const [query, setQuery] = useState(value.label);
   const [hints, setHints] = useState<GeoSuggestionDto[]>([]);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
   const skipSearch = useRef(false);
-  const [style, setStyle] = useState(tone === 'dark' ? MAP_STYLES.dark : MAP_STYLES.light);
-  const usedFallback = useRef(false);
 
   const inputClass =
     tone === 'dark'
@@ -99,8 +97,9 @@ export function AddressPicker({
   const lng = value.lng ?? TEL_AVIV[1];
 
   useEffect(() => {
+    if (!ready) return;
     mapRef.current?.jumpTo({ center: [lng, lat], zoom: 15 });
-  }, [lat, lng]);
+  }, [lat, lng, ready]);
 
   function applySuggestion(item: GeoSuggestionDto) {
     skipSearch.current = true;
@@ -196,40 +195,28 @@ export function AddressPicker({
       </div>
       {hint ? <p className={`text-sm ${muted}`}>{hint}</p> : null}
 
-      <div
-        dir="ltr"
-        className={`h-56 overflow-hidden rounded-xl border ${tone === 'dark' ? 'border-white/10' : 'border-ink/10'}`}
+      <PealunaMap
+        tone={tone}
+        mapRef={mapRef}
+        className={`h-64 overflow-hidden rounded-xl border ${tone === 'dark' ? 'border-white/10' : 'border-ink/10'}`}
+        initialViewState={{ latitude: lat, longitude: lng, zoom: 13 }}
+        onReady={() => setReady(true)}
+        onClick={(event) => {
+          if (event.lngLat) void applyCoords(event.lngLat.lat, event.lngLat.lng);
+        }}
       >
-        <Map
-          ref={mapRef}
-          initialViewState={{ latitude: lat, longitude: lng, zoom: 13 }}
-          mapStyle={style}
-          scrollZoom={false}
-          style={{ width: '100%', height: '100%' }}
-          onLoad={() => mapRef.current?.resize()}
-          onError={() => {
-            if (usedFallback.current) return;
-            usedFallback.current = true;
-            setStyle(tone === 'dark' ? MAP_STYLES_FALLBACK.dark : MAP_STYLES_FALLBACK.light);
-          }}
-          onClick={(event) => {
-            if (event.lngLat) void applyCoords(event.lngLat.lat, event.lngLat.lng);
+        <Marker
+          longitude={lng}
+          latitude={lat}
+          anchor="bottom"
+          draggable
+          onDragEnd={(event) => {
+            void applyCoords(event.lngLat.lat, event.lngLat.lng);
           }}
         >
-          <NavigationControl position="top-right" showCompass={false} />
-          <Marker
-            longitude={lng}
-            latitude={lat}
-            anchor="bottom"
-            draggable
-            onDragEnd={(event) => {
-              void applyCoords(event.lngLat.lat, event.lngLat.lng);
-            }}
-          >
-            <MapPin />
-          </Marker>
-        </Map>
-      </div>
+          <MapPin />
+        </Marker>
+      </PealunaMap>
     </div>
   );
 }
