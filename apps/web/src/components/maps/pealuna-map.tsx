@@ -109,7 +109,7 @@ export function PealunaMap({
   const styleIndexRef = useRef(0);
   const fallbackCoolDown = useRef(false);
 
-  function useNextStyle(fromError = false) {
+  function switchBasemap(fromError = false) {
     if (fromError && fallbackCoolDown.current) return;
     if (styleIndexRef.current >= palette.length - 1) return;
     if (fromError) {
@@ -138,12 +138,12 @@ export function PealunaMap({
     let cancelled = false;
     const img = new Image();
     const timer = window.setTimeout(() => {
-      if (!cancelled) useNextStyle();
+      if (!cancelled) switchBasemap();
     }, 4000);
     img.onload = () => window.clearTimeout(timer);
     img.onerror = () => {
       window.clearTimeout(timer);
-      if (!cancelled) useNextStyle();
+      if (!cancelled) switchBasemap();
     };
     img.src = url;
     return () => {
@@ -172,7 +172,7 @@ export function PealunaMap({
           map.resize();
           onReady?.(map);
         }}
-        onError={() => useNextStyle(true)}
+        onError={() => switchBasemap(true)}
       >
         <NavigationControl position="top-right" showCompass={false} />
         {children}

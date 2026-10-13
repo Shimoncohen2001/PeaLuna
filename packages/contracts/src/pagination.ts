@@ -20,3 +20,5 @@ export function paginationMeta(total: number, page: number, limit: number) {
     hasPrevPage: page > 1,
   };
 }
+
+export type PaginationMeta = ReturnType<typeof paginationMeta>;

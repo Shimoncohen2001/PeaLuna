@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { PaginationMeta } from './pagination.js';
 
 export const apiErrorSchema = z.object({
   code: z.string(),
@@ -12,7 +13,7 @@ export interface ApiResponse<T> {
   data: T | null;
   meta: {
     requestId: string;
-    pagination?: ReturnType<typeof import('./pagination.js').paginationMeta>;
+    pagination?: PaginationMeta;
   };
   error: ApiError | null;
 }

@@ -15,7 +15,7 @@ import {
   toOrderActorRole,
 } from '../../lib/access.js';
 import { updateOrderIfVersion } from '../../lib/order-lock.js';
-import { PaymentService } from '../payments/payment.service.js';
+import type { PaymentService } from '../payments/payment.service.js';
 
 type OrderWithRelations = Prisma.RepairOrderGetPayload<{
   include: {
