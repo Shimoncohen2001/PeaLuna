@@ -33,6 +33,7 @@ export function DashboardShell({
     ...(isAdmin
       ? [
           { href: '/admin', label: t.nav.adminHome },
+          { href: '/admin/customers', label: t.nav.adminCustomers },
           { href: '/admin/technicians', label: t.nav.adminExperts },
           { href: '/admin/services', label: t.admin.services },
           { href: '/admin/skills', label: t.nav.adminSkills },

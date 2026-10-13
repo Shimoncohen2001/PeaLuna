@@ -118,9 +118,11 @@ export default function AdminDashboardPage() {
       ) : null}
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label={copy.customers} hint={copy.customersHint} loading={dashboard.isLoading}>
-          {data ? data.customers.total : null}
-        </StatCard>
+        <Link href="/admin/customers" className="block rounded-[var(--radius-card)] transition hover:ring-1 hover:ring-champagne/40">
+          <StatCard label={copy.customers} hint={copy.customersHint} loading={dashboard.isLoading}>
+            {data ? data.customers.total : null}
+          </StatCard>
+        </Link>
         <StatCard label={copy.new7} loading={dashboard.isLoading}>
           {data ? data.customers.new7 : null}
         </StatCard>

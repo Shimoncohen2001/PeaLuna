@@ -163,6 +163,39 @@ export class AdminService {
     };
   }
 
+  async listCustomers() {
+    const rows = await prisma.customerProfile.findMany({
+      where: { user: { status: NOT_DELETED } },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+      select: {
+        id: true,
+        createdAt: true,
+        _count: { select: { orders: true } },
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            email: true,
+            status: true,
+            createdAt: true,
+            roles: { select: { role: { select: { name: true } } } },
+          },
+        },
+      },
+    });
+
+    return rows.map((row) => ({
+      id: row.id,
+      name: `${row.user.firstName} ${row.user.lastName}`.trim(),
+      email: row.user.email,
+      status: row.user.status,
+      createdAt: row.user.createdAt.toISOString(),
+      roles: row.user.roles.map((item) => item.role.name),
+      bookings: row._count.orders,
+    }));
+  }
+
   private async capturedRevenue(since: Date): Promise<{
     gmvCents: number;
     commissionCents: number;

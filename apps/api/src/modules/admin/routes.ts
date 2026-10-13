@@ -19,4 +19,14 @@ export async function adminRoutes(app: AppInstance): Promise<void> {
       return reply.send(successResponse(dashboard, request.requestId));
     },
   );
+
+  app.get(
+    `${API_PREFIX}/admin/customers`,
+    { preHandler: [app.authenticate] },
+    async (request, reply) => {
+      requireAdmin(request);
+      const customers = await admin.listCustomers();
+      return reply.send(successResponse(customers, request.requestId));
+    },
+  );
 }

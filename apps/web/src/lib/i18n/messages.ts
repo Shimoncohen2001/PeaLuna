@@ -43,6 +43,7 @@ export type Messages = {
     reviews: string;
     admin: string;
     adminHome: string;
+    adminCustomers: string;
     adminExperts: string;
     adminSkills: string;
     adminWorkflow: string;
@@ -306,6 +307,18 @@ export type Messages = {
       noneRecent: string;
       paidOrders: string;
     };
+    customersPage: {
+      title: string;
+      subtitle: string;
+      count: string;
+      empty: string;
+      bookings: string;
+      alsoExpert: string;
+      alsoAdmin: string;
+      statusActive: string;
+      statusPending: string;
+      statusSuspended: string;
+    };
   };
   auth: {
     title: string;
@@ -543,6 +556,7 @@ export const en: Messages = {
     reviews: 'Reviews',
     admin: 'Admin',
     adminHome: 'Overview',
+    adminCustomers: 'Clients',
     adminExperts: 'Experts',
     adminSkills: 'Skills',
     adminWorkflow: 'Steps',
@@ -787,7 +801,7 @@ export const en: Messages = {
       periodYear: '12 months',
       periodAll: 'All time',
       customers: 'Registered clients',
-      customersHint: 'Customer accounts, excluding deleted profiles',
+      customersHint: 'Every signup creates a client profile, including experts and unconfirmed emails',
       new7: 'New in 7 days',
       new30: 'New in 30 days',
       bookings: 'Bookings',
@@ -809,6 +823,18 @@ export const en: Messages = {
       expertsReview: 'Experts to review',
       noneRecent: 'No bookings yet.',
       paidOrders: 'Paid bookings',
+    },
+    customersPage: {
+      title: 'Registered clients',
+      subtitle: 'Real accounts with a client profile. Experts and admin also appear if they signed up as clients first.',
+      count: 'Accounts',
+      empty: 'No client profiles yet.',
+      bookings: 'Bookings',
+      alsoExpert: 'Expert',
+      alsoAdmin: 'Admin',
+      statusActive: 'Active',
+      statusPending: 'Email not confirmed',
+      statusSuspended: 'Suspended',
     },
   },
   auth: {
@@ -1054,6 +1080,7 @@ export const fr: Messages = {
     reviews: 'Avis',
     admin: 'Admin',
     adminHome: 'Tableau de bord',
+    adminCustomers: 'Clientes',
     adminExperts: 'Expertes',
     adminSkills: 'Compétences',
     adminWorkflow: 'Étapes',
@@ -1302,7 +1329,7 @@ export const fr: Messages = {
       periodYear: '12 mois',
       periodAll: 'Tout',
       customers: 'Clientes inscrites',
-      customersHint: 'Comptes cliente, hors profils supprimés',
+      customersHint: 'Chaque inscription crée un profil cliente, y compris expertes et emails non confirmés',
       new7: 'Nouvelles sur 7 jours',
       new30: 'Nouvelles sur 30 jours',
       bookings: 'Réservations',
@@ -1324,6 +1351,19 @@ export const fr: Messages = {
       expertsReview: 'Expertes à valider',
       noneRecent: 'Aucune réservation pour le moment.',
       paidOrders: 'Réservations payées',
+    },
+    customersPage: {
+      title: 'Clientes inscrites',
+      subtitle:
+        'Comptes réels avec un profil cliente. Les expertes et l’admin apparaissent aussi s’ils se sont d’abord inscrits comme clientes.',
+      count: 'Comptes',
+      empty: 'Aucun profil cliente pour le moment.',
+      bookings: 'Réservations',
+      alsoExpert: 'Experte',
+      alsoAdmin: 'Admin',
+      statusActive: 'Actif',
+      statusPending: 'Email non confirmé',
+      statusSuspended: 'Suspendu',
     },
   },
   auth: {
@@ -1569,6 +1609,7 @@ export const he: Messages = {
     reviews: 'ביקורות',
     admin: 'ניהול',
     adminHome: 'לוח בקרה',
+    adminCustomers: 'לקוחות',
     adminExperts: 'מומחיות',
     adminSkills: 'כישורים',
     adminWorkflow: 'שלבים',
@@ -1810,7 +1851,7 @@ export const he: Messages = {
       periodYear: '12 חודשים',
       periodAll: 'הכול',
       customers: 'לקוחות רשומות',
-      customersHint: 'חשבונות לקוחה, ללא פרופילים שנמחקו',
+      customersHint: 'כל הרשמה יוצרת פרופיל לקוחה, כולל מומחיות ואימיילים שטרם אומתו',
       new7: 'חדשות ב-7 ימים',
       new30: 'חדשות ב-30 ימים',
       bookings: 'הזמנות',
@@ -1832,6 +1873,18 @@ export const he: Messages = {
       expertsReview: 'מומחיות לבדיקה',
       noneRecent: 'עדיין אין הזמנות.',
       paidOrders: 'הזמנות ששולמו',
+    },
+    customersPage: {
+      title: 'לקוחות רשומות',
+      subtitle: 'חשבונות אמיתיים עם פרופיל לקוחה. גם מומחיות ומנהלות מופיעות אם נרשמו קודם כלקוחות.',
+      count: 'חשבונות',
+      empty: 'אין עדיין פרופילי לקוחה.',
+      bookings: 'הזמנות',
+      alsoExpert: 'מומחית',
+      alsoAdmin: 'ניהול',
+      statusActive: 'פעיל',
+      statusPending: 'אימייל לא אומת',
+      statusSuspended: 'מושעה',
     },
   },
   auth: {
