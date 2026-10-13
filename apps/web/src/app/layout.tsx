@@ -1,27 +1,35 @@
 import type { Metadata, Viewport } from 'next';
-import { Cormorant_Garamond, DM_Sans, Noto_Sans_Hebrew } from 'next/font/google';
+import localFont from 'next/font/local';
 import { Providers } from '@/components/providers';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './globals.css';
 
-const cormorant = Cormorant_Garamond({
-  subsets: ['latin'],
+const cormorant = localFont({
+  src: [
+    { path: '../fonts/cormorant-latin-400.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/cormorant-latin-500.woff2', weight: '500', style: 'normal' },
+    { path: '../fonts/cormorant-latin-600.woff2', weight: '600', style: 'normal' },
+  ],
   variable: '--font-cormorant',
   display: 'swap',
-  weight: ['400', '500', '600'],
 });
 
-const dmSans = DM_Sans({
-  subsets: ['latin'],
+const dmSans = localFont({
+  src: '../fonts/dm-sans-latin-variable.woff2',
   variable: '--font-dm-sans',
   display: 'swap',
+  weight: '100 1000',
 });
 
-const notoHebrew = Noto_Sans_Hebrew({
-  subsets: ['hebrew'],
+const notoHebrew = localFont({
+  src: [
+    { path: '../fonts/noto-hebrew-400.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/noto-hebrew-500.woff2', weight: '500', style: 'normal' },
+    { path: '../fonts/noto-hebrew-600.woff2', weight: '600', style: 'normal' },
+    { path: '../fonts/noto-hebrew-700.woff2', weight: '700', style: 'normal' },
+  ],
   variable: '--font-hebrew',
   display: 'swap',
-  weight: ['400', '500', '600', '700'],
 });
 
 export const viewport: Viewport = {
