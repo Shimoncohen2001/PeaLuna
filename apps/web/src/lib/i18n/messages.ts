@@ -371,6 +371,73 @@ export type Messages = {
       prevPage: string;
       results: string;
     };
+    expertsPage: {
+      title: string;
+      subtitle: string;
+      search: string;
+      searchPlaceholder: string;
+      sort: string;
+      sortCreated: string;
+      sortBookings: string;
+      sortGmv: string;
+      sortCommission: string;
+      sortPayout: string;
+      sortRating: string;
+      sortCompleted: string;
+      sortCancelled: string;
+      newest: string;
+      oldest: string;
+      filterAll: string;
+      activityAll: string;
+      activityBooked: string;
+      activityNone: string;
+      empty: string;
+      results: string;
+      openDossier: string;
+      backToList: string;
+      notFound: string;
+      total: string;
+      active: string;
+      newPeriod: string;
+      reviewQueue: string;
+      bookings: string;
+      paid: string;
+      gmv: string;
+      gmvHint: string;
+      commission: string;
+      commissionHint: string;
+      payout: string;
+      payoutHint: string;
+      transferred: string;
+      transferredHint: string;
+      cashKept: string;
+      cashKeptHint: string;
+      cashDue: string;
+      rating: string;
+      reviews: string;
+      reviewsEmpty: string;
+      completedRate: string;
+      cancellationRate: string;
+      profile: string;
+      services: string;
+      servicesEmpty: string;
+      priceBase: string;
+      priceCustom: string;
+      history: string;
+      historyEmpty: string;
+      finance: string;
+      unpaidBooking: string;
+      captured: string;
+      city: string;
+      signedUp: string;
+      stripeReady: string;
+      stripeMissing: string;
+      home: string;
+      salon: string;
+      cash: string;
+      approve: string;
+      reject: string;
+    };
   };
   auth: {
     title: string;
@@ -939,6 +1006,74 @@ export const en: Messages = {
       nextPage: 'Next',
       prevPage: 'Previous',
       results: '{n} accounts',
+    },
+    expertsPage: {
+      title: 'Professionals',
+      subtitle:
+        'Live tracking of registered experts. Bookings are counted separately from captured payments, commissions and payouts.',
+      search: 'Search',
+      searchPlaceholder: 'Name, email or city',
+      sort: 'Rank by',
+      sortCreated: 'Sign-up date',
+      sortBookings: 'Bookings',
+      sortGmv: 'Captured volume',
+      sortCommission: 'PeaLuna commission',
+      sortPayout: 'Expert share',
+      sortRating: 'Rating',
+      sortCompleted: 'Completed rate',
+      sortCancelled: 'Cancellation rate',
+      newest: 'Descending',
+      oldest: 'Ascending',
+      filterAll: 'All statuses',
+      activityAll: 'All activity',
+      activityBooked: 'With bookings',
+      activityNone: 'No bookings yet',
+      empty: 'No professionals match these filters.',
+      results: '{n} professionals',
+      openDossier: 'Open file',
+      backToList: 'All professionals',
+      notFound: 'This professional file could not be found.',
+      total: 'Registered',
+      active: 'Active',
+      newPeriod: 'New in this period',
+      reviewQueue: 'To review',
+      bookings: 'Bookings',
+      paid: 'Captured payments',
+      gmv: 'Captured volume',
+      gmvHint: 'Customer payments captured only — not every booking.',
+      commission: 'PeaLuna commission',
+      commissionHint: '20% of captured payments.',
+      payout: 'Expert share',
+      payoutHint: 'Captured volume minus platform commission.',
+      transferred: 'Transferred',
+      transferredHint: 'Card payouts actually sent to the expert.',
+      cashKept: 'Cash kept',
+      cashKeptHint: 'Cash the expert already received, before paying PeaLuna.',
+      cashDue: 'Cash commission due',
+      rating: 'Average rating',
+      reviews: 'Reviews',
+      reviewsEmpty: 'No reviews yet.',
+      completedRate: 'Completed rate',
+      cancellationRate: 'Cancellation rate',
+      profile: 'Profile',
+      services: 'Services and prices',
+      servicesEmpty: 'No services selected.',
+      priceBase: 'Catalog',
+      priceCustom: 'Custom',
+      history: 'Bookings',
+      historyEmpty: 'No bookings assigned yet.',
+      finance: 'Money',
+      unpaidBooking: 'Booking not paid',
+      captured: 'Captured',
+      city: 'City',
+      signedUp: 'Signed up',
+      stripeReady: 'Stripe ready',
+      stripeMissing: 'Stripe not set up',
+      home: 'Home',
+      salon: 'Salon',
+      cash: 'Cash',
+      approve: 'Approve',
+      reject: 'Reject',
     },
   },
   auth: {
@@ -1521,6 +1656,74 @@ export const fr: Messages = {
       prevPage: 'Précédent',
       results: '{n} comptes',
     },
+    expertsPage: {
+      title: 'Professionnelles',
+      subtitle:
+        'Suivi réel des expertes inscrites. Les réservations sont séparées des paiements encaissés, des commissions et des reversements.',
+      search: 'Recherche',
+      searchPlaceholder: 'Nom, email ou ville',
+      sort: 'Classement',
+      sortCreated: 'Date d’inscription',
+      sortBookings: 'Réservations',
+      sortGmv: 'Volume encaissé',
+      sortCommission: 'Commission PeaLuna',
+      sortPayout: 'Part experte',
+      sortRating: 'Note',
+      sortCompleted: 'Taux terminé',
+      sortCancelled: 'Taux d’annulation',
+      newest: 'Décroissant',
+      oldest: 'Croissant',
+      filterAll: 'Tous les statuts',
+      activityAll: 'Toute activité',
+      activityBooked: 'Avec réservations',
+      activityNone: 'Sans réservation',
+      empty: 'Aucune professionnelle ne correspond à ces filtres.',
+      results: '{n} professionnelles',
+      openDossier: 'Ouvrir le dossier',
+      backToList: 'Toutes les professionnelles',
+      notFound: 'Ce dossier professionnelle est introuvable.',
+      total: 'Inscrites',
+      active: 'Actives',
+      newPeriod: 'Nouvelles sur la période',
+      reviewQueue: 'À valider',
+      bookings: 'Réservations',
+      paid: 'Paiements encaissés',
+      gmv: 'Volume encaissé',
+      gmvHint: 'Paiements clientes encaissés uniquement — pas toutes les réservations.',
+      commission: 'Commission PeaLuna',
+      commissionHint: '20 % des paiements encaissés.',
+      payout: 'Part experte',
+      payoutHint: 'Volume encaissé moins la commission plateforme.',
+      transferred: 'Reversé',
+      transferredHint: 'Virements carte réellement envoyés à l’experte.',
+      cashKept: 'Espèces conservées',
+      cashKeptHint: 'Argent déjà reçu en espèces, avant le versement à PeaLuna.',
+      cashDue: 'Commission cash due',
+      rating: 'Note moyenne',
+      reviews: 'Avis',
+      reviewsEmpty: 'Aucun avis pour le moment.',
+      completedRate: 'Taux terminé',
+      cancellationRate: 'Taux d’annulation',
+      profile: 'Profil',
+      services: 'Services et tarifs',
+      servicesEmpty: 'Aucun service sélectionné.',
+      priceBase: 'Catalogue',
+      priceCustom: 'Personnalisé',
+      history: 'Réservations',
+      historyEmpty: 'Aucune réservation assignée pour le moment.',
+      finance: 'Argent',
+      unpaidBooking: 'Réservation non payée',
+      captured: 'Encaissé',
+      city: 'Ville',
+      signedUp: 'Inscription',
+      stripeReady: 'Stripe prêt',
+      stripeMissing: 'Stripe non configuré',
+      home: 'Domicile',
+      salon: 'Salon',
+      cash: 'Espèces',
+      approve: 'Approuver',
+      reject: 'Refuser',
+    },
   },
   auth: {
     title: 'Bon retour',
@@ -2093,6 +2296,73 @@ export const he: Messages = {
       nextPage: 'הבא',
       prevPage: 'הקודם',
       results: '{n} חשבונות',
+    },
+    expertsPage: {
+      title: 'מומחיות',
+      subtitle: 'מעקב חי אחר המומחיות. הזמנות נספרות בנפרד מתשלומים שנגבו, עמלות והעברות.',
+      search: 'חיפוש',
+      searchPlaceholder: 'שם, אימייל או עיר',
+      sort: 'דירוג לפי',
+      sortCreated: 'תאריך הרשמה',
+      sortBookings: 'הזמנות',
+      sortGmv: 'מחזור שנגבה',
+      sortCommission: 'עמלת PeaLuna',
+      sortPayout: 'חלק המומחית',
+      sortRating: 'דירוג',
+      sortCompleted: 'שיעור השלמה',
+      sortCancelled: 'שיעור ביטולים',
+      newest: 'יורד',
+      oldest: 'עולה',
+      filterAll: 'כל הסטטוסים',
+      activityAll: 'כל הפעילות',
+      activityBooked: 'עם הזמנות',
+      activityNone: 'בלי הזמנות',
+      empty: 'אין מומחית שמתאימה לסינון.',
+      results: '{n} מומחיות',
+      openDossier: 'פתיחת תיק',
+      backToList: 'כל המומחיות',
+      notFound: 'תיק המומחית לא נמצא.',
+      total: 'רשומות',
+      active: 'פעילות',
+      newPeriod: 'חדשות בתקופה',
+      reviewQueue: 'לבדיקה',
+      bookings: 'הזמנות',
+      paid: 'תשלומים שנגבו',
+      gmv: 'מחזור שנגבה',
+      gmvHint: 'תשלומי לקוחות שנגבו בלבד — לא כל הזמנה.',
+      commission: 'עמלת PeaLuna',
+      commissionHint: '20% מהתשלומים שנגבו.',
+      payout: 'חלק המומחית',
+      payoutHint: 'המחזור שנגבה פחות עמלת הפלטפורמה.',
+      transferred: 'הועבר',
+      transferredHint: 'העברות כרטיס שנשלחו בפועל למומחית.',
+      cashKept: 'מזומן אצלה',
+      cashKeptHint: 'מזומן שכבר התקבל, לפני התשלום ל-PeaLuna.',
+      cashDue: 'עמלת מזומן לתשלום',
+      rating: 'דירוג ממוצע',
+      reviews: 'ביקורות',
+      reviewsEmpty: 'אין עדיין ביקורות.',
+      completedRate: 'שיעור השלמה',
+      cancellationRate: 'שיעור ביטולים',
+      profile: 'פרופיל',
+      services: 'שירותים ומחירים',
+      servicesEmpty: 'לא נבחרו שירותים.',
+      priceBase: 'קטלוג',
+      priceCustom: 'מותאם',
+      history: 'הזמנות',
+      historyEmpty: 'אין עדיין הזמנות משויכות.',
+      finance: 'כסף',
+      unpaidBooking: 'הזמנה לא שולמה',
+      captured: 'נגבה',
+      city: 'עיר',
+      signedUp: 'נרשמה',
+      stripeReady: 'Stripe מוכן',
+      stripeMissing: 'Stripe לא הוגדר',
+      home: 'בית',
+      salon: 'סלון',
+      cash: 'מזומן',
+      approve: 'אישור',
+      reject: 'דחייה',
     },
   },
   auth: {

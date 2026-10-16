@@ -34,7 +34,53 @@ export const adminCustomerIdParamsSchema = z.object({
   id: z.string().uuid(),
 });
 
+export const adminExpertSortBySchema = z.enum([
+  'createdAt',
+  'bookings',
+  'gmv',
+  'commission',
+  'payout',
+  'rating',
+  'completedRate',
+  'cancellationRate',
+]);
+
+export const adminExpertStatusFilterSchema = z.enum([
+  'all',
+  'PENDING_APPLICATION',
+  'UNDER_REVIEW',
+  'APPROVED',
+  'SUSPENDED',
+  'REJECTED',
+]);
+
+export const adminExpertsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  q: z
+    .string()
+    .trim()
+    .max(120)
+    .optional()
+    .transform((value) => value || undefined),
+  sortBy: adminExpertSortBySchema.default('bookings'),
+  sortOrder: z.enum(['asc', 'desc']).default('desc'),
+  status: adminExpertStatusFilterSchema.default('all'),
+  activity: adminCustomerActivityFilterSchema.default('all'),
+  period: adminDashboardPeriodSchema,
+});
+
+export const adminExpertsOverviewQuerySchema = z.object({
+  period: adminDashboardPeriodSchema,
+});
+
+export const adminExpertIdParamsSchema = z.object({
+  id: z.string().uuid(),
+});
+
 export type AdminDashboardPeriod = z.infer<typeof adminDashboardPeriodSchema>;
 export type AdminDashboardQuery = z.infer<typeof adminDashboardQuerySchema>;
 export type AdminCustomersQuery = z.infer<typeof adminCustomersQuerySchema>;
 export type AdminCustomerSortBy = z.infer<typeof adminCustomerSortBySchema>;
+export type AdminExpertsQuery = z.infer<typeof adminExpertsQuerySchema>;
+export type AdminExpertSortBy = z.infer<typeof adminExpertSortBySchema>;

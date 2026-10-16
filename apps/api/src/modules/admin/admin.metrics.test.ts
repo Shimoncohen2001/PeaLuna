@@ -3,6 +3,7 @@ import {
   averageBasketCents,
   bookingBucket,
   cancellationRateBps,
+  completionRateBps,
   fillSeries,
   grainForPeriod,
   periodStart,
@@ -31,6 +32,8 @@ describe('admin dashboard metrics', () => {
     expect(cancellationRateBps(0, 0)).toBe(0);
     expect(averageBasketCents(10_000, 2)).toBe(5000);
     expect(cancellationRateBps(1, 4)).toBe(2500);
+    expect(completionRateBps(0, 0)).toBe(0);
+    expect(completionRateBps(3, 4)).toBe(7500);
   });
 
   it('fills missing series days with zero instead of fabricated values', () => {

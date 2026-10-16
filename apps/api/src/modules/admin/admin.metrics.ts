@@ -130,3 +130,8 @@ export function cancellationRateBps(cancelled: number, total: number): number {
   if (total <= 0) return 0;
   return Math.round((cancelled / total) * 10_000);
 }
+
+export function completionRateBps(completed: number, total: number): number {
+  if (total <= 0) return 0;
+  return Math.round((completed / total) * 10_000);
+}
