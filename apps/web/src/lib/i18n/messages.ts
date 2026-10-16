@@ -318,6 +318,56 @@ export type Messages = {
       statusActive: string;
       statusPending: string;
       statusSuspended: string;
+      search: string;
+      searchPlaceholder: string;
+      sort: string;
+      sortCreated: string;
+      sortBookings: string;
+      sortSpent: string;
+      newest: string;
+      oldest: string;
+      filterAll: string;
+      activityAll: string;
+      activityBooked: string;
+      activityNone: string;
+      phone: string;
+      spent: string;
+      average: string;
+      lastBooking: string;
+      signedUp: string;
+      openDossier: string;
+      backToList: string;
+      profile: string;
+      signupDate: string;
+      country: string;
+      language: string;
+      verified: string;
+      unverified: string;
+      summary: string;
+      experts: string;
+      expertsEmpty: string;
+      history: string;
+      historyEmpty: string;
+      care: string;
+      nextCare: string;
+      wigs: string;
+      wigsEmpty: string;
+      archived: string;
+      transactions: string;
+      transactionsEmpty: string;
+      pending: string;
+      confirmed: string;
+      completed: string;
+      cancelled: string;
+      paid: string;
+      noPhone: string;
+      googleAccount: string;
+      passwordAccount: string;
+      notFound: string;
+      pageOf: string;
+      nextPage: string;
+      prevPage: string;
+      results: string;
     };
   };
   auth: {
@@ -828,13 +878,63 @@ export const en: Messages = {
       title: 'Registered clients',
       subtitle: 'Real accounts with a client profile. Experts and admin also appear if they signed up as clients first.',
       count: 'Accounts',
-      empty: 'No client profiles yet.',
+      empty: 'No client profiles match these filters.',
       bookings: 'Bookings',
       alsoExpert: 'Expert',
       alsoAdmin: 'Admin',
       statusActive: 'Active',
       statusPending: 'Email not confirmed',
       statusSuspended: 'Suspended',
+      search: 'Search',
+      searchPlaceholder: 'Name, email or phone',
+      sort: 'Sort',
+      sortCreated: 'Sign-up date',
+      sortBookings: 'Bookings',
+      sortSpent: 'Spend',
+      newest: 'Descending',
+      oldest: 'Ascending',
+      filterAll: 'All statuses',
+      activityAll: 'All activity',
+      activityBooked: 'With bookings',
+      activityNone: 'No bookings yet',
+      phone: 'Phone',
+      spent: 'Spend',
+      average: 'Average booking',
+      lastBooking: 'Last booking',
+      signedUp: 'Signed up',
+      openDossier: 'Open file',
+      backToList: 'All clients',
+      profile: 'Profile',
+      signupDate: 'Sign-up date',
+      country: 'Country',
+      language: 'Language',
+      verified: 'Email confirmed',
+      unverified: 'Email not confirmed',
+      summary: 'Activity',
+      experts: 'Professionals booked',
+      expertsEmpty: 'No professional booked yet.',
+      history: 'Bookings and care',
+      historyEmpty: 'No bookings yet.',
+      care: 'Care report',
+      nextCare: 'Next care',
+      wigs: 'Registered wigs',
+      wigsEmpty: 'No wig registered on the platform.',
+      archived: 'Archived',
+      transactions: 'Latest transactions',
+      transactionsEmpty: 'No captured payments yet.',
+      pending: 'Pending',
+      confirmed: 'Confirmed',
+      completed: 'Completed',
+      cancelled: 'Cancelled',
+      paid: 'Paid',
+      noPhone: 'No phone on file',
+      googleAccount: 'Google',
+      passwordAccount: 'Email',
+      notFound: 'This client file could not be found.',
+      pageOf: 'Page {page} of {pages}',
+      nextPage: 'Next',
+      prevPage: 'Previous',
+      results: '{n} accounts',
     },
   },
   auth: {
@@ -1357,13 +1457,63 @@ export const fr: Messages = {
       subtitle:
         'Comptes réels avec un profil cliente. Les expertes et l’admin apparaissent aussi s’ils se sont d’abord inscrits comme clientes.',
       count: 'Comptes',
-      empty: 'Aucun profil cliente pour le moment.',
+      empty: 'Aucun profil cliente ne correspond à ces filtres.',
       bookings: 'Réservations',
       alsoExpert: 'Experte',
       alsoAdmin: 'Admin',
       statusActive: 'Actif',
       statusPending: 'Email non confirmé',
       statusSuspended: 'Suspendu',
+      search: 'Recherche',
+      searchPlaceholder: 'Nom, email ou téléphone',
+      sort: 'Tri',
+      sortCreated: 'Date d’inscription',
+      sortBookings: 'Réservations',
+      sortSpent: 'Dépenses',
+      newest: 'Décroissant',
+      oldest: 'Croissant',
+      filterAll: 'Tous les statuts',
+      activityAll: 'Toute activité',
+      activityBooked: 'Avec réservations',
+      activityNone: 'Sans réservation',
+      phone: 'Téléphone',
+      spent: 'Dépenses',
+      average: 'Panier moyen',
+      lastBooking: 'Dernière réservation',
+      signedUp: 'Inscription',
+      openDossier: 'Ouvrir le dossier',
+      backToList: 'Toutes les clientes',
+      profile: 'Profil',
+      signupDate: 'Date d’inscription',
+      country: 'Pays',
+      language: 'Langue',
+      verified: 'Email confirmé',
+      unverified: 'Email non confirmé',
+      summary: 'Activité',
+      experts: 'Professionnelles réservées',
+      expertsEmpty: 'Aucune professionnelle réservée pour le moment.',
+      history: 'Réservations et soins',
+      historyEmpty: 'Aucune réservation pour le moment.',
+      care: 'Rapport de soin',
+      nextCare: 'Prochain soin',
+      wigs: 'Perruques enregistrées',
+      wigsEmpty: 'Aucune perruque enregistrée sur la plateforme.',
+      archived: 'Archivée',
+      transactions: 'Dernières transactions',
+      transactionsEmpty: 'Aucun paiement encaissé pour le moment.',
+      pending: 'En attente',
+      confirmed: 'Confirmées',
+      completed: 'Terminées',
+      cancelled: 'Annulées',
+      paid: 'Payées',
+      noPhone: 'Pas de téléphone',
+      googleAccount: 'Google',
+      passwordAccount: 'Email',
+      notFound: 'Ce dossier cliente est introuvable.',
+      pageOf: 'Page {page} sur {pages}',
+      nextPage: 'Suivant',
+      prevPage: 'Précédent',
+      results: '{n} comptes',
     },
   },
   auth: {
@@ -1878,13 +2028,63 @@ export const he: Messages = {
       title: 'לקוחות רשומות',
       subtitle: 'חשבונות אמיתיים עם פרופיל לקוחה. גם מומחיות ומנהלות מופיעות אם נרשמו קודם כלקוחות.',
       count: 'חשבונות',
-      empty: 'אין עדיין פרופילי לקוחה.',
+      empty: 'אין פרופיל לקוחה שמתאים לסינון.',
       bookings: 'הזמנות',
       alsoExpert: 'מומחית',
       alsoAdmin: 'ניהול',
       statusActive: 'פעיל',
       statusPending: 'אימייל לא אומת',
       statusSuspended: 'מושעה',
+      search: 'חיפוש',
+      searchPlaceholder: 'שם, אימייל או טלפון',
+      sort: 'מיון',
+      sortCreated: 'תאריך הרשמה',
+      sortBookings: 'הזמנות',
+      sortSpent: 'הוצאות',
+      newest: 'יורד',
+      oldest: 'עולה',
+      filterAll: 'כל הסטטוסים',
+      activityAll: 'כל הפעילות',
+      activityBooked: 'עם הזמנות',
+      activityNone: 'בלי הזמנות',
+      phone: 'טלפון',
+      spent: 'הוצאות',
+      average: 'ממוצע הזמנה',
+      lastBooking: 'הזמנה אחרונה',
+      signedUp: 'נרשמה',
+      openDossier: 'פתיחת תיק',
+      backToList: 'כל הלקוחות',
+      profile: 'פרופיל',
+      signupDate: 'תאריך הרשמה',
+      country: 'מדינה',
+      language: 'שפה',
+      verified: 'אימייל אומת',
+      unverified: 'אימייל לא אומת',
+      summary: 'פעילות',
+      experts: 'מומחיות שהוזמנו',
+      expertsEmpty: 'עדיין לא הוזמנה מומחית.',
+      history: 'הזמנות וטיפולים',
+      historyEmpty: 'אין עדיין הזמנות.',
+      care: 'דוח טיפול',
+      nextCare: 'טיפול הבא',
+      wigs: 'פאות רשומות',
+      wigsEmpty: 'אין פאה רשומה בפלטפורמה.',
+      archived: 'בארכיון',
+      transactions: 'עסקאות אחרונות',
+      transactionsEmpty: 'אין עדיין תשלומים שנגבו.',
+      pending: 'ממתינות',
+      confirmed: 'מאושרות',
+      completed: 'הושלמו',
+      cancelled: 'בוטלו',
+      paid: 'שולמו',
+      noPhone: 'אין טלפון',
+      googleAccount: 'גוגל',
+      passwordAccount: 'אימייל',
+      notFound: 'תיק הלקוחה לא נמצא.',
+      pageOf: 'עמוד {page} מתוך {pages}',
+      nextPage: 'הבא',
+      prevPage: 'הקודם',
+      results: '{n} חשבונות',
     },
   },
   auth: {

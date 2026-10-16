@@ -1,4 +1,9 @@
-import { adminDashboardQuerySchema, successResponse } from '@velure/contracts';
+import {
+  adminCustomerIdParamsSchema,
+  adminCustomersQuerySchema,
+  adminDashboardQuerySchema,
+  successResponse,
+} from '@velure/contracts';
 import type { AppInstance } from '../../types/app.js';
 import { API_PREFIX } from '../../config/constants.js';
 import { requireAdmin } from '../../lib/access.js';
@@ -22,11 +27,27 @@ export async function adminRoutes(app: AppInstance): Promise<void> {
 
   app.get(
     `${API_PREFIX}/admin/customers`,
-    { preHandler: [app.authenticate] },
+    {
+      preHandler: [app.authenticate],
+      schema: { querystring: adminCustomersQuerySchema },
+    },
     async (request, reply) => {
       requireAdmin(request);
-      const customers = await admin.listCustomers();
+      const customers = await admin.listCustomers(request.query);
       return reply.send(successResponse(customers, request.requestId));
+    },
+  );
+
+  app.get(
+    `${API_PREFIX}/admin/customers/:id`,
+    {
+      preHandler: [app.authenticate],
+      schema: { params: adminCustomerIdParamsSchema },
+    },
+    async (request, reply) => {
+      requireAdmin(request);
+      const customer = await admin.getCustomer(request.params.id);
+      return reply.send(successResponse(customer, request.requestId));
     },
   );
 }

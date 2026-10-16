@@ -1,9 +1,11 @@
-import { Prisma, prisma, type OrderStatus } from '@velure/database';
+import { Prisma, prisma, type OrderStatus, type UserStatus } from '@velure/database';
+import type { AdminCustomersQuery } from '@velure/contracts';
 import {
   BOOKING_STATUSES,
   CONFIRMED_STATUSES,
   PENDING_STATUSES,
   averageBasketCents,
+  bookingBucket,
   cancellationRateBps,
   fillSeries,
   grainForPeriod,
@@ -11,6 +13,14 @@ import {
   seriesKeys,
   type DashboardPeriod,
 } from './admin.metrics.js';
+import {
+  accumulateCustomerOrder,
+  compareCustomerRows,
+  customerSearchTokens,
+  emptyCustomerStats,
+  finalizeCustomerStats,
+  statsByCustomer,
+} from './admin.customers.js';
 
 const NOT_DELETED = { not: 'DELETED' as const };
 
@@ -163,15 +173,21 @@ export class AdminService {
     };
   }
 
-  async listCustomers() {
+  async listCustomers(query: AdminCustomersQuery) {
+    const tokens = customerSearchTokens(query.q);
+    const userStatus: UserStatus | undefined =
+      query.status === 'all' ? undefined : query.status;
+
+    const where: Prisma.CustomerProfileWhereInput = {
+      user: { status: userStatus ?? NOT_DELETED },
+      ...(tokens.length ? customerNameSearchWhere(tokens) : {}),
+    };
+
     const rows = await prisma.customerProfile.findMany({
-      where: { user: { status: NOT_DELETED } },
-      orderBy: { createdAt: 'desc' },
-      take: 200,
+      where,
       select: {
         id: true,
-        createdAt: true,
-        _count: { select: { orders: true } },
+        phone: true,
         user: {
           select: {
             firstName: true,
@@ -185,15 +201,265 @@ export class AdminService {
       },
     });
 
-    return rows.map((row) => ({
-      id: row.id,
-      name: `${row.user.firstName} ${row.user.lastName}`.trim(),
-      email: row.user.email,
-      status: row.user.status,
-      createdAt: row.user.createdAt.toISOString(),
-      roles: row.user.roles.map((item) => item.role.name),
-      bookings: row._count.orders,
-    }));
+    const ids = rows.map((row) => row.id);
+    const orderRows =
+      ids.length === 0
+        ? []
+        : await prisma.repairOrder.findMany({
+            where: { customerId: { in: ids }, status: { in: BOOKING_STATUSES } },
+            select: {
+              customerId: true,
+              status: true,
+              paymentStatus: true,
+              totalCents: true,
+              createdAt: true,
+            },
+          });
+    const stats = statsByCustomer(orderRows);
+
+    const mapped = rows.map((row) => {
+      const summary = stats.get(row.id) ?? emptyCustomerStats();
+      return {
+        id: row.id,
+        name: `${row.user.firstName} ${row.user.lastName}`.trim(),
+        email: row.user.email,
+        phone: row.phone,
+        status: row.user.status,
+        createdAt: row.user.createdAt.toISOString(),
+        roles: publicRoles(row.user.roles.map((item) => item.role.name)),
+        bookings: summary.bookings,
+        cancelled: summary.cancelled,
+        spentCents: summary.spentCents,
+        paidCount: summary.paidCount,
+        averageBasketCents: summary.averageBasketCents,
+        currency: 'ILS',
+        lastBookingAt: summary.lastBookingAt,
+      };
+    });
+
+    const filtered =
+      query.activity === 'booked'
+        ? mapped.filter((row) => row.bookings > 0)
+        : query.activity === 'none'
+          ? mapped.filter((row) => row.bookings === 0)
+          : mapped;
+
+    filtered.sort((left, right) =>
+      compareCustomerRows(left, right, query.sortBy, query.sortOrder),
+    );
+
+    const total = filtered.length;
+    const start = (query.page - 1) * query.limit;
+    return {
+      items: filtered.slice(start, start + query.limit),
+      page: query.page,
+      limit: query.limit,
+      total,
+    };
+  }
+
+  async getCustomer(id: string) {
+    const profile = await prisma.customerProfile.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        phone: true,
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            email: true,
+            status: true,
+            countryCode: true,
+            locale: true,
+            createdAt: true,
+            emailVerifiedAt: true,
+            passwordHash: true,
+            roles: { select: { role: { select: { name: true } } } },
+            authIdentities: { select: { provider: true } },
+          },
+        },
+        wigs: {
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            name: true,
+            reference: true,
+            brand: true,
+            color: true,
+            fiberType: true,
+            lengthCm: true,
+            currentCondition: true,
+            lastCareAt: true,
+            lastTechnicianName: true,
+            archivedAt: true,
+            _count: { select: { orders: true } },
+          },
+        },
+        orders: {
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            orderNumber: true,
+            status: true,
+            paymentStatus: true,
+            paymentMethod: true,
+            totalCents: true,
+            currency: true,
+            createdAt: true,
+            scheduledAt: true,
+            completedAt: true,
+            venueType: true,
+            serviceCity: true,
+            technician: { select: { id: true, displayName: true } },
+            wig: { select: { name: true } },
+            lineItems: { select: { serviceType: { select: { slug: true, name: true } } } },
+            careReport: {
+              select: {
+                status: true,
+                submittedAt: true,
+                beforeGeneralCondition: true,
+                afterGeneralCondition: true,
+                nextCareAt: true,
+                operations: { select: { code: true } },
+              },
+            },
+            transactions: {
+              orderBy: { createdAt: 'desc' },
+              select: {
+                id: true,
+                type: true,
+                status: true,
+                amountCents: true,
+                currency: true,
+                createdAt: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!profile || profile.user.status === 'DELETED') {
+      throw Object.assign(new Error('Customer not found'), {
+        statusCode: 404,
+        code: 'CUSTOMER_NOT_FOUND',
+      });
+    }
+
+    const summary = finalizeCustomerStats(
+      profile.orders.reduce((acc, order) => {
+        accumulateCustomerOrder(acc, {
+          customerId: profile.id,
+          status: order.status,
+          paymentStatus: order.paymentStatus,
+          totalCents: order.totalCents,
+          createdAt: order.createdAt,
+        });
+        return acc;
+      }, emptyCustomerStats()),
+    );
+
+    const experts = new Map<
+      string,
+      { id: string; name: string; bookings: number; spentCents: number }
+    >();
+    for (const order of profile.orders) {
+      if (!order.technician || !bookingBucket(order.status)) continue;
+      const current = experts.get(order.technician.id) ?? {
+        id: order.technician.id,
+        name: order.technician.displayName ?? '—',
+        bookings: 0,
+        spentCents: 0,
+      };
+      current.bookings += 1;
+      if (order.paymentStatus === 'CAPTURED') current.spentCents += order.totalCents;
+      experts.set(order.technician.id, current);
+    }
+
+    const currency =
+      profile.orders.find((order) => order.paymentStatus === 'CAPTURED')?.currency ??
+      profile.orders[0]?.currency ??
+      'ILS';
+
+    return {
+      id: profile.id,
+      name: `${profile.user.firstName} ${profile.user.lastName}`.trim(),
+      email: profile.user.email,
+      phone: profile.phone,
+      status: profile.user.status,
+      countryCode: profile.user.countryCode,
+      locale: profile.user.locale,
+      createdAt: profile.user.createdAt.toISOString(),
+      emailVerifiedAt: profile.user.emailVerifiedAt?.toISOString() ?? null,
+      roles: publicRoles(profile.user.roles.map((item) => item.role.name)),
+      providers: [
+        ...new Set([
+          ...(profile.user.passwordHash ? ['password'] : []),
+          ...profile.user.authIdentities.map((identity) => identity.provider),
+        ]),
+      ],
+      summary: { ...summary, currency },
+      experts: [...experts.values()].sort((left, right) => right.bookings - left.bookings),
+      bookings: profile.orders.map((order) => ({
+        id: order.id,
+        orderNumber: order.orderNumber,
+        status: order.status,
+        paymentStatus: order.paymentStatus,
+        paymentMethod: order.paymentMethod,
+        totalCents: order.totalCents,
+        currency: order.currency,
+        createdAt: order.createdAt.toISOString(),
+        scheduledAt: order.scheduledAt?.toISOString() ?? null,
+        completedAt: order.completedAt?.toISOString() ?? null,
+        venueType: order.venueType,
+        serviceCity: order.serviceCity,
+        expertName: order.technician?.displayName ?? null,
+        wigName: order.wig.name,
+        services: order.lineItems.map((item) => ({
+          slug: item.serviceType.slug,
+          name: item.serviceType.name,
+        })),
+        care: order.careReport
+          ? {
+              status: order.careReport.status,
+              submittedAt: order.careReport.submittedAt?.toISOString() ?? null,
+              operations: order.careReport.operations.map((operation) => operation.code),
+              beforeCondition: order.careReport.beforeGeneralCondition,
+              afterCondition: order.careReport.afterGeneralCondition,
+              nextCareAt: order.careReport.nextCareAt?.toISOString() ?? null,
+            }
+          : null,
+      })),
+      transactions: profile.orders
+        .flatMap((order) =>
+          order.transactions.map((transaction) => ({
+            id: transaction.id,
+            orderNumber: order.orderNumber,
+            type: transaction.type,
+            status: transaction.status,
+            amountCents: transaction.amountCents,
+            currency: transaction.currency,
+            createdAt: transaction.createdAt.toISOString(),
+          })),
+        )
+        .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
+        .slice(0, 50),
+      wigs: profile.wigs.map((wig) => ({
+        id: wig.id,
+        name: wig.name,
+        reference: wig.reference,
+        brand: wig.brand,
+        color: wig.color,
+        fiberType: wig.fiberType,
+        lengthCm: wig.lengthCm,
+        currentCondition: wig.currentCondition,
+        lastCareAt: wig.lastCareAt?.toISOString() ?? null,
+        lastTechnicianName: wig.lastTechnicianName,
+        archivedAt: wig.archivedAt?.toISOString() ?? null,
+        bookings: wig._count.orders,
+      })),
+    };
   }
 
   private async capturedRevenue(since: Date): Promise<{
@@ -269,4 +535,28 @@ function bucketFormatSql(grain: ReturnType<typeof grainForPeriod>) {
   if (grain === 'day') return Prisma.raw(`'YYYY-MM-DD'`);
   if (grain === 'week') return Prisma.raw(`'IYYY-"W"IW'`);
   return Prisma.raw(`'YYYY-MM'`);
+}
+
+const VISIBLE_ROLES = new Set(['CUSTOMER', 'TECHNICIAN', 'ADMIN', 'SUPER_ADMIN', 'OPS']);
+
+function publicRoles(names: string[]): string[] {
+  return names.filter((name) => VISIBLE_ROLES.has(name));
+}
+
+function customerNameSearchWhere(tokens: string[]): Prisma.CustomerProfileWhereInput {
+  return {
+    AND: tokens.map((token) => {
+      const digits = token.replace(/\D/g, '');
+      const or: Prisma.CustomerProfileWhereInput[] = [
+        { user: { firstName: { contains: token, mode: 'insensitive' } } },
+        { user: { lastName: { contains: token, mode: 'insensitive' } } },
+        { user: { email: { contains: token, mode: 'insensitive' } } },
+        { phone: { contains: token, mode: 'insensitive' } },
+      ];
+      if (digits.length >= 4) {
+        or.push({ phone: { contains: digits } });
+      }
+      return { OR: or };
+    }),
+  };
 }
