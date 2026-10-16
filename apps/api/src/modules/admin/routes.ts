@@ -5,12 +5,13 @@ import {
   successResponse,
 } from '@velure/contracts';
 import type { AppInstance } from '../../types/app.js';
+import type { Env } from '../../config/env.js';
 import { API_PREFIX } from '../../config/constants.js';
 import { requireAdmin } from '../../lib/access.js';
 import { AdminService } from './admin.service.js';
 
-export async function adminRoutes(app: AppInstance): Promise<void> {
-  const admin = new AdminService();
+export async function adminRoutes(app: AppInstance, env: Env): Promise<void> {
+  const admin = new AdminService(env);
 
   app.get(
     `${API_PREFIX}/admin/dashboard`,

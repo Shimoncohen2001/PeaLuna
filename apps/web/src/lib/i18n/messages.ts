@@ -349,6 +349,8 @@ export type Messages = {
       history: string;
       historyEmpty: string;
       care: string;
+      photos: string;
+      photosEmpty: string;
       nextCare: string;
       wigs: string;
       wigsEmpty: string;
@@ -916,6 +918,8 @@ export const en: Messages = {
       history: 'Bookings and care',
       historyEmpty: 'No bookings yet.',
       care: 'Care report',
+      photos: 'Before / after photos',
+      photosEmpty: 'No before/after photos on file yet.',
       nextCare: 'Next care',
       wigs: 'Registered wigs',
       wigsEmpty: 'No wig registered on the platform.',
@@ -1495,6 +1499,8 @@ export const fr: Messages = {
       history: 'Réservations et soins',
       historyEmpty: 'Aucune réservation pour le moment.',
       care: 'Rapport de soin',
+      photos: 'Photos avant / après',
+      photosEmpty: 'Pas encore de photos avant/après.',
       nextCare: 'Prochain soin',
       wigs: 'Perruques enregistrées',
       wigsEmpty: 'Aucune perruque enregistrée sur la plateforme.',
@@ -2066,6 +2072,8 @@ export const he: Messages = {
       history: 'הזמנות וטיפולים',
       historyEmpty: 'אין עדיין הזמנות.',
       care: 'דוח טיפול',
+      photos: 'תמונות לפני / אחרי',
+      photosEmpty: 'אין עדיין תמונות לפני/אחרי.',
       nextCare: 'טיפול הבא',
       wigs: 'פאות רשומות',
       wigsEmpty: 'אין פאה רשומה בפלטפורמה.',

@@ -59,7 +59,7 @@ export async function buildApp() {
   await careReportRoutes(app, env);
   await geoRoutes(app, env);
   await catalogRoutes(app);
-  await adminRoutes(app);
+  await adminRoutes(app, env);
 
   app.get('/', async (_request, reply) => {
     return reply.send({

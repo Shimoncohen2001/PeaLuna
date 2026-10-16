@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ApiClientError } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
@@ -9,6 +10,7 @@ import { careLabel, careUi } from '@/lib/i18n/care';
 import { catalogServiceName } from '@/lib/i18n/catalog';
 import { useLocale } from '@/lib/i18n/locale';
 import { formatMoney, formatStatus, intlLocale } from '@/lib/format';
+import type { Locale } from '@/lib/i18n/messages';
 
 type AdminCustomerDetail = {
   id: string;
@@ -51,6 +53,7 @@ type AdminCustomerDetail = {
     expertName: string | null;
     wigName: string | null;
     services: Array<{ slug: string; name: string }>;
+    photos: CarePhoto[];
     care: {
       status: string;
       submittedAt: string | null;
@@ -85,6 +88,16 @@ type AdminCustomerDetail = {
   }>;
 };
 
+type CarePhoto = {
+  id: string;
+  phase: 'BEFORE' | 'AFTER';
+  angle: string | null;
+  kind: 'image' | 'video';
+  url: string;
+};
+
+const PHOTO_ANGLES = ['FRONT', 'BACK', 'LEFT', 'RIGHT', 'LACE'] as const;
+
 export default function AdminCustomerDetailPage() {
   const params = useParams<{ id: string }>();
   const { authFetch } = useAuth();
@@ -92,6 +105,7 @@ export default function AdminCustomerDetailPage() {
   const copy = t.admin.customersPage;
   const dateLocale = intlLocale(locale);
   const care = careUi(locale);
+  const [preview, setPreview] = useState<CarePhoto | null>(null);
 
   const dossier = useQuery({
     queryKey: ['admin-customer', params.id],
@@ -216,6 +230,35 @@ export default function AdminCustomerDetailPage() {
       </section>
 
       <section className="rounded-[var(--radius-card)] border border-ink/5 bg-warm-white p-5">
+        <h2 className="font-display text-2xl text-ink">{copy.photos}</h2>
+        {data.bookings.every((booking) => booking.photos.length === 0) ? (
+          <p className="mt-4 text-sm text-muted">{copy.photosEmpty}</p>
+        ) : (
+          <ul className="mt-4 space-y-6">
+            {data.bookings
+              .filter((booking) => booking.photos.length > 0)
+              .map((booking) => (
+                <li key={`photos-${booking.id}`}>
+                  <p className="text-sm font-medium text-ink">
+                    {booking.orderNumber}
+                    {booking.wigName ? ` · ${booking.wigName}` : ''}
+                    {booking.expertName ? ` · ${booking.expertName}` : ''}
+                  </p>
+                  <CarePhotoGrid
+                    photos={booking.photos}
+                    locale={locale}
+                    beforeLabel={care.before}
+                    afterLabel={care.after}
+                    extraLabel={care.extra}
+                    onOpen={setPreview}
+                  />
+                </li>
+              ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="rounded-[var(--radius-card)] border border-ink/5 bg-warm-white p-5">
         <h2 className="font-display text-2xl text-ink">{copy.history}</h2>
         {data.bookings.length === 0 ? (
           <p className="mt-4 text-sm text-muted">{copy.historyEmpty}</p>
@@ -287,6 +330,28 @@ export default function AdminCustomerDetailPage() {
                         .filter(Boolean)
                         .join(' · ')}
                     </p>
+                    {booking.photos.length > 0 ? (
+                      <CarePhotoGrid
+                        photos={booking.photos}
+                        locale={locale}
+                        beforeLabel={care.before}
+                        afterLabel={care.after}
+                        extraLabel={care.extra}
+                        onOpen={setPreview}
+                      />
+                    ) : null}
+                  </div>
+                ) : booking.photos.length > 0 ? (
+                  <div className="mt-3 rounded-xl bg-beige/40 px-4 py-3 text-sm">
+                    <p className="font-medium text-ink">{copy.photos}</p>
+                    <CarePhotoGrid
+                      photos={booking.photos}
+                      locale={locale}
+                      beforeLabel={care.before}
+                      afterLabel={care.after}
+                      extraLabel={care.extra}
+                      onOpen={setPreview}
+                    />
                   </div>
                 ) : null}
               </li>
@@ -354,6 +419,22 @@ export default function AdminCustomerDetailPage() {
           )}
         </article>
       </section>
+
+      {preview ? (
+        <button
+          type="button"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/80 p-4"
+          onClick={() => setPreview(null)}
+          aria-label={t.nav.closeMenu}
+        >
+          {preview.kind === 'video' ? (
+            <video src={preview.url} className="max-h-full max-w-full rounded-lg" controls autoPlay />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={preview.url} alt="" className="max-h-full max-w-full rounded-lg object-contain" />
+          )}
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -393,4 +474,84 @@ function statusLabel(
   if (status === 'PENDING_VERIFICATION') return copy.statusPending;
   if (status === 'SUSPENDED') return copy.statusSuspended;
   return formatStatus(status);
+}
+
+function CarePhotoGrid({
+  photos,
+  locale,
+  beforeLabel,
+  afterLabel,
+  extraLabel,
+  onOpen,
+}: {
+  photos: CarePhoto[];
+  locale: Locale;
+  beforeLabel: string;
+  afterLabel: string;
+  extraLabel: string;
+  onOpen: (photo: CarePhoto) => void;
+}) {
+  return (
+    <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+      {PHOTO_ANGLES.map((angle) => {
+        const before = photos.find((photo) => photo.phase === 'BEFORE' && photo.angle === angle);
+        const after = photos.find((photo) => photo.phase === 'AFTER' && photo.angle === angle);
+        if (!before && !after) return null;
+        return (
+          <div key={angle}>
+            <p className="mb-1 text-xs text-muted">
+              {careLabel(locale, angle)} · {beforeLabel} / {afterLabel}
+            </p>
+            <div className="grid grid-cols-2 gap-1">
+              <PhotoThumb photo={before} onOpen={onOpen} />
+              <PhotoThumb photo={after} onOpen={onOpen} />
+            </div>
+          </div>
+        );
+      })}
+      {photos
+        .filter(
+          (photo) =>
+            photo.angle === 'EXTRA' ||
+            !photo.angle ||
+            !PHOTO_ANGLES.includes(photo.angle as (typeof PHOTO_ANGLES)[number]),
+        )
+        .map((photo) => (
+          <div key={photo.id}>
+            <p className="mb-1 text-xs text-muted">
+              {photo.phase === 'BEFORE' ? beforeLabel : afterLabel}
+              {photo.angle === 'EXTRA' ? ` · ${extraLabel}` : ''}
+            </p>
+            <PhotoThumb photo={photo} onOpen={onOpen} tall />
+          </div>
+        ))}
+    </div>
+  );
+}
+
+function PhotoThumb({
+  photo,
+  onOpen,
+  tall,
+}: {
+  photo?: CarePhoto;
+  onOpen: (photo: CarePhoto) => void;
+  tall?: boolean;
+}) {
+  if (!photo) {
+    return <div className={tall ? 'h-28 rounded bg-ink/5' : 'h-20 rounded bg-ink/5'} />;
+  }
+  if (photo.kind === 'video') {
+    return (
+      <button type="button" onClick={() => onOpen(photo)} className="block w-full overflow-hidden rounded">
+        <video src={photo.url} className={tall ? 'h-28 w-full object-cover' : 'h-20 w-full object-cover'} muted />
+      </button>
+    );
+  }
+  return (
+    <button type="button" onClick={() => onOpen(photo)} className="block w-full overflow-hidden rounded">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={photo.url} alt="" className={tall ? 'h-28 w-full object-cover' : 'h-20 w-full object-cover'} />
+    </button>
+  );
 }

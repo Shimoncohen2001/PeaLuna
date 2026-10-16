@@ -1,5 +1,9 @@
+import type { S3Client } from '@aws-sdk/client-s3';
 import { Prisma, prisma, type OrderStatus, type UserStatus } from '@velure/database';
 import type { AdminCustomersQuery } from '@velure/contracts';
+import type { Env } from '../../config/env.js';
+import { mediaPublicUrl } from '../media/media-url.js';
+import { createS3Client } from '../media/s3.js';
 import {
   BOOKING_STATUSES,
   CONFIRMED_STATUSES,
@@ -27,6 +31,8 @@ const NOT_DELETED = { not: 'DELETED' as const };
 type BucketRow = { bucket: string; value: bigint | number };
 
 export class AdminService {
+  constructor(private readonly env: Env) {}
+
   async dashboard(period: DashboardPeriod) {
     const now = new Date();
     const requestedSince = periodStart(period, now);
@@ -314,6 +320,22 @@ export class AdminService {
             technician: { select: { id: true, displayName: true } },
             wig: { select: { name: true } },
             lineItems: { select: { serviceType: { select: { slug: true, name: true } } } },
+            attachments: {
+              where: {
+                OR: [
+                  { photoPhase: { in: ['BEFORE', 'AFTER'] } },
+                  { purpose: { in: ['BEFORE_CARE', 'AFTER_CARE'] } },
+                ],
+              },
+              select: {
+                id: true,
+                mimeType: true,
+                photoPhase: true,
+                photoAngle: true,
+                purpose: true,
+                storageKey: true,
+              },
+            },
             careReport: {
               select: {
                 status: true,
@@ -322,6 +344,22 @@ export class AdminService {
                 afterGeneralCondition: true,
                 nextCareAt: true,
                 operations: { select: { code: true } },
+                photos: {
+                  where: {
+                    OR: [
+                      { photoPhase: { in: ['BEFORE', 'AFTER'] } },
+                      { purpose: { in: ['BEFORE_CARE', 'AFTER_CARE'] } },
+                    ],
+                  },
+                  select: {
+                    id: true,
+                    mimeType: true,
+                    photoPhase: true,
+                    photoAngle: true,
+                    purpose: true,
+                    storageKey: true,
+                  },
+                },
               },
             },
             transactions: {
@@ -382,6 +420,47 @@ export class AdminService {
       profile.orders[0]?.currency ??
       'ILS';
 
+    const s3 = createS3Client(this.env);
+    const bookings = await Promise.all(
+      profile.orders.map(async (order) => {
+        const photos = await signedCarePhotos(this.env, s3, [
+          ...(order.careReport?.photos ?? []),
+          ...order.attachments,
+        ]);
+        return {
+          id: order.id,
+          orderNumber: order.orderNumber,
+          status: order.status,
+          paymentStatus: order.paymentStatus,
+          paymentMethod: order.paymentMethod,
+          totalCents: order.totalCents,
+          currency: order.currency,
+          createdAt: order.createdAt.toISOString(),
+          scheduledAt: order.scheduledAt?.toISOString() ?? null,
+          completedAt: order.completedAt?.toISOString() ?? null,
+          venueType: order.venueType,
+          serviceCity: order.serviceCity,
+          expertName: order.technician?.displayName ?? null,
+          wigName: order.wig.name,
+          services: order.lineItems.map((item) => ({
+            slug: item.serviceType.slug,
+            name: item.serviceType.name,
+          })),
+          photos,
+          care: order.careReport
+            ? {
+                status: order.careReport.status,
+                submittedAt: order.careReport.submittedAt?.toISOString() ?? null,
+                operations: order.careReport.operations.map((operation) => operation.code),
+                beforeCondition: order.careReport.beforeGeneralCondition,
+                afterCondition: order.careReport.afterGeneralCondition,
+                nextCareAt: order.careReport.nextCareAt?.toISOString() ?? null,
+              }
+            : null,
+        };
+      }),
+    );
+
     return {
       id: profile.id,
       name: `${profile.user.firstName} ${profile.user.lastName}`.trim(),
@@ -401,36 +480,7 @@ export class AdminService {
       ],
       summary: { ...summary, currency },
       experts: [...experts.values()].sort((left, right) => right.bookings - left.bookings),
-      bookings: profile.orders.map((order) => ({
-        id: order.id,
-        orderNumber: order.orderNumber,
-        status: order.status,
-        paymentStatus: order.paymentStatus,
-        paymentMethod: order.paymentMethod,
-        totalCents: order.totalCents,
-        currency: order.currency,
-        createdAt: order.createdAt.toISOString(),
-        scheduledAt: order.scheduledAt?.toISOString() ?? null,
-        completedAt: order.completedAt?.toISOString() ?? null,
-        venueType: order.venueType,
-        serviceCity: order.serviceCity,
-        expertName: order.technician?.displayName ?? null,
-        wigName: order.wig.name,
-        services: order.lineItems.map((item) => ({
-          slug: item.serviceType.slug,
-          name: item.serviceType.name,
-        })),
-        care: order.careReport
-          ? {
-              status: order.careReport.status,
-              submittedAt: order.careReport.submittedAt?.toISOString() ?? null,
-              operations: order.careReport.operations.map((operation) => operation.code),
-              beforeCondition: order.careReport.beforeGeneralCondition,
-              afterCondition: order.careReport.afterGeneralCondition,
-              nextCareAt: order.careReport.nextCareAt?.toISOString() ?? null,
-            }
-          : null,
-      })),
+      bookings,
       transactions: profile.orders
         .flatMap((order) =>
           order.transactions.map((transaction) => ({
@@ -559,4 +609,38 @@ function customerNameSearchWhere(tokens: string[]): Prisma.CustomerProfileWhereI
       return { OR: or };
     }),
   };
+}
+
+type CarePhotoRow = {
+  id: string;
+  mimeType: string;
+  photoPhase: 'BEFORE' | 'AFTER' | null;
+  photoAngle: string | null;
+  purpose: string;
+  storageKey: string;
+};
+
+function carePhotoPhase(row: CarePhotoRow): 'BEFORE' | 'AFTER' | null {
+  if (row.photoPhase === 'BEFORE' || row.photoPhase === 'AFTER') return row.photoPhase;
+  if (row.purpose === 'BEFORE_CARE') return 'BEFORE';
+  if (row.purpose === 'AFTER_CARE') return 'AFTER';
+  return null;
+}
+
+async function signedCarePhotos(env: Env, s3: S3Client | null, rows: CarePhotoRow[]) {
+  const unique = [...new Map(rows.map((row) => [row.id, row])).values()];
+  const photos = await Promise.all(
+    unique.map(async (row) => {
+      const phase = carePhotoPhase(row);
+      if (!phase) return null;
+      return {
+        id: row.id,
+        phase,
+        angle: row.photoAngle,
+        kind: row.mimeType.startsWith('video/') ? ('video' as const) : ('image' as const),
+        url: await mediaPublicUrl(env, s3, row.storageKey),
+      };
+    }),
+  );
+  return photos.filter((photo): photo is NonNullable<typeof photo> => Boolean(photo?.url));
 }
