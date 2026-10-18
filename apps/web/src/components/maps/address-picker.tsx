@@ -142,7 +142,7 @@ export function AddressPicker({
     }
   }
 
-  async function useMyLocation() {
+  async function locateFromDevice() {
     const result = await geoPrompt.request('address');
     if (result.status === 'granted') {
       void applyCoords(result.position.coords.latitude, result.position.coords.longitude);
@@ -189,7 +189,7 @@ export function AddressPicker({
         <button
           type="button"
           className={btn}
-          onClick={() => void useMyLocation()}
+          onClick={() => void locateFromDevice()}
           disabled={busy || geoPrompt.pending}
         >
           {geoPrompt.pending ? t.geo.locating : labels.useLocation}
