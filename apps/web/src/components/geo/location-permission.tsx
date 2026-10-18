@@ -23,20 +23,11 @@ export type GeoRequestResult =
 type Gate =
   | { phase: 'closed' }
   | { phase: 'ask'; purpose: GeoPurpose }
+  | { phase: 'locating'; purpose: GeoPurpose }
   | { phase: 'error'; purpose: GeoPurpose; kind: 'denied' | 'unavailable' };
 
 function errorKind(err: GeolocationPositionError | { code?: number }): 'denied' | 'unavailable' {
   return err.code === 1 ? 'denied' : 'unavailable';
-}
-
-function readBrowserPosition(): Promise<GeolocationPosition> {
-  return new Promise((resolve, reject) => {
-    if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      reject({ code: 2 });
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(resolve, reject, GEO_OPTIONS);
-  });
 }
 
 export function useGeolocationPrompt() {
@@ -44,11 +35,11 @@ export function useGeolocationPrompt() {
   const titleId = useId();
   const descriptionId = useId();
   const [mounted, setMounted] = useState(false);
-  const [pending, setPending] = useState(false);
   const [gate, setGate] = useState<Gate>({ phase: 'closed' });
   const purposeRef = useRef<GeoPurpose>('nearby');
   const resolveRef = useRef<((value: GeoRequestResult) => void) | null>(null);
   const requestingRef = useRef(false);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
     setMounted(true);
@@ -58,7 +49,6 @@ export function useGeolocationPrompt() {
     requestingRef.current = false;
     resolveRef.current?.(value);
     resolveRef.current = null;
-    setPending(false);
     setGate({ phase: 'closed' });
   }, []);
 
@@ -73,6 +63,7 @@ export function useGeolocationPrompt() {
   }, []);
 
   const cancelAsk = useCallback(() => {
+    requestIdRef.current += 1;
     finish({ status: 'cancelled' });
   }, [finish]);
 
@@ -80,23 +71,29 @@ export function useGeolocationPrompt() {
     if (requestingRef.current) return;
     requestingRef.current = true;
     const purpose = purposeRef.current;
-    setGate({ phase: 'closed' });
-    setPending(true);
+    const requestId = ++requestIdRef.current;
+    setGate({ phase: 'locating', purpose });
 
-    const run = async () => {
-      try {
-        const position = await readBrowserPosition();
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      requestingRef.current = false;
+      setGate({ phase: 'error', purpose, kind: 'unavailable' });
+      return;
+    }
+
+    // Must run in the same tap as Accept, otherwise some browsers drop the gesture
+    // and show a separate permission UI instead of activating location.
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        if (requestId !== requestIdRef.current) return;
         finish({ status: 'granted', position });
-      } catch (err) {
-        const kind = errorKind(err as GeolocationPositionError);
-        setPending(false);
-        setGate({ phase: 'error', purpose, kind });
-      }
-    };
-
-    window.requestAnimationFrame(() => {
-      window.setTimeout(() => void run(), 0);
-    });
+      },
+      (err) => {
+        if (requestId !== requestIdRef.current) return;
+        requestingRef.current = false;
+        setGate({ phase: 'error', purpose, kind: errorKind(err) });
+      },
+      GEO_OPTIONS,
+    );
   }, [finish]);
 
   const dismissError = useCallback(() => {
@@ -110,10 +107,9 @@ export function useGeolocationPrompt() {
   useEffect(() => {
     if (gate.phase === 'closed') return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        if (gate.phase === 'ask') cancelAsk();
-        else dismissError();
-      }
+      if (event.key !== 'Escape') return;
+      if (gate.phase === 'ask') cancelAsk();
+      else if (gate.phase === 'error') dismissError();
     };
     window.addEventListener('keydown', onKey);
     const previous = document.body.style.overflow;
@@ -125,10 +121,15 @@ export function useGeolocationPrompt() {
   }, [cancelAsk, dismissError, gate.phase]);
 
   const copy =
-    gate.phase === 'ask'
+    gate.phase === 'ask' || gate.phase === 'locating'
       ? {
           title: t.geo.askTitle,
-          body: gate.purpose === 'nearby' ? t.geo.askNearby : t.geo.askAddress,
+          body:
+            gate.phase === 'locating'
+              ? t.geo.locating
+              : gate.purpose === 'nearby'
+                ? t.geo.askNearby
+                : t.geo.askAddress,
         }
       : gate.phase === 'error'
         ? {
@@ -148,12 +149,16 @@ export function useGeolocationPrompt() {
     mounted && copy && gate.phase !== 'closed' ? (
       createPortal(
         <div className="fixed inset-0 z-[80] flex items-end justify-center p-4 sm:items-center">
-          <button
-            type="button"
-            aria-label={t.common.cancel}
-            className="absolute inset-0 bg-ink/40 backdrop-blur-[2px]"
-            onClick={gate.phase === 'ask' ? cancelAsk : dismissError}
-          />
+          {gate.phase === 'locating' ? (
+            <div className="absolute inset-0 bg-ink/40 backdrop-blur-[2px]" />
+          ) : (
+            <button
+              type="button"
+              aria-label={t.common.cancel}
+              className="absolute inset-0 bg-ink/40 backdrop-blur-[2px]"
+              onClick={gate.phase === 'ask' ? cancelAsk : dismissError}
+            />
+          )}
           <div
             role="dialog"
             aria-modal="true"
@@ -191,7 +196,7 @@ export function useGeolocationPrompt() {
                   {t.geo.askContinue}
                 </Button>
               </div>
-            ) : (
+            ) : gate.phase === 'locating' ? null : (
               <div className="mt-6 flex justify-end">
                 <Button
                   type="button"
@@ -210,5 +215,5 @@ export function useGeolocationPrompt() {
       )
     ) : null;
 
-  return { request, pending: pending || gate.phase !== 'closed', dialog: overlay };
+  return { request, pending: gate.phase !== 'closed', dialog: overlay };
 }

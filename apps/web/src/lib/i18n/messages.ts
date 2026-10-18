@@ -1321,16 +1321,16 @@ export const en: Messages = {
     useLocation: 'Use my location',
     askTitle: 'Find experts near you',
     askNearby:
-      'PeaLuna can use your location to show professionals nearby. Your exact position is never shown to them. Next, your browser will ask for permission.',
+      'PeaLuna uses your location only to show professionals nearby. Your exact position is never shown to them.',
     askAddress:
-      'PeaLuna can use your location to fill your address faster. You can also type a city or postal code, or drop a pin on the map. Next, your browser will ask for permission.',
-    askContinue: 'Continue',
+      'PeaLuna uses your location to fill your address faster. You can also type a city or postal code, or drop a pin on the map.',
+    askContinue: 'Turn on location',
     deniedTitle: 'Location was not shared',
     errorTitle: 'Location unavailable',
     deniedNearby:
-      'The browser did not allow location access. You can still choose an expert from the list, or enter a city or postal code.',
+      'Location was not turned on. You can still choose an expert from the list, or enter a city or postal code.',
     deniedAddress:
-      'The browser did not allow location access. Type a city or postal code, or drop a pin on the map.',
+      'Location was not turned on. Type a city or postal code, or drop a pin on the map.',
     unavailableNearby:
       'We could not read your position. Choose an expert from the list, or enter a city or postal code.',
     unavailableAddress:
@@ -2007,16 +2007,16 @@ export const fr: Messages = {
     useLocation: 'Utiliser ma position',
     askTitle: 'Trouver des expertes près de toi',
     askNearby:
-      'PeaLuna peut utiliser ta position pour afficher les professionnelles à proximité. Ta position exacte n’est jamais montrée. Ensuite, le navigateur demandera l’autorisation.',
+      'PeaLuna utilise ta position uniquement pour afficher les professionnelles à proximité. Ta position exacte n’est jamais montrée.',
     askAddress:
-      'PeaLuna peut utiliser ta position pour remplir ton adresse plus vite. Tu peux aussi saisir une ville ou un code postal, ou placer un pin. Ensuite, le navigateur demandera l’autorisation.',
-    askContinue: 'Continuer',
+      'PeaLuna utilise ta position pour remplir ton adresse plus vite. Tu peux aussi saisir une ville ou un code postal, ou placer un pin.',
+    askContinue: 'Activer ma position',
     deniedTitle: 'Position non partagée',
     errorTitle: 'Position indisponible',
     deniedNearby:
-      'Le navigateur n’a pas autorisé la localisation. Tu peux encore choisir une experte dans la liste, ou saisir une ville ou un code postal.',
+      'La localisation n’a pas été activée. Tu peux encore choisir une experte dans la liste, ou saisir une ville ou un code postal.',
     deniedAddress:
-      'Le navigateur n’a pas autorisé la localisation. Saisis une ville ou un code postal, ou place un pin sur la carte.',
+      'La localisation n’a pas été activée. Saisis une ville ou un code postal, ou place un pin sur la carte.',
     unavailableNearby:
       'Impossible de lire ta position. Choisis une experte dans la liste, ou saisis une ville ou un code postal.',
     unavailableAddress:
@@ -2684,16 +2684,16 @@ export const he: Messages = {
     useLocation: 'השתמשי במיקום שלי',
     askTitle: 'למצוא מומחיות קרוב אלייך',
     askNearby:
-      'PeaLuna יכולה להשתמש במיקום שלך כדי להציג מקצועיות בקרבת מקום. המיקום המדויק לא מוצג להן. אחר כך הדפדפן יבקש אישור.',
+      'PeaLuna משתמשת במיקום שלך רק כדי להציג מקצועיות בקרבת מקום. המיקום המדויק לא מוצג להן.',
     askAddress:
-      'PeaLuna יכולה להשתמש במיקום שלך כדי למלא את הכתובת מהר יותר. אפשר גם להזין עיר או מיקוד, או לשים סיכה על המפה. אחר כך הדפדפן יבקש אישור.',
-    askContinue: 'המשך',
+      'PeaLuna משתמשת במיקום שלך כדי למלא את הכתובת מהר יותר. אפשר גם להזין עיר או מיקוד, או לשים סיכה על המפה.',
+    askContinue: 'הפעלת מיקום',
     deniedTitle: 'המיקום לא שותף',
     errorTitle: 'המיקום לא זמין',
     deniedNearby:
-      'הדפדפן לא אישר גישה למיקום. אפשר לבחור מומחית מהרשימה, או להזין עיר או מיקוד.',
+      'המיקום לא הופעל. אפשר לבחור מומחית מהרשימה, או להזין עיר או מיקוד.',
     deniedAddress:
-      'הדפדפן לא אישר גישה למיקום. הזיני עיר או מיקוד, או שימי סיכה על המפה.',
+      'המיקום לא הופעל. הזיני עיר או מיקוד, או שימי סיכה על המפה.',
     unavailableNearby:
       'לא הצלחנו לקרוא את המיקום. בחרי מומחית מהרשימה, או הזיני עיר או מיקוד.',
     unavailableAddress:
