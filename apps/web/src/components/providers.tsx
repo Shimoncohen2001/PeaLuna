@@ -1,7 +1,7 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { CookieBanner } from '@/components/cookies/cookie-banner';
 import { ConfirmProvider } from '@/components/ui/confirm-dialog';
 import { AuthProvider } from '@/lib/auth';
@@ -27,7 +27,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <ConfirmProvider>
           <AuthProvider>
             {children}
-            <CookieBanner />
+            <Suspense fallback={null}>
+              <CookieBanner />
+            </Suspense>
           </AuthProvider>
         </ConfirmProvider>
       </LocaleProvider>

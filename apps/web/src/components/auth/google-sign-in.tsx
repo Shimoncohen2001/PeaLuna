@@ -4,6 +4,7 @@ import Script from 'next/script';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiClientError, apiFetch } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
+import { COOKIE_CONSENT_EVENT, readCookieConsent } from '@/lib/cookies/consent';
 import { useLocale } from '@/lib/i18n/locale';
 
 type GoogleCredentialResponse = { credential: string };
@@ -43,8 +44,16 @@ export function GoogleSignInButton({ onError }: { onError: (message: string) => 
   const { loginWithGoogle } = useAuth();
   const [clientId, setClientId] = useState<string | null | undefined>(undefined);
   const [scriptReady, setScriptReady] = useState(false);
+  const [consentOk, setConsentOk] = useState(false);
   const [pending, setPending] = useState(false);
   const btnRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const sync = () => setConsentOk(!!readCookieConsent());
+    sync();
+    window.addEventListener(COOKIE_CONSENT_EVENT, sync);
+    return () => window.removeEventListener(COOKIE_CONSENT_EVENT, sync);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,7 +84,9 @@ export function GoogleSignInButton({ onError }: { onError: (message: string) => 
   );
 
   useEffect(() => {
-    if (!clientId || !scriptReady || !btnRef.current || !window.google?.accounts?.id) return;
+    if (!consentOk || !clientId || !scriptReady || !btnRef.current || !window.google?.accounts?.id) {
+      return;
+    }
     const host = btnRef.current;
     const width = Math.min(400, Math.max(240, host.clientWidth || 320));
     window.google.accounts.id.initialize({
@@ -96,20 +107,24 @@ export function GoogleSignInButton({ onError }: { onError: (message: string) => 
       width,
       locale: locale === 'he' ? 'he' : locale,
     });
-  }, [clientId, scriptReady, locale, handleCredential]);
+  }, [consentOk, clientId, scriptReady, locale, handleCredential]);
 
   if (!clientId) return null;
 
   return (
     <div className="mb-6 space-y-3">
-      <Script
-        src="https://accounts.google.com/gsi/client"
-        strategy="afterInteractive"
-        onLoad={() => setScriptReady(true)}
-      />
-      <div ref={btnRef} className="flex min-h-11 w-full justify-center" />
-      {pending ? <p className="text-center text-sm text-muted">{t.auth.submitting}</p> : null}
-      <p className="text-center text-xs text-muted">{t.auth.googleTerms}</p>
+      {consentOk ? (
+        <>
+          <Script
+            src="https://accounts.google.com/gsi/client"
+            strategy="afterInteractive"
+            onLoad={() => setScriptReady(true)}
+          />
+          <div ref={btnRef} className="flex min-h-11 w-full justify-center" />
+          {pending ? <p className="text-center text-sm text-muted">{t.auth.submitting}</p> : null}
+          <p className="text-center text-xs text-muted">{t.auth.googleTerms}</p>
+        </>
+      ) : null}
       <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-muted">
         <span className="h-px flex-1 bg-ink/10" />
         {t.auth.orEmail}

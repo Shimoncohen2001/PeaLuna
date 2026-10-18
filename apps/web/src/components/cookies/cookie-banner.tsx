@@ -1,10 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import {
   COOKIE_CONSENT_EVENT,
+  cookiePolicyHref,
   readCookieConsent,
   writeCookieConsent,
 } from '@/lib/cookies/consent';
@@ -12,6 +15,8 @@ import { useLocale } from '@/lib/i18n/locale';
 
 export function CookieBanner() {
   const { t } = useLocale();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -21,14 +26,17 @@ export function CookieBanner() {
     return () => window.removeEventListener(COOKIE_CONSENT_EVENT, sync);
   }, []);
 
-  if (!visible) return null;
-
   function accept() {
     writeCookieConsent();
     setVisible(false);
   }
 
-  return (
+  if (pathname === '/cookies' || !visible) return null;
+
+  const search = searchParams.toString();
+  const returnTo = search ? `${pathname}?${search}` : pathname;
+
+  return createPortal(
     <div
       role="dialog"
       aria-label={t.cookies.title}
@@ -39,7 +47,7 @@ export function CookieBanner() {
           <p className="text-sm font-medium text-ink">{t.cookies.title}</p>
           <p className="mt-1 text-sm leading-relaxed text-muted">{t.cookies.message}</p>
           <Link
-            href="/cookies"
+            href={cookiePolicyHref(returnTo)}
             className="mt-2 inline-block text-sm text-champagne hover:underline"
           >
             {t.cookies.learnMore}
@@ -49,6 +57,7 @@ export function CookieBanner() {
           {t.cookies.accept}
         </Button>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

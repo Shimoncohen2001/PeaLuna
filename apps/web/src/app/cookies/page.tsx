@@ -1,13 +1,31 @@
 'use client';
 
 import Link from 'next/link';
+import { Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
-import { writeCookieConsent } from '@/lib/cookies/consent';
+import { safeReturnPath, writeCookieConsent } from '@/lib/cookies/consent';
 import { useLocale } from '@/lib/i18n/locale';
 import { Button } from '@/components/ui/button';
 
 export default function CookiesPage() {
+  return (
+    <Suspense>
+      <CookiesPolicy />
+    </Suspense>
+  );
+}
+
+function CookiesPolicy() {
   const { t } = useLocale();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = safeReturnPath(searchParams.get('next')) ?? '/';
+
+  function accept() {
+    writeCookieConsent();
+    router.replace(returnTo);
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blush/30 to-warm-white px-4 py-12">
@@ -27,11 +45,11 @@ export default function CookiesPage() {
             type="button"
             variant="gold"
             className="w-full sm:w-auto"
-            onClick={() => writeCookieConsent()}
+            onClick={accept}
           >
             {t.cookies.accept}
           </Button>
-          <Link href="/" className="inline-flex">
+          <Link href={returnTo} className="inline-flex">
             <Button type="button" variant="secondary" className="w-full sm:w-auto">
               {t.common.back}
             </Button>
