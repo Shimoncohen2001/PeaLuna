@@ -113,9 +113,16 @@ export default function ProOrderDetailPage() {
   const respond = useMutation({
     mutationFn: (decision: 'accept' | 'decline') =>
       authFetch(`/api/v1/technicians/me/orders/${params.id}/${decision}`, { method: 'POST' }),
-    onSuccess: async () => {
+    onSuccess: async (_data, decision) => {
       setError(null);
-      await invalidate();
+      await queryClient.invalidateQueries({ queryKey: ['pro-orders'] });
+      await queryClient.invalidateQueries({ queryKey: ['pro-dashboard'] });
+      if (decision === 'decline') {
+        queryClient.removeQueries({ queryKey: ['pro-order', params.id] });
+        router.replace('/pro/orders');
+        return;
+      }
+      await queryClient.invalidateQueries({ queryKey: ['pro-order', params.id] });
     },
     onError: (err) => {
       setError(err instanceof ApiClientError ? err.message : t.auth.error);

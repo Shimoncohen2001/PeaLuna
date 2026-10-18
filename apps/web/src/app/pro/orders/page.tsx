@@ -45,8 +45,14 @@ export default function ProOrdersPage() {
   const respond = useMutation({
     mutationFn: ({ id, decision }: { id: string; decision: 'accept' | 'decline' }) =>
       authFetch(`/api/v1/technicians/me/orders/${id}/${decision}`, { method: 'POST' }),
-    onSuccess: async () => {
+    onSuccess: async (_data, { id, decision }) => {
       setError(null);
+      if (decision === 'decline') {
+        queryClient.setQueryData<ProOrder[]>(['pro-orders'], (rows) =>
+          (rows ?? []).filter((row) => row.id !== id),
+        );
+        queryClient.removeQueries({ queryKey: ['pro-order', id] });
+      }
       await queryClient.invalidateQueries({ queryKey: ['pro-orders'] });
       await queryClient.invalidateQueries({ queryKey: ['pro-dashboard'] });
     },
