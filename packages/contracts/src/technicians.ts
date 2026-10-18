@@ -35,6 +35,11 @@ export const setAvailabilitySchema = z.object({
   slots: z.array(availabilitySlotSchema).max(21),
 });
 
+export const technicianSlotsQuerySchema = z.object({
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
 export const technicianSearchQuerySchema = z.object({
   postalCode: z.string().max(12).optional(),
   city: z.string().max(100).optional(),

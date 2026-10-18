@@ -402,6 +402,52 @@ export class TechnicianService {
     return mapPublicTechnician(profile);
   }
 
+  async listBookingCalendar(id: string, from: string, to: string) {
+    const profile = await prisma.technicianProfile.findFirst({
+      where: { id, status: 'APPROVED' },
+      include: { availability: true },
+    });
+    if (!profile) {
+      throw Object.assign(new Error('Technician not found'), {
+        statusCode: 404,
+        code: 'TECHNICIAN_NOT_FOUND',
+      });
+    }
+
+    const fromDate = new Date(`${from}T00:00:00.000Z`);
+    const toDate = new Date(`${to}T23:59:59.999Z`);
+    if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime()) || toDate < fromDate) {
+      throw Object.assign(new Error('Invalid date range'), { statusCode: 400, code: 'INVALID_RANGE' });
+    }
+    fromDate.setUTCDate(fromDate.getUTCDate() - 1);
+    toDate.setUTCDate(toDate.getUTCDate() + 1);
+    if (toDate.getTime() - fromDate.getTime() > 93 * 24 * 60 * 60 * 1000) {
+      throw Object.assign(new Error('Date range too large'), { statusCode: 400, code: 'INVALID_RANGE' });
+    }
+
+    const booked = await prisma.repairOrder.findMany({
+      where: {
+        technicianId: id,
+        status: { notIn: ['CANCELLED', 'ARCHIVED'] },
+        scheduledAt: { gte: fromDate, lte: toDate },
+      },
+      select: { scheduledAt: true },
+    });
+
+    return {
+      availability: profile.availability
+        .filter((slot) => slot.isActive)
+        .map((slot) => ({
+          dayOfWeek: slot.dayOfWeek,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+        })),
+      bookedAt: booked
+        .map((row) => row.scheduledAt?.toISOString())
+        .filter((value): value is string => Boolean(value)),
+    };
+  }
+
   async setAvailability(
     userId: string,
     slots: { dayOfWeek: number; startTime: string; endTime: string; isActive: boolean }[],

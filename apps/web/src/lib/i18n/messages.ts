@@ -96,6 +96,11 @@ export type Messages = {
     actionFailed: string;
     required: string;
     optional: string;
+    search: string;
+    noMatches: string;
+    previousMonth: string;
+    nextMonth: string;
+    today: string;
   };
   dashboard: {
     hello: string;
@@ -235,6 +240,11 @@ export type Messages = {
     postalCode: string;
     service: string;
     nearbyDistance: string;
+    noSlots: string;
+    pickSlot: string;
+    availableLegend: string;
+    unavailableLegend: string;
+    selectedLegend: string;
   };
   admin: {
     title: string;
@@ -729,6 +739,11 @@ export const en: Messages = {
     actionFailed: 'This action could not be completed.',
     required: 'Required',
     optional: 'Optional',
+    search: 'Search',
+    noMatches: 'No matching option.',
+    previousMonth: 'Previous month',
+    nextMonth: 'Next month',
+    today: 'Today',
   },
   dashboard: {
     hello: 'Hello, {name}',
@@ -871,6 +886,11 @@ export const en: Messages = {
     postalCode: 'Postal code',
     service: 'Service',
     nearbyDistance: 'Sorted by distance from you',
+    noSlots: 'No times available on this day.',
+    pickSlot: 'Available times',
+    availableLegend: 'Available',
+    unavailableLegend: 'Unavailable',
+    selectedLegend: 'Selected',
   },
   admin: {
     title: 'Catalog',
@@ -1375,6 +1395,11 @@ export const fr: Messages = {
     actionFailed: 'Action impossible.',
     required: 'Obligatoire',
     optional: 'Facultatif',
+    search: 'Rechercher',
+    noMatches: 'Aucune option correspondante.',
+    previousMonth: 'Mois précédent',
+    nextMonth: 'Mois suivant',
+    today: 'Aujourd’hui',
   },
   dashboard: {
     hello: 'Bonjour, {name}',
@@ -1519,6 +1544,11 @@ export const fr: Messages = {
     postalCode: 'Code postal',
     service: 'Service',
     nearbyDistance: 'Triées par distance',
+    noSlots: 'Aucun créneau ce jour-là.',
+    pickSlot: 'Horaires disponibles',
+    availableLegend: 'Disponible',
+    unavailableLegend: 'Indisponible',
+    selectedLegend: 'Sélectionné',
   },
   admin: {
     title: 'Catalogue',
@@ -2022,6 +2052,11 @@ export const he: Messages = {
     actionFailed: 'לא ניתן לבצע את הפעולה.',
     required: 'חובה',
     optional: 'רשות',
+    search: 'חיפוש',
+    noMatches: 'אין אפשרות תואמת.',
+    previousMonth: 'חודש קודם',
+    nextMonth: 'חודש הבא',
+    today: 'היום',
   },
   dashboard: {
     hello: 'שלום, {name}',
@@ -2161,6 +2196,11 @@ export const he: Messages = {
     postalCode: 'מיקוד',
     service: 'שירות',
     nearbyDistance: 'ממוינות לפי מרחק ממך',
+    noSlots: 'אין שעות פנויות ביום הזה.',
+    pickSlot: 'שעות פנויות',
+    availableLegend: 'פנוי',
+    unavailableLegend: 'לא פנוי',
+    selectedLegend: 'נבחר',
   },
   admin: {
     title: 'קטלוג',

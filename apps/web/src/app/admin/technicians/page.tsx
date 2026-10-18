@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/auth';
 import { interpolate } from '@/lib/i18n/messages';
 import { useLocale } from '@/lib/i18n/locale';
 import { formatMoney, formatStatus, intlLocale } from '@/lib/format';
+import { Select } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
 type Period = '7' | '30' | '90' | '365' | 'all';
@@ -274,10 +275,10 @@ export default function AdminTechniciansPage() {
           className="h-11 w-full rounded-full border border-ink/10 bg-beige/30 px-4 text-sm text-ink outline-none focus:border-champagne"
         />
         <div className="flex flex-wrap gap-2">
-          <Select label={copy.sort} value={sortBy} onChange={(value) => setFilter({ sortBy: value })} options={SORT_OPTIONS.map((value) => ({ value, label: sortLabel(value, copy) }))} />
-          <Select label={copy.sort} value={sortOrder} onChange={(value) => setFilter({ sortOrder: value })} options={[{ value: 'desc', label: copy.newest }, { value: 'asc', label: copy.oldest }]} />
-          <Select label={copy.filterAll} value={status} onChange={(value) => setFilter({ status: value })} options={STATUS_OPTIONS.map((value) => ({ value, label: value === 'all' ? copy.filterAll : formatStatus(value, t.status) }))} />
-          <Select label={copy.activityAll} value={activity} onChange={(value) => setFilter({ activity: value })} options={ACTIVITY_OPTIONS.map((value) => ({ value, label: value === 'all' ? copy.activityAll : value === 'booked' ? copy.activityBooked : copy.activityNone }))} />
+          <FilterSelect label={copy.sort} value={sortBy} onChange={(value) => setFilter({ sortBy: value })} options={SORT_OPTIONS.map((value) => ({ value, label: sortLabel(value, copy) }))} />
+          <FilterSelect label={copy.sort} value={sortOrder} onChange={(value) => setFilter({ sortOrder: value })} options={[{ value: 'desc', label: copy.newest }, { value: 'asc', label: copy.oldest }]} />
+          <FilterSelect label={copy.filterAll} value={status} onChange={(value) => setFilter({ status: value })} options={STATUS_OPTIONS.map((value) => ({ value, label: value === 'all' ? copy.filterAll : formatStatus(value, t.status) }))} />
+          <FilterSelect label={copy.activityAll} value={activity} onChange={(value) => setFilter({ activity: value })} options={ACTIVITY_OPTIONS.map((value) => ({ value, label: value === 'all' ? copy.activityAll : value === 'booked' ? copy.activityBooked : copy.activityNone }))} />
         </div>
       </div>
 
@@ -397,7 +398,7 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
   );
 }
 
-function Select({
+function FilterSelect({
   label,
   value,
   onChange,
@@ -411,11 +412,7 @@ function Select({
   return (
     <label className="flex min-w-[9rem] flex-1 flex-col gap-1 text-xs text-muted">
       {label}
-      <select value={value} onChange={(event) => onChange(event.target.value)} className="h-10 rounded-full border border-ink/10 bg-beige/30 px-3 text-sm text-ink outline-none focus:border-champagne">
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>{option.label}</option>
-        ))}
-      </select>
+      <Select value={value} onChange={onChange} options={options} />
     </label>
   );
 }

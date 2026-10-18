@@ -9,7 +9,7 @@ import { useAuth } from '@/lib/auth';
 import { interpolate } from '@/lib/i18n/messages';
 import { useLocale } from '@/lib/i18n/locale';
 import { formatMoney, formatStatus, intlLocale } from '@/lib/format';
-import { cn } from '@/lib/utils';
+import { Select } from '@/components/ui/select';
 
 type AdminCustomer = {
   id: string;
@@ -320,19 +320,7 @@ function FilterSelect({
   return (
     <label className="flex min-w-[9rem] flex-1 flex-col gap-1 text-xs text-muted">
       {label}
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className={cn(
-          'h-10 rounded-full border border-ink/10 bg-beige/30 px-3 text-sm text-ink outline-none focus:border-champagne',
-        )}
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+      <Select value={value} onChange={onChange} options={options} />
     </label>
   );
 }

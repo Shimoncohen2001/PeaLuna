@@ -7,6 +7,7 @@ import {
   successResponse,
   technicianApplySchema,
   technicianSearchQuerySchema,
+  technicianSlotsQuerySchema,
   technicianUpdateSchema,
 } from '@velure/contracts';
 import type { Role } from '@velure/domain';
@@ -161,6 +162,20 @@ export async function technicianRoutes(app: AppInstance, env: Env): Promise<void
         decision: 'DECLINE',
       });
       return reply.send(successResponse(result, request.requestId));
+    },
+  );
+
+  app.get(
+    `${API_PREFIX}/technicians/:id/slots`,
+    {
+      preHandler: [app.authenticate],
+      schema: { querystring: technicianSlotsQuerySchema },
+    },
+    async (request, reply) => {
+      requireUser(request);
+      const { id } = request.params as { id: string };
+      const calendar = await technicians.listBookingCalendar(id, request.query.from, request.query.to);
+      return reply.send(successResponse(calendar, request.requestId));
     },
   );
 

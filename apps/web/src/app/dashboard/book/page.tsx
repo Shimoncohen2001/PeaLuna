@@ -6,9 +6,12 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type { ServiceTypeDto, WigDto } from '@velure/contracts';
+import { SlotCalendar } from '@/components/booking/slot-calendar';
 import { Button } from '@/components/ui/button';
+import { Select } from '@/components/ui/select';
 import { ApiClientError } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
+import { ymd } from '@/lib/booking/slots';
 import { useLocale } from '@/lib/i18n/locale';
 import { formatDistanceKm, formatMoney, intlLocale } from '@/lib/format';
 import { BookingMediaStep } from '@/components/booking/booking-media-step';
@@ -57,6 +60,12 @@ type TechnicianCard = {
   longitude: number | null;
   services: { id: string; slug?: string; name: string; basePriceCents: number }[];
   skills?: { id: string; slug?: string; name: string }[];
+  availability?: { dayOfWeek: number; startTime: string; endTime: string }[];
+};
+
+type BookingCalendar = {
+  availability: { dayOfWeek: number; startTime: string; endTime: string }[];
+  bookedAt: string[];
 };
 
 type BookingResult = {
@@ -139,6 +148,27 @@ export default function BookPage() {
     () => wigs.data?.find((w) => w.id === wigId) ?? null,
     [wigs.data, wigId],
   );
+
+  const slotRange = useMemo(() => {
+    const now = new Date();
+    return {
+      from: ymd(new Date(now.getFullYear(), now.getMonth(), 1)),
+      to: ymd(new Date(now.getFullYear(), now.getMonth() + 4, 0)),
+    };
+  }, []);
+
+  const calendar = useQuery({
+    queryKey: ['tech-slots', technicianId, slotRange.from, slotRange.to],
+    enabled: Boolean(technicianId) && step >= 4,
+    queryFn: () =>
+      authFetch<BookingCalendar>(
+        `/api/v1/technicians/${technicianId}/slots?from=${slotRange.from}&to=${slotRange.to}`,
+      ),
+  });
+
+  useEffect(() => {
+    setScheduledAt('');
+  }, [technicianId]);
 
   const totalCents = useMemo(() => {
     if (!services.data) return 0;
@@ -288,21 +318,20 @@ export default function BookPage() {
               <label className="text-sm font-medium" htmlFor="wigId">
                 {t.book.chooseWig}
               </label>
-              <select
+              <Select
                 id="wigId"
                 value={wigId}
-                onChange={(e) => setWigId(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-ink/10 px-3 py-2"
-                required
-              >
-                <option value="">{t.book.choosePlaceholder}</option>
-                {wigs.data?.map((wig) => (
-                  <option key={wig.id} value={wig.id}>
-                    {wig.name}
-                    {wig.brand ? ` · ${wig.brand}` : ''}
-                  </option>
-                ))}
-              </select>
+                onChange={setWigId}
+                placeholder={t.book.choosePlaceholder}
+                searchPlaceholder={t.common.search}
+                emptyLabel={t.common.noMatches}
+                invalid={step === 1 && Boolean(error) && !wigId}
+                options={(wigs.data ?? []).map((wig) => ({
+                  value: wig.id,
+                  label: wig.name,
+                  description: [wig.brand, wig.color].filter(Boolean).join(' · ') || undefined,
+                }))}
+              />
               <p className="text-sm text-muted">
                 <Link href="/dashboard/wigs" className="text-champagne hover:underline">
                   {t.book.addWigLink}
@@ -352,14 +381,15 @@ export default function BookPage() {
             >
               {t.book.locateMe}
             </Button>
-            <select
+            <Select
+              className="w-full sm:w-56"
               value={venueType}
-              onChange={(e) => setVenueType(e.target.value as 'HOME' | 'SALON')}
-              className="rounded-lg border border-ink/10 px-3 py-2"
-            >
-              <option value="HOME">{t.payment.homeVenue}</option>
-              <option value="SALON">{t.payment.salonVenue}</option>
-            </select>
+              onChange={(next) => setVenueType(next as 'HOME' | 'SALON')}
+              options={[
+                { value: 'HOME', label: t.payment.homeVenue },
+                { value: 'SALON', label: t.payment.salonVenue },
+              ]}
+            />
           </div>
           {geoHint ? <p className="text-sm text-muted">{geoHint}</p> : null}
 
@@ -423,17 +453,28 @@ export default function BookPage() {
             {selectedTech?.displayName} — {venueType === 'HOME' ? t.payment.homeVenue : t.payment.salonVenue}
           </p>
           <div>
-            <label className="text-sm font-medium" htmlFor="scheduledAt">
-              {t.book.stepSlot}
-            </label>
-            <input
-              id="scheduledAt"
-              type="datetime-local"
-              value={scheduledAt}
-              onChange={(e) => setScheduledAt(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-ink/10 px-3 py-2"
-              required
-            />
+            <p className="text-sm font-medium">{t.book.stepSlot}</p>
+            <div className="mt-3">
+              <SlotCalendar
+                value={scheduledAt}
+                onChange={setScheduledAt}
+                availability={calendar.data?.availability ?? selectedTech?.availability ?? []}
+                bookedAt={calendar.data?.bookedAt ?? []}
+                locale={locale}
+                isLoading={calendar.isLoading}
+                labels={{
+                  previousMonth: t.common.previousMonth,
+                  nextMonth: t.common.nextMonth,
+                  today: t.common.today,
+                  noSlots: t.book.noSlots,
+                  loading: t.common.loading,
+                  pickSlot: t.book.pickSlot,
+                  available: t.book.availableLegend,
+                  unavailable: t.book.unavailableLegend,
+                  selected: t.book.selectedLegend,
+                }}
+              />
+            </div>
           </div>
           {venueType === 'SALON' && selectedTech?.latitude != null && selectedTech.longitude != null ? (
             <LocationMap

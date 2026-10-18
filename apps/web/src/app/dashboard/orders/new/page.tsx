@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type { OrderDto, ServiceTypeDto, WigDto } from '@velure/contracts';
 import { Button } from '@/components/ui/button';
+import { Select } from '@/components/ui/select';
 import { ApiClientError } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth';
 import { formatMoney } from '@/lib/format';
@@ -17,6 +18,7 @@ export default function NewOrderPage() {
   const { t, locale } = useLocale();
   const router = useRouter();
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [wigId, setWigId] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const wigs = useQuery({
@@ -64,8 +66,12 @@ export default function NewOrderPage() {
       setError(t.book.needService);
       return;
     }
+    if (!wigId) {
+      setError(t.book.needWig);
+      return;
+    }
     createOrder.mutate({
-      wigId: String(form.get('wigId')),
+      wigId,
       serviceTypeIds: selectedServices,
       customerNotes: String(form.get('customerNotes') || '') || undefined,
       submit: form.get('submitNow') === 'on',
@@ -92,19 +98,23 @@ export default function NewOrderPage() {
             <label htmlFor="wigId" className="text-sm font-medium">
               {t.book.stepWig}
             </label>
-            <select
-              id="wigId"
-              name="wigId"
-              required
-              className="mt-1 w-full rounded-lg border border-ink/10 bg-warm-white px-3 py-2"
-            >
-              <option value="">{t.book.choosePlaceholder}</option>
-              {wigs.data?.map((wig) => (
-                <option key={wig.id} value={wig.id}>
-                  {wig.name}
-                </option>
-              ))}
-            </select>
+            <div className="mt-1">
+              <Select
+                id="wigId"
+                name="wigId"
+                value={wigId}
+                onChange={setWigId}
+                placeholder={t.book.choosePlaceholder}
+                searchPlaceholder={t.common.search}
+                emptyLabel={t.common.noMatches}
+                invalid={Boolean(error) && !wigId}
+                options={(wigs.data ?? []).map((wig) => ({
+                  value: wig.id,
+                  label: wig.name,
+                  description: [wig.brand, wig.color].filter(Boolean).join(' · ') || undefined,
+                }))}
+              />
+            </div>
           </div>
 
           <fieldset>
