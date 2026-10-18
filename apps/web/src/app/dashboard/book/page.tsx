@@ -15,6 +15,7 @@ import { ymd } from '@/lib/booking/slots';
 import { useLocale } from '@/lib/i18n/locale';
 import { formatDistanceKm, formatMoney, intlLocale } from '@/lib/format';
 import { BookingMediaStep } from '@/components/booking/booking-media-step';
+import { useGeolocationPrompt } from '@/components/geo/location-permission';
 import type { AddressValue } from '@/components/maps/address-picker';
 import {
   catalogServiceCategory,
@@ -80,6 +81,7 @@ export default function BookPage() {
   const { authFetch, isAuthenticated } = useAuth();
   const { t, format, locale } = useLocale();
   const router = useRouter();
+  const geoPrompt = useGeolocationPrompt();
   const STEPS = STEP_KEYS.map((key) => t.book[key]);
   const [step, setStep] = useState(0);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
@@ -359,27 +361,26 @@ export default function BookPage() {
               type="button"
               variant="secondary"
               size="sm"
+              disabled={geoPrompt.pending}
               onClick={() => {
-                if (!navigator.geolocation) {
-                  setGeoHint(t.geo.unavailable);
-                  return;
-                }
-                navigator.geolocation.getCurrentPosition(
-                  (pos) => {
-                    setUserLat(pos.coords.latitude);
-                    setUserLng(pos.coords.longitude);
+                void (async () => {
+                  const result = await geoPrompt.request('nearby');
+                  if (result.status === 'granted') {
+                    setUserLat(result.position.coords.latitude);
+                    setUserLng(result.position.coords.longitude);
                     setFilterByGps(true);
                     setGeoHint(null);
-                  },
-                  (err) => {
-                    setFilterByGps(false);
-                    setGeoHint(err.code === err.PERMISSION_DENIED ? t.geo.denied : t.geo.unavailable);
-                  },
-                  { enableHighAccuracy: false, timeout: 8000, maximumAge: 60_000 },
-                );
+                    return;
+                  }
+                  if (result.status === 'cancelled') return;
+                  setFilterByGps(false);
+                  setGeoHint(
+                    result.status === 'denied' ? t.geo.deniedNearby : t.geo.unavailableNearby,
+                  );
+                })();
               }}
             >
-              {t.book.locateMe}
+              {geoPrompt.pending ? t.geo.locating : t.book.locateMe}
             </Button>
             <Select
               className="w-full sm:w-56"
@@ -391,7 +392,11 @@ export default function BookPage() {
               ]}
             />
           </div>
-          {geoHint ? <p className="text-sm text-muted">{geoHint}</p> : null}
+          {geoHint ? (
+            <p className="rounded-xl border border-ink/10 bg-beige/40 px-3 py-2 text-sm leading-relaxed text-muted">
+              {geoHint}
+            </p>
+          ) : null}
 
           <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
             <ul className="space-y-3">
@@ -570,6 +575,7 @@ export default function BookPage() {
       ) : null}
 
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
+      {geoPrompt.dialog}
 
       <div className="action-row">
         {step > 0 ? (

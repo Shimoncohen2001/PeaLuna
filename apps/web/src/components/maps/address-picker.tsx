@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Marker, type MapRef } from 'react-map-gl/maplibre';
 import type { GeoSuggestionDto } from '@velure/contracts';
+import { useGeolocationPrompt } from '@/components/geo/location-permission';
 import { ApiClientError } from '@/lib/api-client';
+import { useLocale } from '@/lib/i18n/locale';
 import { MapPin, PealunaMap } from './pealuna-map';
 
 const TEL_AVIV: [number, number] = [32.0853, 34.7818];
@@ -38,6 +40,8 @@ export function AddressPicker({
   labels,
   tone = 'light',
 }: AddressPickerProps) {
+  const { t } = useLocale();
+  const geoPrompt = useGeolocationPrompt();
   const mapRef = useRef<MapRef>(null);
   const [ready, setReady] = useState(false);
   const [query, setQuery] = useState(value.label);
@@ -138,20 +142,14 @@ export function AddressPicker({
     }
   }
 
-  function useMyLocation() {
-    if (!navigator.geolocation) {
-      setHint(labels.unavailable);
+  async function useMyLocation() {
+    const result = await geoPrompt.request('address');
+    if (result.status === 'granted') {
+      void applyCoords(result.position.coords.latitude, result.position.coords.longitude);
       return;
     }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        void applyCoords(pos.coords.latitude, pos.coords.longitude);
-      },
-      (err) => {
-        setHint(err.code === err.PERMISSION_DENIED ? labels.denied : labels.unavailable);
-      },
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 60_000 },
-    );
+    if (result.status === 'cancelled') return;
+    setHint(result.status === 'denied' ? t.geo.deniedAddress : t.geo.unavailableAddress);
   }
 
   return (
@@ -188,12 +186,18 @@ export function AddressPicker({
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <button type="button" className={btn} onClick={useMyLocation} disabled={busy}>
-          {labels.useLocation}
+        <button
+          type="button"
+          className={btn}
+          onClick={() => void useMyLocation()}
+          disabled={busy || geoPrompt.pending}
+        >
+          {geoPrompt.pending ? t.geo.locating : labels.useLocation}
         </button>
         <p className={`self-center text-xs ${muted}`}>{labels.pickOnMap}</p>
       </div>
       {hint ? <p className={`text-sm ${muted}`}>{hint}</p> : null}
+      {geoPrompt.dialog}
 
       <PealunaMap
         tone={tone}

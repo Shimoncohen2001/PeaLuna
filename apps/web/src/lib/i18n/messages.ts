@@ -648,6 +648,18 @@ export type Messages = {
     noResults: string;
     pickOnMap: string;
     useLocation: string;
+    askTitle: string;
+    askNearby: string;
+    askAddress: string;
+    askContinue: string;
+    deniedTitle: string;
+    errorTitle: string;
+    deniedNearby: string;
+    deniedAddress: string;
+    unavailableNearby: string;
+    unavailableAddress: string;
+    locating: string;
+    gotIt: string;
   };
   orders: {
     title: string;
@@ -1300,13 +1312,31 @@ export const en: Messages = {
   geo: {
     meters: '{n} m',
     km: '{n} km',
-    denied: 'Location was not shared. You can still pick an expert from the list.',
-    unavailable: 'Location is not available on this device.',
+    denied: 'Location was not shared. You can still pick an expert from the list, or enter a city or postal code.',
+    unavailable: 'Location is not available on this device. Enter a city or postal code instead.',
     emptyExperts: 'No experts found for these filters.',
     searchAddress: 'Address',
     noResults: 'No matching address in Israel.',
     pickOnMap: 'Or drop a pin on the map.',
     useLocation: 'Use my location',
+    askTitle: 'Find experts near you',
+    askNearby:
+      'PeaLuna can use your location to show professionals nearby. Your exact position is never shown to them. Next, your browser will ask for permission.',
+    askAddress:
+      'PeaLuna can use your location to fill your address faster. You can also type a city or postal code, or drop a pin on the map. Next, your browser will ask for permission.',
+    askContinue: 'Continue',
+    deniedTitle: 'Location was not shared',
+    errorTitle: 'Location unavailable',
+    deniedNearby:
+      'The browser did not allow location access. You can still choose an expert from the list, or enter a city or postal code.',
+    deniedAddress:
+      'The browser did not allow location access. Type a city or postal code, or drop a pin on the map.',
+    unavailableNearby:
+      'We could not read your position. Choose an expert from the list, or enter a city or postal code.',
+    unavailableAddress:
+      'We could not read your position. Type a city or postal code, or drop a pin on the map.',
+    locating: 'Looking for your position…',
+    gotIt: 'Got it',
   },
   orders: {
     title: 'Appointments',
@@ -1968,13 +1998,31 @@ export const fr: Messages = {
   geo: {
     meters: '{n} m',
     km: '{n} km',
-    denied: 'Position non partagée. Tu peux quand même choisir une experte dans la liste.',
-    unavailable: 'La géolocalisation n’est pas disponible sur cet appareil.',
+    denied: 'Position non partagée. Tu peux encore choisir une experte dans la liste, ou saisir une ville ou un code postal.',
+    unavailable: 'La géolocalisation n’est pas disponible sur cet appareil. Saisis une ville ou un code postal.',
     emptyExperts: 'Aucune experte pour ces filtres.',
     searchAddress: 'Adresse',
     noResults: 'Aucune adresse correspondante en Israël.',
     pickOnMap: 'Ou place un pin sur la carte.',
     useLocation: 'Utiliser ma position',
+    askTitle: 'Trouver des expertes près de toi',
+    askNearby:
+      'PeaLuna peut utiliser ta position pour afficher les professionnelles à proximité. Ta position exacte n’est jamais montrée. Ensuite, le navigateur demandera l’autorisation.',
+    askAddress:
+      'PeaLuna peut utiliser ta position pour remplir ton adresse plus vite. Tu peux aussi saisir une ville ou un code postal, ou placer un pin. Ensuite, le navigateur demandera l’autorisation.',
+    askContinue: 'Continuer',
+    deniedTitle: 'Position non partagée',
+    errorTitle: 'Position indisponible',
+    deniedNearby:
+      'Le navigateur n’a pas autorisé la localisation. Tu peux encore choisir une experte dans la liste, ou saisir une ville ou un code postal.',
+    deniedAddress:
+      'Le navigateur n’a pas autorisé la localisation. Saisis une ville ou un code postal, ou place un pin sur la carte.',
+    unavailableNearby:
+      'Impossible de lire ta position. Choisis une experte dans la liste, ou saisis une ville ou un code postal.',
+    unavailableAddress:
+      'Impossible de lire ta position. Saisis une ville ou un code postal, ou place un pin sur la carte.',
+    locating: 'Recherche de ta position…',
+    gotIt: 'Compris',
   },
   orders: {
     title: 'Rendez-vous',
@@ -2627,13 +2675,31 @@ export const he: Messages = {
   geo: {
     meters: '{n} מ׳',
     km: '{n} ק״מ',
-    denied: 'המיקום לא שותף. אפשר עדיין לבחור מומחית מהרשימה.',
-    unavailable: 'אין מיקום במכשיר הזה.',
+    denied: 'המיקום לא שותף. אפשר לבחור מומחית מהרשימה או להזין עיר או מיקוד.',
+    unavailable: 'אין מיקום במכשיר הזה. אפשר להזין עיר או מיקוד.',
     emptyExperts: 'לא נמצאו מומחיות לסינון הזה.',
     searchAddress: 'כתובת',
     noResults: 'לא נמצאה כתובת תואמת בישראל.',
     pickOnMap: 'או שימי סיכה על המפה.',
     useLocation: 'השתמשי במיקום שלי',
+    askTitle: 'למצוא מומחיות קרוב אלייך',
+    askNearby:
+      'PeaLuna יכולה להשתמש במיקום שלך כדי להציג מקצועיות בקרבת מקום. המיקום המדויק לא מוצג להן. אחר כך הדפדפן יבקש אישור.',
+    askAddress:
+      'PeaLuna יכולה להשתמש במיקום שלך כדי למלא את הכתובת מהר יותר. אפשר גם להזין עיר או מיקוד, או לשים סיכה על המפה. אחר כך הדפדפן יבקש אישור.',
+    askContinue: 'המשך',
+    deniedTitle: 'המיקום לא שותף',
+    errorTitle: 'המיקום לא זמין',
+    deniedNearby:
+      'הדפדפן לא אישר גישה למיקום. אפשר לבחור מומחית מהרשימה, או להזין עיר או מיקוד.',
+    deniedAddress:
+      'הדפדפן לא אישר גישה למיקום. הזיני עיר או מיקוד, או שימי סיכה על המפה.',
+    unavailableNearby:
+      'לא הצלחנו לקרוא את המיקום. בחרי מומחית מהרשימה, או הזיני עיר או מיקוד.',
+    unavailableAddress:
+      'לא הצלחנו לקרוא את המיקום. הזיני עיר או מיקוד, או שימי סיכה על המפה.',
+    locating: 'מחפשות את המיקום…',
+    gotIt: 'הבנתי',
   },
   orders: {
     title: 'תורים',
