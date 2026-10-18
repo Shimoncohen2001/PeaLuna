@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import type { ServiceTypeDto, WigDto } from '@velure/contracts';
+import type { GeoSuggestionDto, ServiceTypeDto, WigDto } from '@velure/contracts';
+import { AddressConfirmCard } from '@/components/booking/address-confirm';
 import { SlotCalendar } from '@/components/booking/slot-calendar';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
@@ -38,11 +39,6 @@ const ExpertsMap = dynamic(
 
 const AddressPicker = dynamic(
   () => import('@/components/maps/address-picker').then((m) => m.AddressPicker),
-  { ssr: false },
-);
-
-const LocationMap = dynamic(
-  () => import('@/components/maps/pealuna-map').then((m) => m.LocationMap),
   { ssr: false },
 );
 
@@ -103,6 +99,11 @@ export default function BookPage() {
     lat: null,
     lng: null,
   });
+  const [suggestedAddress, setSuggestedAddress] = useState<AddressValue | null>(null);
+  const [homeAddressUi, setHomeAddressUi] = useState<'lookup' | 'suggest' | 'manual' | 'saved'>('manual');
+  const reverseKeyRef = useRef<string | null>(null);
+  const homeAddressUiRef = useRef(homeAddressUi);
+  homeAddressUiRef.current = homeAddressUi;
   const [error, setError] = useState<string | null>(null);
 
   const services = useQuery({
@@ -171,6 +172,53 @@ export default function BookPage() {
   useEffect(() => {
     setScheduledAt('');
   }, [technicianId]);
+
+  function applyHomeAddress(next: AddressValue) {
+    setServiceAddress(next);
+    if (next.city) setCity(next.city);
+    if (next.postalCode) setPostalCode(next.postalCode);
+  }
+
+  useEffect(() => {
+    if (step !== 4 || venueType !== 'HOME') return;
+    if (userLat == null || userLng == null) {
+      if (homeAddressUiRef.current === 'lookup' || homeAddressUiRef.current === 'suggest') {
+        setHomeAddressUi('manual');
+      }
+      return;
+    }
+    const key = `${userLat.toFixed(5)},${userLng.toFixed(5)}`;
+    if (reverseKeyRef.current === key) return;
+    reverseKeyRef.current = key;
+    if (serviceAddress.label.trim()) {
+      setHomeAddressUi('saved');
+      return;
+    }
+    let cancelled = false;
+    setHomeAddressUi('lookup');
+    void authFetch<GeoSuggestionDto | null>(`/api/v1/geo/reverse?lat=${userLat}&lon=${userLng}`)
+      .then((item) => {
+        if (cancelled || homeAddressUiRef.current === 'manual') return;
+        if (!item?.label) {
+          setHomeAddressUi('manual');
+          return;
+        }
+        setSuggestedAddress({
+          label: item.label,
+          city: item.city ?? '',
+          postalCode: item.postalCode ?? '',
+          lat: item.lat,
+          lng: item.lng,
+        });
+        setHomeAddressUi('suggest');
+      })
+      .catch(() => {
+        if (!cancelled && homeAddressUiRef.current !== 'manual') setHomeAddressUi('manual');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [authFetch, serviceAddress.label, step, userLat, userLng, venueType]);
 
   const totalCents = useMemo(() => {
     if (!services.data) return 0;
@@ -481,58 +529,88 @@ export default function BookPage() {
               />
             </div>
           </div>
-          {venueType === 'SALON' && selectedTech?.latitude != null && selectedTech.longitude != null ? (
-            <LocationMap
-              latitude={selectedTech.latitude}
-              longitude={selectedTech.longitude}
-              className="h-64 overflow-hidden rounded-xl border border-ink/10"
-            />
+          {venueType === 'SALON' && (selectedTech?.serviceCity || selectedTech?.servicePostalCode) ? (
+            <p className="rounded-xl border border-ink/10 bg-beige/30 px-4 py-3 text-sm text-ink">
+              {[selectedTech.serviceCity, selectedTech.servicePostalCode].filter(Boolean).join(' · ')}
+            </p>
           ) : null}
           {venueType === 'HOME' ? (
             <div className="space-y-4">
-              <AddressPicker
-                value={serviceAddress}
-                onChange={setServiceAddress}
-                authFetch={authFetch}
-                labels={{
-                  search: t.geo.searchAddress,
-                  noResults: t.geo.noResults,
-                  pickOnMap: t.geo.pickOnMap,
-                  useLocation: t.geo.useLocation,
-                  denied: t.geo.denied,
-                  unavailable: t.geo.unavailable,
-                }}
-              />
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="text-sm font-medium" htmlFor="city">
-                    {t.book.city}
-                  </label>
-                  <input
-                    id="city"
-                    value={serviceAddress.city || city}
-                    onChange={(e) => {
-                      setCity(e.target.value);
-                      setServiceAddress((prev) => ({ ...prev, city: e.target.value }));
-                    }}
-                    className="mt-1 w-full rounded-lg border border-ink/10 px-3 py-2"
-                  />
+              {homeAddressUi === 'lookup' ? <AddressConfirmCard loading onOther={() => setHomeAddressUi('manual')} /> : null}
+              {homeAddressUi === 'suggest' && suggestedAddress ? (
+                <AddressConfirmCard
+                  address={suggestedAddress.label}
+                  onUse={() => {
+                    applyHomeAddress(suggestedAddress);
+                    setHomeAddressUi('saved');
+                  }}
+                  onOther={() => setHomeAddressUi('manual')}
+                />
+              ) : null}
+              {homeAddressUi === 'saved' ? (
+                <div className="flex items-start justify-between gap-3 rounded-2xl border border-ink/5 bg-beige/40 p-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.18em] text-champagne">{t.book.recognizedTitle}</p>
+                    <p className="mt-2 text-sm leading-relaxed text-ink">{serviceAddress.label}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="shrink-0 text-sm text-champagne hover:underline"
+                    onClick={() => setHomeAddressUi('manual')}
+                  >
+                    {t.book.changeAddress}
+                  </button>
                 </div>
-                <div>
-                  <label className="text-sm font-medium" htmlFor="postalCode">
-                    {t.book.postalCode}
-                  </label>
-                  <input
-                    id="postalCode"
-                    value={serviceAddress.postalCode || postalCode}
-                    onChange={(e) => {
-                      setPostalCode(e.target.value);
-                      setServiceAddress((prev) => ({ ...prev, postalCode: e.target.value }));
-                    }}
-                    className="mt-1 w-full rounded-lg border border-ink/10 px-3 py-2"
-                  />
+              ) : null}
+              {homeAddressUi === 'manual' ? (
+                <AddressPicker
+                  value={serviceAddress}
+                  onChange={applyHomeAddress}
+                  authFetch={authFetch}
+                  showMap={false}
+                  showLocate={!filterByGps}
+                  labels={{
+                    search: t.geo.searchAddress,
+                    noResults: t.geo.noResults,
+                    pickOnMap: t.geo.pickOnMap,
+                    useLocation: t.geo.useLocation,
+                    denied: t.geo.denied,
+                    unavailable: t.geo.unavailable,
+                  }}
+                />
+              ) : null}
+              {homeAddressUi === 'manual' || homeAddressUi === 'saved' ? (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="text-sm font-medium" htmlFor="city">
+                      {t.book.city}
+                    </label>
+                    <input
+                      id="city"
+                      value={serviceAddress.city || city}
+                      onChange={(e) => {
+                        setCity(e.target.value);
+                        setServiceAddress((prev) => ({ ...prev, city: e.target.value }));
+                      }}
+                      className="mt-1 w-full rounded-lg border border-ink/10 px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium" htmlFor="postalCode">
+                      {t.book.postalCode}
+                    </label>
+                    <input
+                      id="postalCode"
+                      value={serviceAddress.postalCode || postalCode}
+                      onChange={(e) => {
+                        setPostalCode(e.target.value);
+                        setServiceAddress((prev) => ({ ...prev, postalCode: e.target.value }));
+                      }}
+                      className="mt-1 w-full rounded-lg border border-ink/10 px-3 py-2"
+                    />
+                  </div>
                 </div>
-              </div>
+              ) : null}
             </div>
           ) : null}
         </div>

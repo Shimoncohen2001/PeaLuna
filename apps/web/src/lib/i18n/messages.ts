@@ -246,6 +246,12 @@ export type Messages = {
     availableLegend: string;
     unavailableLegend: string;
     selectedLegend: string;
+    recognizedTitle: string;
+    recognizedHint: string;
+    useThisAddress: string;
+    anotherAddress: string;
+    lookingUpAddress: string;
+    changeAddress: string;
   };
   admin: {
     title: string;
@@ -913,6 +919,12 @@ export const en: Messages = {
     availableLegend: 'Available',
     unavailableLegend: 'Unavailable',
     selectedLegend: 'Selected',
+    recognizedTitle: 'Address found',
+    recognizedHint: 'This is the address from your position. Use it for the home visit, or enter another one.',
+    useThisAddress: 'Use this address',
+    anotherAddress: 'Use another address',
+    lookingUpAddress: 'Looking up your address…',
+    changeAddress: 'Change address',
   },
   admin: {
     title: 'Catalog',
@@ -1598,6 +1610,12 @@ export const fr: Messages = {
     availableLegend: 'Disponible',
     unavailableLegend: 'Indisponible',
     selectedLegend: 'Sélectionné',
+    recognizedTitle: 'Adresse reconnue',
+    recognizedHint: 'Voici l’adresse associée à ta position. Tu veux l’utiliser pour le rendez-vous à domicile, ou en saisir une autre ?',
+    useThisAddress: 'Utiliser cette adresse',
+    anotherAddress: 'Choisir une autre adresse',
+    lookingUpAddress: 'Recherche de ton adresse…',
+    changeAddress: 'Modifier l’adresse',
   },
   admin: {
     title: 'Catalogue',
@@ -2277,6 +2295,12 @@ export const he: Messages = {
     availableLegend: 'פנוי',
     unavailableLegend: 'לא פנוי',
     selectedLegend: 'נבחר',
+    recognizedTitle: 'כתובת זוהתה',
+    recognizedHint: 'זו הכתובת לפי המיקום שלך. להשתמש בה לביקור בבית, או להזין כתובת אחרת?',
+    useThisAddress: 'להשתמש בכתובת הזו',
+    anotherAddress: 'לבחור כתובת אחרת',
+    lookingUpAddress: 'מחפשות את הכתובת…',
+    changeAddress: 'שינוי כתובת',
   },
   admin: {
     title: 'קטלוג',

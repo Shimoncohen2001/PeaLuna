@@ -31,6 +31,8 @@ type AddressPickerProps = {
     unavailable: string;
   };
   tone?: 'light' | 'dark';
+  showMap?: boolean;
+  showLocate?: boolean;
 };
 
 export function AddressPicker({
@@ -39,6 +41,8 @@ export function AddressPicker({
   authFetch,
   labels,
   tone = 'light',
+  showMap = true,
+  showLocate = true,
 }: AddressPickerProps) {
   const { t } = useLocale();
   const geoPrompt = useGeolocationPrompt();
@@ -185,42 +189,48 @@ export function AddressPicker({
         ) : null}
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          className={btn}
-          onClick={() => void locateFromDevice()}
-          disabled={busy || geoPrompt.pending}
-        >
-          {geoPrompt.pending ? t.geo.locating : labels.useLocation}
-        </button>
-        <p className={`self-center text-xs ${muted}`}>{labels.pickOnMap}</p>
-      </div>
+      {showLocate || showMap ? (
+        <div className="flex flex-wrap gap-2">
+          {showLocate ? (
+            <button
+              type="button"
+              className={btn}
+              onClick={() => void locateFromDevice()}
+              disabled={busy || geoPrompt.pending}
+            >
+              {geoPrompt.pending ? t.geo.locating : labels.useLocation}
+            </button>
+          ) : null}
+          {showMap ? <p className={`self-center text-xs ${muted}`}>{labels.pickOnMap}</p> : null}
+        </div>
+      ) : null}
       {hint ? <p className={`text-sm ${muted}`}>{hint}</p> : null}
       {geoPrompt.dialog}
 
-      <PealunaMap
-        tone={tone}
-        mapRef={mapRef}
-        className={`h-64 overflow-hidden rounded-xl border ${tone === 'dark' ? 'border-white/10' : 'border-ink/10'}`}
-        initialViewState={{ latitude: lat, longitude: lng, zoom: 13 }}
-        onReady={() => setReady(true)}
-        onClick={(event) => {
-          if (event.lngLat) void applyCoords(event.lngLat.lat, event.lngLat.lng);
-        }}
-      >
-        <Marker
-          longitude={lng}
-          latitude={lat}
-          anchor="bottom"
-          draggable
-          onDragEnd={(event) => {
-            void applyCoords(event.lngLat.lat, event.lngLat.lng);
+      {showMap ? (
+        <PealunaMap
+          tone={tone}
+          mapRef={mapRef}
+          className={`h-64 overflow-hidden rounded-xl border ${tone === 'dark' ? 'border-white/10' : 'border-ink/10'}`}
+          initialViewState={{ latitude: lat, longitude: lng, zoom: 13 }}
+          onReady={() => setReady(true)}
+          onClick={(event) => {
+            if (event.lngLat) void applyCoords(event.lngLat.lat, event.lngLat.lng);
           }}
         >
-          <MapPin />
-        </Marker>
-      </PealunaMap>
+          <Marker
+            longitude={lng}
+            latitude={lat}
+            anchor="bottom"
+            draggable
+            onDragEnd={(event) => {
+              void applyCoords(event.lngLat.lat, event.lngLat.lng);
+            }}
+          >
+            <MapPin />
+          </Marker>
+        </PealunaMap>
+      ) : null}
     </div>
   );
 }
