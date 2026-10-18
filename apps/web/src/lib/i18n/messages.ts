@@ -48,6 +48,7 @@ export type Messages = {
     adminSkills: string;
     adminWorkflow: string;
     clients: string;
+    notifications: string;
   };
   home: {
     eyebrow: string;
@@ -504,6 +505,14 @@ export type Messages = {
     accept: string;
     decline: string;
   };
+  notifications: {
+    title: string;
+    empty: string;
+    markAllRead: string;
+    unread: string;
+    openRequest: string;
+    seeAll: string;
+  };
   tracker: {
     sent: string;
     accepted: string;
@@ -690,6 +699,7 @@ export const en: Messages = {
     adminSkills: 'Skills',
     adminWorkflow: 'Steps',
     clients: 'Clients',
+    notifications: 'Notifications',
   },
   home: {
     eyebrow: 'Premium wig care marketplace',
@@ -1154,6 +1164,14 @@ export const en: Messages = {
     accept: 'Accept',
     decline: 'Decline',
   },
+  notifications: {
+    title: 'Notifications',
+    empty: 'No notifications yet.',
+    markAllRead: 'Mark all as read',
+    unread: 'Unread',
+    openRequest: 'Open request',
+    seeAll: 'See all',
+  },
   tracker: {
     sent: 'Request sent',
     accepted: 'Accepted',
@@ -1344,6 +1362,7 @@ export const fr: Messages = {
     adminSkills: 'Compétences',
     adminWorkflow: 'Étapes',
     clients: 'Clientes',
+    notifications: 'Notifications',
   },
   home: {
     eyebrow: 'Marketplace premium de soins pour perruques',
@@ -1813,6 +1832,14 @@ export const fr: Messages = {
     accept: 'Accepter',
     decline: 'Refuser',
   },
+  notifications: {
+    title: 'Notifications',
+    empty: 'Aucune notification pour le moment.',
+    markAllRead: 'Tout marquer comme lu',
+    unread: 'Non lues',
+    openRequest: 'Ouvrir la demande',
+    seeAll: 'Tout voir',
+  },
   tracker: {
     sent: 'Réservation envoyée',
     accepted: 'Acceptée',
@@ -2003,6 +2030,7 @@ export const he: Messages = {
     adminSkills: 'כישורים',
     adminWorkflow: 'שלבים',
     clients: 'לקוחות',
+    notifications: 'התראות',
   },
   home: {
     eyebrow: 'מרקטפלייס פרימיום לטיפול בפאות',
@@ -2462,6 +2490,14 @@ export const he: Messages = {
     open: 'פתיחת תיק',
     accept: 'אישור',
     decline: 'סירוב',
+  },
+  notifications: {
+    title: 'התראות',
+    empty: 'אין התראות כרגע.',
+    markAllRead: 'סמני הכל כנקרא',
+    unread: 'לא נקראו',
+    openRequest: 'לפתיחת הבקשה',
+    seeAll: 'הצג הכל',
   },
   tracker: {
     sent: 'הבקשה נשלחה',

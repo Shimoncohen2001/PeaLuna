@@ -898,6 +898,8 @@ model Notification {
   userId    String              @map("user_id") @db.Uuid
   channel   NotificationChannel
   status    NotificationStatus  @default(PENDING)
+  type      String              @default("GENERIC") @db.VarChar(50)
+  entityId  String?             @map("entity_id") @db.Uuid
   title     String              @db.VarChar(255)
   body      String              @db.Text
   payload   Json?
@@ -907,7 +909,9 @@ model Notification {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, channel, type, entityId], name: "notifications_dedupe")
   @@index([userId, status])
+  @@index([userId, readAt, createdAt])
   @@map("notifications")
 }
 

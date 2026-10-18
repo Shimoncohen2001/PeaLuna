@@ -9,6 +9,7 @@ import { useLocale } from '@/lib/i18n/locale';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 
 export function DashboardShell({
   children,
@@ -47,6 +48,7 @@ export function DashboardShell({
     { href: '/pro/orders', label: t.nav.proOrders },
     { href: '/pro/clients', label: t.nav.clients },
     { href: '/pro/reviews', label: t.nav.reviews },
+    { href: '/pro/notifications', label: t.nav.notifications },
     { href: '/pro/availability', label: t.nav.availability },
     { href: '/pro/apply', label: t.nav.myProfile },
   ];
@@ -137,6 +139,7 @@ export function DashboardShell({
             >
               {user?.firstName} {user?.lastName}
             </span>
+            {isProTheme ? <NotificationBell variant="pro" /> : null}
             <Button
               variant={isProTheme ? 'secondary' : 'ghost'}
               size="sm"
@@ -148,19 +151,22 @@ export function DashboardShell({
             <LanguageSwitcher />
           </div>
 
-          <button
-            type="button"
-            className={cn(
-              'ml-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-full md:hidden',
-              isProTheme ? 'bg-white/10 text-[#f7efe8]' : 'bg-ink/5 text-ink',
-            )}
-            aria-expanded={menuOpen}
-            aria-controls="dashboard-mobile-menu"
-            aria-label={menuOpen ? t.nav.closeMenu : t.nav.menu}
-            onClick={() => setMenuOpen((open) => !open)}
-          >
-            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
+          <div className="ml-auto flex items-center gap-2 md:hidden">
+            {isProTheme ? <NotificationBell variant="pro" /> : null}
+            <button
+              type="button"
+              className={cn(
+                'flex h-11 w-11 shrink-0 items-center justify-center rounded-full',
+                isProTheme ? 'bg-white/10 text-[#f7efe8]' : 'bg-ink/5 text-ink',
+              )}
+              aria-expanded={menuOpen}
+              aria-controls="dashboard-mobile-menu"
+              aria-label={menuOpen ? t.nav.closeMenu : t.nav.menu}
+              onClick={() => setMenuOpen((open) => !open)}
+            >
+              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
 
         {menuOpen ? (

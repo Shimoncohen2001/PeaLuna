@@ -16,11 +16,17 @@ import type { Env } from '../../config/env.js';
 import { API_PREFIX } from '../../config/constants.js';
 import { requireAdmin, requireUser } from '../../lib/access.js';
 import { withIdempotency } from '../../lib/idempotency.js';
+import { createMailer } from '../../infrastructure/mailer.js';
+import { NotificationService } from '../notifications/notification.service.js';
 import { TechnicianService } from './technician.service.js';
 import { listMediaForWigOrder } from '../media/list-for-order.js';
 
-export async function technicianRoutes(app: AppInstance, env: Env): Promise<void> {
-  const technicians = new TechnicianService();
+export async function technicianRoutes(
+  app: AppInstance,
+  env: Env,
+  notifications = new NotificationService({ mailer: createMailer(env), webOrigin: env.WEB_ORIGIN }),
+): Promise<void> {
+  const technicians = new TechnicianService(notifications);
 
   app.get(
     `${API_PREFIX}/technicians`,

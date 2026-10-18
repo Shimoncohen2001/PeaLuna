@@ -191,6 +191,57 @@ export function createMailer(env: Env): Mailer {
   return new LoggingMailer(env.NODE_ENV === 'test');
 }
 
+export function bookingRequestEmail(params: {
+  to: string;
+  expertFirstName: string;
+  customerName: string;
+  services: string;
+  when: string;
+  orderNumber: string;
+  orderUrl: string;
+}): MailMessage {
+  const { to, expertFirstName, customerName, services, when, orderNumber, orderUrl } = params;
+  return {
+    to,
+    subject: 'PeaLuna — nouvelle demande de réservation / new booking request / בקשת תור חדשה',
+    text: [
+      `Bonjour ${expertFirstName},`,
+      '',
+      `${customerName} a envoyé une demande de réservation (pas encore confirmée).`,
+      `Soin : ${services}`,
+      `Date : ${when}`,
+      `Référence : ${orderNumber}`,
+      `Ouvre la demande : ${orderUrl}`,
+      '',
+      `Hi ${expertFirstName},`,
+      `${customerName} sent a booking request (not confirmed yet).`,
+      `Service: ${services}`,
+      `When: ${when}`,
+      `Open: ${orderUrl}`,
+      '',
+      `שלום ${expertFirstName},`,
+      `${customerName} שלחה בקשת תור (עדיין לא מאושרת).`,
+      `טיפול: ${services}`,
+      `מועד: ${when}`,
+      `לפתיחה: ${orderUrl}`,
+    ].join('\n'),
+    html: `<p>Bonjour ${escapeHtml(expertFirstName)},</p>
+<p><strong>${escapeHtml(customerName)}</strong> a envoyé une <strong>demande de réservation</strong> — à confirmer ou refuser.</p>
+<p>Soin : ${escapeHtml(services)}<br/>Date : ${escapeHtml(when)}<br/>Référence : ${escapeHtml(orderNumber)}</p>
+<p><a href="${escapeHtml(orderUrl)}">Ouvrir la demande</a></p>
+<p>Hi ${escapeHtml(expertFirstName)}, this is a booking <strong>request</strong>, not a confirmed appointment.</p>
+<p dir="rtl">שלום ${escapeHtml(expertFirstName)}, זו <strong>בקשת תור</strong> — עדיין לא מאושרת.</p>`,
+  };
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 export function verificationEmail(params: {
   to: string;
   firstName: string;

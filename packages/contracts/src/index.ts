@@ -13,3 +13,4 @@ export * from './care-reports.js';
 export * from './geo.js';
 export * from './catalog.js';
 export * from './admin.js';
+export * from './notifications.js';

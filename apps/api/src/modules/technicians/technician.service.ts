@@ -17,6 +17,7 @@ import {
 } from '../../lib/access.js';
 import { updateOrderIfVersion } from '../../lib/order-lock.js';
 import { CatalogService } from '../catalog/catalog.service.js';
+import { NotificationService } from '../notifications/notification.service.js';
 
 const catalog = new CatalogService();
 
@@ -99,6 +100,8 @@ async function replaceTechnicianSkills(
 }
 
 export class TechnicianService {
+  constructor(private readonly notifications = new NotificationService()) {}
+
   async apply(userId: string, input: {
     displayName: string;
     headline?: string;
@@ -806,11 +809,36 @@ export class TechnicianService {
           lineItems: { include: { serviceType: { select: { slug: true, name: true } } } },
           wig: { select: { id: true, name: true } },
           technician: {
+            include: {
+              user: { select: { id: true, email: true, locale: true, firstName: true, lastName: true } },
+            },
+          },
+          customer: {
             include: { user: { select: { firstName: true, lastName: true } } },
           },
         },
       });
     });
+
+    try {
+      const expert = order.technician;
+      if (expert?.userId) {
+        await this.notifications.notifyBookingRequest({
+          technicianUserId: expert.userId,
+          technicianEmail: expert.user.email,
+          technicianLocale: expert.user.locale,
+          technicianFirstName: expert.user.firstName,
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          scheduledAt: order.scheduledAt,
+          venueType: order.venueType,
+          serviceNames: order.lineItems.map((li) => li.description ?? li.serviceType.name ?? 'Service'),
+          customerName: `${order.customer.user.firstName} ${order.customer.user.lastName}`.trim(),
+        });
+      }
+    } catch (err) {
+      console.error('[notifications] booking request notice failed', err);
+    }
 
     return {
       id: order.id,

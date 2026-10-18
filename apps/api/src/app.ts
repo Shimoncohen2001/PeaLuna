@@ -24,6 +24,9 @@ import { careReportRoutes } from './modules/care-reports/routes.js';
 import { geoRoutes } from './modules/geo/routes.js';
 import { catalogRoutes } from './modules/catalog/routes.js';
 import { adminRoutes } from './modules/admin/routes.js';
+import { NotificationService } from './modules/notifications/notification.service.js';
+import { notificationRoutes } from './modules/notifications/routes.js';
+import { createMailer } from './infrastructure/mailer.js';
 import type { AppInstance } from './types/app.js';
 
 export async function buildApp() {
@@ -53,7 +56,12 @@ export async function buildApp() {
   await wigRoutes(app);
   await orderRoutes(app, env);
   await mediaRoutes(app, env);
-  await technicianRoutes(app, env);
+  const notifications = new NotificationService({
+    mailer: createMailer(env),
+    webOrigin: env.WEB_ORIGIN,
+  });
+  await technicianRoutes(app, env, notifications);
+  await notificationRoutes(app, notifications);
   await paymentRoutes(app, env);
   await reviewRoutes(app);
   await careReportRoutes(app, env);
