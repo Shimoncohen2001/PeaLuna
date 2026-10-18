@@ -75,6 +75,9 @@ export type Messages = {
     serviceCareDesc: string;
     serviceDesignTitle: string;
     serviceDesignDesc: string;
+    atelierAlt: string;
+    repairPhotoAlt: string;
+    carePhotoAlt: string;
     footer: string;
   };
   common: {
@@ -745,6 +748,9 @@ export const en: Messages = {
     serviceCareDesc: 'Wash, condition, and long-term maintenance tracked on your wig profile.',
     serviceDesignTitle: 'Hair design',
     serviceDesignDesc: 'Cut, restyle, and colour work by specialists near you in Israel.',
+    atelierAlt: 'PeaLuna atelier — a warm, professional wig care studio.',
+    repairPhotoAlt: 'Hand-tied lace ventilation — artisan needlework on a wig.',
+    carePhotoAlt: 'An expert assembling a wig cap with precision tools.',
     footer: 'EU-hosted · GDPR-ready architecture.',
   },
   common: {
@@ -1434,6 +1440,9 @@ export const fr: Messages = {
     serviceCareDesc: 'Lavage, entretien et suivi durable sur le profil de ta perruque.',
     serviceDesignTitle: 'Hair design',
     serviceDesignDesc: 'Coupe, restyle et couleur par des expertes près de chez toi en Israël.',
+    atelierAlt: 'Atelier PeaLuna — espace de soin des perruques, chaleureux et professionnel.',
+    repairPhotoAlt: 'Ventilation sur dentelle — travail artisanal à l’aiguille.',
+    carePhotoAlt: 'Montage minutieux d’une coiffe de perruque par une experte.',
     footer: 'Hébergé en UE · Architecture prête RGPD.',
   },
   common: {
@@ -2124,6 +2133,9 @@ export const he: Messages = {
     serviceCareDesc: 'שטיפה, תחזוקה ומעקב ארוך טווח בפרופיל הפאה.',
     serviceDesignTitle: 'עיצוב שיער',
     serviceDesignDesc: 'גזרה, עיצוב וצבע אצל מומחיות קרובות אליך בישראל.',
+    atelierAlt: 'סטודיו PeaLuna — חלל טיפול בפאות חם ומקצועי.',
+    repairPhotoAlt: 'ונטילציה על תחרה — עבודת מחט אומנותית.',
+    carePhotoAlt: 'הרכבה מדויקת של כיפת פאה בידי מומחית.',
     footer: 'מאוחסן באיחוד האירופי · מוכן ל-GDPR.',
   },
   common: {

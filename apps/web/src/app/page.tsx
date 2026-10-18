@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Sparkles, Shield, Truck } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Header } from '@/components/marketing/header';
 import { Button } from '@/components/ui/button';
@@ -23,50 +24,91 @@ export default function HomePage() {
 
   const steps = [t.home.howStep1, t.home.howStep2, t.home.howStep3, t.home.howStep4];
 
+  const services = [
+    {
+      title: t.home.serviceRepairTitle,
+      desc: t.home.serviceRepairDesc,
+      image: '/images/home/ventilation.jpg',
+      alt: t.home.repairPhotoAlt,
+    },
+    {
+      title: t.home.serviceCareTitle,
+      desc: t.home.serviceCareDesc,
+      image: '/images/home/cap-work.jpg',
+      alt: t.home.carePhotoAlt,
+    },
+    {
+      title: t.home.serviceDesignTitle,
+      desc: t.home.serviceDesignDesc,
+    },
+  ];
+
   return (
     <>
       <Header />
       <main className="pt-16">
-        <section className="relative overflow-hidden px-4 pb-16 pt-16 sm:px-6 sm:pb-24 sm:pt-20 md:pt-32">
+        <section className="relative overflow-hidden px-4 pb-16 pt-16 sm:px-6 sm:pb-24 sm:pt-20 md:pt-28">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-blush/40 to-transparent" />
-          <motion.div
-            className="relative mx-auto max-w-4xl text-center"
-            initial="hidden"
-            animate="visible"
-            transition={{ staggerChildren: 0.12 }}
-          >
-            <motion.p
-              variants={fadeUp}
-              className="mb-4 text-sm uppercase tracking-[0.2em] text-champagne"
-            >
-              {t.home.eyebrow}
-            </motion.p>
-            <motion.h1
-              variants={fadeUp}
-              className="font-display text-4xl leading-tight text-ink sm:text-5xl md:text-7xl"
-            >
-              {t.home.titleLine1}
-              <span className="block text-champagne">{t.home.titleAccent}</span>
-            </motion.h1>
-            <motion.p variants={fadeUp} className="mx-auto mt-6 max-w-2xl text-base text-muted sm:text-lg">
-              {t.home.subtitle}
-            </motion.p>
+          <div className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2 lg:gap-16">
             <motion.div
-              variants={fadeUp}
-              className="mt-10 flex w-full flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4"
+              className="text-center lg:text-start"
+              initial="hidden"
+              animate="visible"
+              transition={{ staggerChildren: 0.12 }}
             >
-              <a href="/register" className="w-full max-w-xs sm:w-auto">
-                <Button variant="primary" size="lg" className="w-full">
-                  {t.home.ctaBook}
-                </Button>
-              </a>
-              <a href="/pro" className="w-full max-w-xs sm:w-auto">
-                <Button variant="secondary" size="lg" className="w-full">
-                  {t.home.ctaBecomeExpert}
-                </Button>
-              </a>
+              <motion.p
+                variants={fadeUp}
+                className="mb-4 text-sm uppercase tracking-[0.2em] text-champagne"
+              >
+                {t.home.eyebrow}
+              </motion.p>
+              <motion.h1
+                variants={fadeUp}
+                className="font-display text-4xl leading-tight text-ink sm:text-5xl md:text-6xl lg:text-[4.25rem]"
+              >
+                {t.home.titleLine1}
+                <span className="block text-champagne">{t.home.titleAccent}</span>
+              </motion.h1>
+              <motion.p
+                variants={fadeUp}
+                className="mx-auto mt-6 max-w-xl text-base text-muted sm:text-lg lg:mx-0"
+              >
+                {t.home.subtitle}
+              </motion.p>
+              <motion.div
+                variants={fadeUp}
+                className="mt-10 flex w-full flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4 lg:justify-start"
+              >
+                <a href="/register" className="w-full max-w-xs sm:w-auto">
+                  <Button variant="primary" size="lg" className="w-full">
+                    {t.home.ctaBook}
+                  </Button>
+                </a>
+                <a href="/pro" className="w-full max-w-xs sm:w-auto">
+                  <Button variant="secondary" size="lg" className="w-full">
+                    {t.home.ctaBecomeExpert}
+                  </Button>
+                </a>
+              </motion.div>
             </motion.div>
-          </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.15 }}
+              className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] shadow-elevated ring-1 ring-ink/5"
+            >
+              <Image
+                src="/images/home/atelier.jpg"
+                alt={t.home.atelierAlt}
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 560px"
+                className="object-cover object-[center_42%]"
+              />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/20 via-transparent to-transparent" />
+            </motion.div>
+          </div>
         </section>
 
         <section id="trust" className="border-t border-ink/5 bg-ink px-4 py-16 text-warm-white sm:px-6 sm:py-20">
@@ -93,17 +135,30 @@ export default function HomePage() {
               {t.home.servicesTitle}
             </h2>
             <div className="mt-12 grid gap-6 md:grid-cols-3">
-              {[
-                { title: t.home.serviceRepairTitle, desc: t.home.serviceRepairDesc },
-                { title: t.home.serviceCareTitle, desc: t.home.serviceCareDesc },
-                { title: t.home.serviceDesignTitle, desc: t.home.serviceDesignDesc },
-              ].map((item) => (
+              {services.map((item) => (
                 <article
                   key={item.title}
-                  className="rounded-[var(--radius-card)] border border-ink/5 bg-warm-white p-6 shadow-soft"
+                  className="flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-ink/5 bg-warm-white shadow-soft"
                 >
-                  <h3 className="font-display text-xl text-ink">{item.title}</h3>
-                  <p className="mt-2 text-sm text-muted">{item.desc}</p>
+                  {item.image ? (
+                    <div className="relative aspect-[5/4] overflow-hidden bg-blush">
+                      <Image
+                        src={item.image}
+                        alt={item.alt ?? ''}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 360px"
+                        className="object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="relative flex aspect-[5/4] items-end bg-gradient-to-br from-blush via-beige to-champagne-light/50 p-8">
+                      <span className="h-px w-14 bg-champagne" aria-hidden />
+                    </div>
+                  )}
+                  <div className="flex flex-1 flex-col p-6">
+                    <h3 className="font-display text-xl text-ink">{item.title}</h3>
+                    <p className="mt-2 text-sm text-muted">{item.desc}</p>
+                  </div>
                 </article>
               ))}
             </div>
