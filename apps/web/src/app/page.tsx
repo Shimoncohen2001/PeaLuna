@@ -33,7 +33,6 @@ export default function HomePage() {
       slides: [
         { src: '/images/home/ventilation.jpg', alt: t.home.repairPhotoAlt },
         { src: '/images/home/cap-work.jpg', alt: t.home.carePhotoAlt },
-        { src: '/images/home/lace-fill.jpg', alt: t.home.laceFillAlt },
         { src: '/images/home/sewing.jpg', alt: t.home.sewingAlt },
       ],
     },
