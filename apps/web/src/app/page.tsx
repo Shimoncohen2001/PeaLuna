@@ -42,7 +42,7 @@ export default function HomePage() {
       desc: t.home.serviceCareDesc,
       delayMs: 1300,
       slides: [
-        { src: '/images/home/coloring.jpg', alt: t.home.colorAlt },
+        { src: '/images/home/care-lace.jpg', alt: t.home.laceFillAlt },
         { src: '/images/home/wash.jpg', alt: t.home.washAlt },
       ],
     },
