@@ -78,6 +78,11 @@ export type Messages = {
     atelierAlt: string;
     repairPhotoAlt: string;
     carePhotoAlt: string;
+    laceFillAlt: string;
+    sewingAlt: string;
+    colorAlt: string;
+    washAlt: string;
+    workshopAlt: string;
     footer: string;
   };
   common: {
@@ -751,6 +756,11 @@ export const en: Messages = {
     atelierAlt: 'PeaLuna atelier — a warm, professional wig care studio.',
     repairPhotoAlt: 'Hand-tied lace ventilation — artisan needlework on a wig.',
     carePhotoAlt: 'An expert assembling a wig cap with precision tools.',
+    laceFillAlt: 'Filling a lace front — each hair placed by hand.',
+    sewingAlt: 'Sewing a wig cap on a professional machine.',
+    colorAlt: 'Colour work on a wig — foils and highlights applied by hand.',
+    washAlt: 'Washing and conditioning a wig in the atelier.',
+    workshopAlt: 'PeaLuna technicians working on wigs in the atelier.',
     footer: 'EU-hosted · GDPR-ready architecture.',
   },
   common: {
@@ -1443,6 +1453,11 @@ export const fr: Messages = {
     atelierAlt: 'Atelier PeaLuna — espace de soin des perruques, chaleureux et professionnel.',
     repairPhotoAlt: 'Ventilation sur dentelle — travail artisanal à l’aiguille.',
     carePhotoAlt: 'Montage minutieux d’une coiffe de perruque par une experte.',
+    laceFillAlt: 'Remplissage d’une dentelle — chaque cheveu posé à la main.',
+    sewingAlt: 'Couture d’une coiffe de perruque à la machine.',
+    colorAlt: 'Coloration d’une perruque — mèches et foils posés à la main.',
+    washAlt: 'Lavage et soin d’une perruque à l’atelier.',
+    workshopAlt: 'Expertes PeaLuna au travail sur des perruques dans l’atelier.',
     footer: 'Hébergé en UE · Architecture prête RGPD.',
   },
   common: {
@@ -2136,6 +2151,11 @@ export const he: Messages = {
     atelierAlt: 'סטודיו PeaLuna — חלל טיפול בפאות חם ומקצועי.',
     repairPhotoAlt: 'ונטילציה על תחרה — עבודת מחט אומנותית.',
     carePhotoAlt: 'הרכבה מדויקת של כיפת פאה בידי מומחית.',
+    laceFillAlt: 'מילוי תחרה — כל שערה מונחת ביד.',
+    sewingAlt: 'תפירת כיפת פאה במכונה מקצועית.',
+    colorAlt: 'צביעת פאה — גוונים ופואלים בעבודת יד.',
+    washAlt: 'שטיפה וטיפול בפאה בסטודיו.',
+    workshopAlt: 'מומחיות PeaLuna בעבודה על פאות בסטודיו.',
     footer: 'מאוחסן באיחוד האירופי · מוכן ל-GDPR.',
   },
   common: {

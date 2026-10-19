@@ -5,6 +5,7 @@ import { Sparkles, Shield, Truck } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Header } from '@/components/marketing/header';
+import { ServicePhotoCarousel } from '@/components/marketing/service-photo-carousel';
 import { Button } from '@/components/ui/button';
 import { useLocale } from '@/lib/i18n/locale';
 
@@ -28,18 +29,31 @@ export default function HomePage() {
     {
       title: t.home.serviceRepairTitle,
       desc: t.home.serviceRepairDesc,
-      image: '/images/home/ventilation.jpg',
-      alt: t.home.repairPhotoAlt,
+      delayMs: 0,
+      slides: [
+        { src: '/images/home/ventilation.jpg', alt: t.home.repairPhotoAlt },
+        { src: '/images/home/cap-work.jpg', alt: t.home.carePhotoAlt },
+        { src: '/images/home/lace-fill.jpg', alt: t.home.laceFillAlt },
+        { src: '/images/home/sewing.jpg', alt: t.home.sewingAlt },
+      ],
     },
     {
       title: t.home.serviceCareTitle,
       desc: t.home.serviceCareDesc,
-      image: '/images/home/cap-work.jpg',
-      alt: t.home.carePhotoAlt,
+      delayMs: 1300,
+      slides: [
+        { src: '/images/home/coloring.jpg', alt: t.home.colorAlt },
+        { src: '/images/home/wash.jpg', alt: t.home.washAlt },
+      ],
     },
     {
       title: t.home.serviceDesignTitle,
       desc: t.home.serviceDesignDesc,
+      delayMs: 2600,
+      slides: [
+        { src: '/images/home/workshop.jpg', alt: t.home.workshopAlt },
+        { src: '/images/home/coloring.jpg', alt: t.home.colorAlt },
+      ],
     },
   ];
 
@@ -140,21 +154,7 @@ export default function HomePage() {
                   key={item.title}
                   className="flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-ink/5 bg-warm-white shadow-soft"
                 >
-                  {item.image ? (
-                    <div className="relative aspect-[5/4] overflow-hidden bg-blush">
-                      <Image
-                        src={item.image}
-                        alt={item.alt ?? ''}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 360px"
-                        className="object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div className="relative flex aspect-[5/4] items-end bg-gradient-to-br from-blush via-beige to-champagne-light/50 p-8">
-                      <span className="h-px w-14 bg-champagne" aria-hidden />
-                    </div>
-                  )}
+                  <ServicePhotoCarousel slides={item.slides} delayMs={item.delayMs} />
                   <div className="flex flex-1 flex-col p-6">
                     <h3 className="font-display text-xl text-ink">{item.title}</h3>
                     <p className="mt-2 text-sm text-muted">{item.desc}</p>
