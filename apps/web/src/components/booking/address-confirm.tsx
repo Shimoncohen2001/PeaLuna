@@ -1,5 +1,6 @@
 'use client';
 
+import { BrandMark } from '@/components/brand/brand-mark';
 import { Button } from '@/components/ui/button';
 import { useLocale } from '@/lib/i18n/locale';
 
@@ -18,7 +19,7 @@ export function AddressConfirmCard({
 
   return (
     <div className="rounded-2xl border border-ink/5 bg-beige/40 p-5 shadow-soft">
-      <p className="text-sm uppercase tracking-[0.18em] text-champagne">{t.brand}</p>
+      <BrandMark variant="mark" href={null} className="h-8 sm:h-8" />
       <h3 className="mt-2 font-display text-2xl text-ink">{t.book.recognizedTitle}</h3>
       <p className="mt-2 text-sm leading-relaxed text-muted">
         {loading ? t.book.lookingUpAddress : t.book.recognizedHint}

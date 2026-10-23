@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useId, useState } from 'react';
+import { BrandMark } from '@/components/brand/brand-mark';
 import { Button } from '@/components/ui/button';
 import { useLocale } from '@/lib/i18n/locale';
 import { cn } from '@/lib/utils';
@@ -63,7 +64,7 @@ export function ReviewModal({
         aria-labelledby={titleId}
         className="relative w-full max-w-md rounded-2xl border border-ink/5 bg-warm-white p-6 shadow-elevated"
       >
-        <p className="text-sm uppercase tracking-[0.18em] text-champagne">{t.brand}</p>
+        <BrandMark variant="mark" href={null} className="h-8 sm:h-8" />
         <h2 id={titleId} className="mt-2 font-display text-3xl text-ink">
           {t.review.title}
         </h2>

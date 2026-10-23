@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Sparkles, Shield, Truck } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { BrandMark } from '@/components/brand/brand-mark';
 import { Header } from '@/components/marketing/header';
 import { ServicePhotoCarousel } from '@/components/marketing/service-photo-carousel';
 import { Button } from '@/components/ui/button';
@@ -180,11 +181,14 @@ export default function HomePage() {
           </div>
         </section>
       </main>
-      <footer className="border-t border-ink/5 px-4 py-8 text-center text-sm text-muted sm:px-6">
-        © {new Date().getFullYear()} {t.brand} · Israel ·{' '}
-        <Link href="/cookies" className="text-champagne hover:underline">
-          {t.cookies.title}
-        </Link>
+      <footer className="border-t border-ink/5 px-4 py-10 text-center text-sm text-muted sm:px-6">
+        <BrandMark href="/" className="mx-auto h-8 sm:h-9" />
+        <p className="mt-4">
+          © {new Date().getFullYear()} {t.brand} · Israel ·{' '}
+          <Link href="/cookies" className="text-champagne hover:underline">
+            {t.cookies.title}
+          </Link>
+        </p>
       </footer>
     </>
   );

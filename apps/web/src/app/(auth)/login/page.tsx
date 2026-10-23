@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { FormEvent, Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { BrandMark } from '@/components/brand/brand-mark';
 import { Button } from '@/components/ui/button';
 import { GoogleSignInButton } from '@/components/auth/google-sign-in';
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
@@ -58,6 +59,9 @@ function LoginForm() {
       <div className="w-full max-w-md rounded-[var(--radius-card)] border border-ink/5 bg-warm-white p-5 shadow-elevated sm:p-8">
         <div dir="ltr" className="flex justify-end">
           <LanguageSwitcher />
+        </div>
+        <div className="mb-6 flex justify-center">
+          <BrandMark variant="lockup" href="/" priority />
         </div>
         <h1 className="font-display text-3xl text-ink">{t.auth.title}</h1>
         <p className="mt-2 text-sm text-muted">{t.auth.subtitle}</p>

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { BrandMark } from '@/components/brand/brand-mark';
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
 import { safeReturnPath, writeCookieConsent } from '@/lib/cookies/consent';
 import { useLocale } from '@/lib/i18n/locale';
@@ -33,7 +34,7 @@ function CookiesPolicy() {
         <div dir="ltr" className="mb-4 flex justify-end">
           <LanguageSwitcher />
         </div>
-        <p className="text-sm uppercase tracking-[0.18em] text-champagne">{t.brand}</p>
+        <BrandMark variant="lockup" href="/" className="mb-4 w-36 sm:w-40" />
         <h1 className="mt-2 font-display text-3xl text-ink">{t.cookies.policyTitle}</h1>
         <p className="mt-4 text-sm leading-relaxed text-muted">{t.cookies.policyIntro}</p>
         <h2 className="mt-6 text-base font-medium text-ink">{t.cookies.essentialTitle}</h2>

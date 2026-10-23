@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
+import { BrandMark } from '@/components/brand/brand-mark';
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
 import { useLocale } from '@/lib/i18n/locale';
 
@@ -22,9 +23,7 @@ export function Header() {
         dir="ltr"
         className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 sm:px-6"
       >
-        <Link href="/" className="shrink-0 font-display text-xl tracking-tight text-ink sm:text-2xl">
-          {t.brand}
-        </Link>
+        <BrandMark href="/" priority />
         <nav className="hidden items-center gap-8 text-sm text-muted md:flex" aria-label="Main">
           {links.map((item) => (
             <Link key={item.href} href={item.href} className="transition-colors hover:text-ink">

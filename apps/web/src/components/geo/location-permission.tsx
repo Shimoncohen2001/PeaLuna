@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { MapPin } from 'lucide-react';
+import { BrandMark } from '@/components/brand/brand-mark';
 import { Button } from '@/components/ui/button';
 import { useLocale } from '@/lib/i18n/locale';
 
@@ -169,7 +170,7 @@ export function useGeolocationPrompt() {
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-champagne/25 text-ink">
               <MapPin className="h-5 w-5" aria-hidden />
             </div>
-            <p className="mt-4 text-sm uppercase tracking-[0.18em] text-champagne">{t.brand}</p>
+            <BrandMark variant="mark" href={null} className="mt-4 h-8 sm:h-8" />
             <h2 id={titleId} className="mt-2 font-display text-3xl text-ink">
               {copy.title}
             </h2>

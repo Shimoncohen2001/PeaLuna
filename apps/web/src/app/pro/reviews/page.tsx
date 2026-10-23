@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import type { ReviewDto } from '@velure/contracts';
+import { BrandMark } from '@/components/brand/brand-mark';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
 import { useLocale } from '@/lib/i18n/locale';
@@ -34,8 +35,8 @@ export default function ProReviewsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-sm uppercase tracking-[0.2em] text-[#e8b4a2]">{t.brand}</p>
-        <h1 className="font-display text-4xl text-[#f7efe8]">{t.review.proTitle}</h1>
+        <BrandMark variant="mark" href={null} onDark className="h-8 sm:h-8" />
+        <h1 className="mt-2 font-display text-4xl text-[#f7efe8]">{t.review.proTitle}</h1>
         <p className="mt-2 text-white/60">{t.review.proSubtitle}</p>
       </div>
 

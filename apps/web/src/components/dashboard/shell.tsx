@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth';
 import { useLocale } from '@/lib/i18n/locale';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { BrandMark } from '@/components/brand/brand-mark';
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
 import { NotificationBell } from '@/components/notifications/notification-bell';
 
@@ -98,15 +99,11 @@ export function DashboardShell({
           dir="ltr"
           className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-3 sm:px-6 md:h-16 md:py-0"
         >
-          <Link
-            href={isProTheme ? '/pro' : '/dashboard'}
-            className={cn(
-              'shrink-0 font-display text-xl sm:text-2xl',
-              isProTheme ? 'text-[#e8b4a2]' : 'text-ink',
-            )}
-          >
-            {t.brand}
-          </Link>
+          <BrandMark
+            href={isProTheme ? '/pro' : isAdmin ? '/admin' : '/dashboard'}
+            onDark={isProTheme}
+            priority
+          />
 
           {showSpaceSwitch ? (
             <Link

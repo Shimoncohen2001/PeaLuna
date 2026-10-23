@@ -71,11 +71,20 @@ export const metadata: Metadata = {
     siteName: 'PeaLuna',
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: '/images/brand/og.png',
+        width: 1200,
+        height: 630,
+        alt: 'PeaLuna',
+      },
+    ],
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
+    images: ['/images/brand/og.png'],
   },
   robots: {
     index: true,
@@ -91,6 +100,7 @@ const jsonLd = {
       '@id': `${SITE_URL}/#organization`,
       name: 'PeaLuna',
       url: SITE_URL,
+      logo: `${SITE_URL}/images/brand/lockup.png`,
       areaServed: { '@type': 'Country', name: 'Israel' },
       description: SITE_DESCRIPTION,
     },

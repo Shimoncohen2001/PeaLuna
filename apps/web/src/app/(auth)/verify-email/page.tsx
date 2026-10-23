@@ -9,6 +9,7 @@ import { useAuth } from '@/lib/auth';
 import { postAuthPath } from '@/lib/home-path';
 import { useLocale } from '@/lib/i18n/locale';
 import type { Messages } from '@/lib/i18n/messages';
+import { BrandMark } from '@/components/brand/brand-mark';
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
 
 const MAIL_ERROR_KEY = 'pealuna.mailError';
@@ -112,6 +113,9 @@ function VerifyEmailInner() {
       <div className="w-full max-w-md rounded-[var(--radius-card)] border border-ink/5 bg-warm-white p-8 shadow-elevated">
         <div dir="ltr" className="mb-4 flex justify-end">
           <LanguageSwitcher />
+        </div>
+        <div className="mb-6 flex justify-center">
+          <BrandMark variant="lockup" href="/" />
         </div>
         <h1 className="font-display text-3xl text-ink">{t.auth.verifyTitle}</h1>
         <p className="mt-3 text-sm text-muted">
