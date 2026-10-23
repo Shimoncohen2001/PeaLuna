@@ -16,6 +16,11 @@ import { ymd } from '@/lib/booking/slots';
 import { useLocale } from '@/lib/i18n/locale';
 import { formatDistanceKm, formatMoney, intlLocale } from '@/lib/format';
 import { BookingMediaStep } from '@/components/booking/booking-media-step';
+import {
+  ExpertReviewList,
+  RatingSummary,
+  ReviewQuote,
+} from '@/components/reviews/expert-reviews';
 import { useGeolocationPrompt } from '@/components/geo/location-permission';
 import type { AddressValue } from '@/components/maps/address-picker';
 import {
@@ -50,6 +55,7 @@ type TechnicianCard = {
   servicePostalCode: string | null;
   ratingAvg: number;
   reviewCount: number;
+  previewReview: { rating: number; comment: string | null; customerName: string } | null;
   distanceKm: number | null;
   offersHomeService: boolean;
   offersSalonService: boolean;
@@ -449,36 +455,58 @@ export default function BookPage() {
           <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
             <ul className="space-y-3">
               {technicians.isLoading ? <p className="text-muted">{t.common.loading}</p> : null}
-              {technicians.data?.map((tech) => (
-                <li key={tech.id}>
-                  <button
-                    type="button"
-                    onClick={() => setTechnicianId(tech.id)}
-                    className={`w-full rounded-xl border p-4 text-left ${
-                      technicianId === tech.id
-                        ? 'border-champagne bg-champagne/10'
-                        : 'border-ink/5 bg-warm-white hover:border-champagne/40'
-                    }`}
-                  >
-                    <p className="font-medium text-ink">{tech.displayName}</p>
-                    <p className="text-sm text-muted">{tech.headline}</p>
-                    <p className="mt-2 text-sm text-muted">
-                      ★ {tech.ratingAvg.toFixed(1)} ({tech.reviewCount})
-                      {formatDistanceKm(tech.distanceKm, format, t.geo)
-                        ? ` · ${formatDistanceKm(tech.distanceKm, format, t.geo)}`
-                        : null}
-                      {tech.serviceCity ? ` · ${tech.serviceCity}` : null}
-                    </p>
-                    {tech.skills && tech.skills.length > 0 ? (
-                      <p className="mt-1 text-xs text-champagne">
-                        {tech.skills
-                          .map((s) => catalogSkillName(locale, s.slug, s.name))
-                          .join(' · ')}
-                      </p>
-                    ) : null}
-                  </button>
-                </li>
-              ))}
+              {technicians.data?.map((tech) => {
+                const selected = technicianId === tech.id;
+                const distance = formatDistanceKm(tech.distanceKm, format, t.geo);
+                return (
+                  <li key={tech.id}>
+                    <div
+                      className={`rounded-xl border p-4 ${
+                        selected
+                          ? 'border-champagne bg-champagne/10'
+                          : 'border-ink/5 bg-warm-white hover:border-champagne/40'
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setTechnicianId(tech.id)}
+                        aria-pressed={selected}
+                        className="w-full text-left"
+                      >
+                        <p className="font-medium text-ink">{tech.displayName}</p>
+                        {tech.headline ? (
+                          <p className="text-sm text-muted">{tech.headline}</p>
+                        ) : null}
+                        <RatingSummary
+                          className="mt-2"
+                          ratingAvg={tech.ratingAvg}
+                          reviewCount={tech.reviewCount}
+                        />
+                        {distance || tech.serviceCity ? (
+                          <p className="mt-1 text-xs text-muted">
+                            {[distance, tech.serviceCity].filter(Boolean).join(' · ')}
+                          </p>
+                        ) : null}
+                        {tech.skills && tech.skills.length > 0 ? (
+                          <p className="mt-1 text-xs text-champagne">
+                            {tech.skills
+                              .map((s) => catalogSkillName(locale, s.slug, s.name))
+                              .join(' · ')}
+                          </p>
+                        ) : null}
+                        {tech.previewReview?.comment && !selected ? (
+                          <ReviewQuote
+                            className="mt-3"
+                            comment={tech.previewReview.comment}
+                            customerName={tech.previewReview.customerName}
+                          />
+                        ) : null}
+                      </button>
+                      <ExpertReviewList technicianId={tech.id} enabled={selected && tech.reviewCount > 0} />
+                    </div>
+                  </li>
+                );
+              })}
               {!technicians.isLoading && (technicians.data?.length ?? 0) === 0 ? (
                 <p className="text-muted">{t.geo.emptyExperts}</p>
               ) : null}
@@ -490,9 +518,9 @@ export default function BookPage() {
               userPosition={
                 filterByGps && userLat != null && userLng != null ? [userLat, userLng] : null
               }
-              technicians={(technicians.data ?? []).map((t) => ({
-                ...t,
-                selected: t.id === technicianId,
+              technicians={(technicians.data ?? []).map((row) => ({
+                ...row,
+                selected: row.id === technicianId,
               }))}
               onSelect={setTechnicianId}
             />
@@ -502,9 +530,18 @@ export default function BookPage() {
 
       {step === 4 ? (
         <div className="space-y-4 rounded-xl border border-ink/5 bg-warm-white p-6">
-          <p className="text-sm text-muted">
-            {selectedTech?.displayName} — {venueType === 'HOME' ? t.payment.homeVenue : t.payment.salonVenue}
-          </p>
+          <div>
+            <p className="text-sm text-muted">
+              {selectedTech?.displayName} — {venueType === 'HOME' ? t.payment.homeVenue : t.payment.salonVenue}
+            </p>
+            {selectedTech ? (
+              <RatingSummary
+                className="mt-1"
+                ratingAvg={selectedTech.ratingAvg}
+                reviewCount={selectedTech.reviewCount}
+              />
+            ) : null}
+          </div>
           <div>
             <p className="text-sm font-medium">{t.book.stepSlot}</p>
             <div className="mt-3">

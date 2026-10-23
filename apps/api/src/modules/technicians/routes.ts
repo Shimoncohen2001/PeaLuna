@@ -19,6 +19,7 @@ import { withIdempotency } from '../../lib/idempotency.js';
 import { createMailer } from '../../infrastructure/mailer.js';
 import { NotificationService } from '../notifications/notification.service.js';
 import { TechnicianService } from './technician.service.js';
+import { ReviewService } from '../reviews/review.service.js';
 import { listMediaForWigOrder } from '../media/list-for-order.js';
 
 export async function technicianRoutes(
@@ -27,6 +28,7 @@ export async function technicianRoutes(
   notifications = new NotificationService({ mailer: createMailer(env), webOrigin: env.WEB_ORIGIN }),
 ): Promise<void> {
   const technicians = new TechnicianService(notifications);
+  const publicReviews = new ReviewService();
 
   app.get(
     `${API_PREFIX}/technicians`,
@@ -182,6 +184,19 @@ export async function technicianRoutes(
       const { id } = request.params as { id: string };
       const calendar = await technicians.listBookingCalendar(id, request.query.from, request.query.to);
       return reply.send(successResponse(calendar, request.requestId));
+    },
+  );
+
+  app.get(
+    `${API_PREFIX}/technicians/:id/reviews`,
+    { schema: { querystring: paginationQuerySchema } },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const { page, limit } = request.query;
+      const result = await publicReviews.listPublicForTechnician(id, page, limit);
+      return reply.send(
+        successResponse(result.reviews, request.requestId, paginationMeta(result.total, page, limit)),
+      );
     },
   );
 

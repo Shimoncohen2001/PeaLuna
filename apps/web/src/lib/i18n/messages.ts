@@ -158,6 +158,10 @@ export type Messages = {
     proTitle: string;
     proEmpty: string;
     proSubtitle: string;
+    newOnPealuna: string;
+    count: string;
+    countOne: string;
+    ratingOnly: string;
   };
   payment: {
     title: string;
@@ -836,6 +840,10 @@ export const en: Messages = {
     proTitle: 'Client reviews',
     proEmpty: 'No reviews yet.',
     proSubtitle: 'Feedback from clients you have worked with.',
+    newOnPealuna: 'New on PeaLuna',
+    count: '{n} reviews',
+    countOne: '1 review',
+    ratingOnly: 'Rated, no written comment.',
   },
   payment: {
     title: 'Payment',
@@ -1533,6 +1541,10 @@ export const fr: Messages = {
     proTitle: 'Avis clients',
     proEmpty: 'Aucun avis pour le moment.',
     proSubtitle: 'Les retours des clientes pour qui tu as travaillé.',
+    newOnPealuna: 'Nouvelle sur PeaLuna',
+    count: '{n} avis',
+    countOne: '1 avis',
+    ratingOnly: 'Notée, sans commentaire écrit.',
   },
   payment: {
     title: 'Paiement',
@@ -2231,6 +2243,10 @@ export const he: Messages = {
     proTitle: 'ביקורות לקוחות',
     proEmpty: 'אין ביקורות עדיין.',
     proSubtitle: 'משוב מלקוחות שעבדת איתן.',
+    newOnPealuna: 'חדשה ב-PeaLuna',
+    count: '{n} ביקורות',
+    countOne: 'ביקורת אחת',
+    ratingOnly: 'דורגה, בלי תגובה כתובה.',
   },
   payment: {
     title: 'תשלום',

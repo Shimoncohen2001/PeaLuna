@@ -18,8 +18,10 @@ import {
 import { updateOrderIfVersion } from '../../lib/order-lock.js';
 import { CatalogService } from '../catalog/catalog.service.js';
 import { NotificationService } from '../notifications/notification.service.js';
+import { ReviewService } from '../reviews/review.service.js';
 
 const catalog = new CatalogService();
+const reviews = new ReviewService();
 
 const technicianPublicInclude = {
   services: { include: { serviceType: true } },
@@ -379,15 +381,17 @@ export class TechnicianService {
 
     const total = nearby.length;
     const pageRows = nearby.slice((params.page - 1) * params.limit, params.page * params.limit);
+    const items = pageRows.map(({ t, distanceKm }) =>
+      mapPublicTechnician(t, Number.isFinite(distanceKm) ? distanceKm : undefined),
+    );
+    const previews = await reviews.previewsForTechnicianIds(items.map((item) => item.id));
 
     return {
       total,
-      items: pageRows.map(({ t, distanceKm }) =>
-        mapPublicTechnician(
-          t,
-          Number.isFinite(distanceKm) ? distanceKm : undefined,
-        ),
-      ),
+      items: items.map((item) => ({
+        ...item,
+        previewReview: previews.get(item.id) ?? null,
+      })),
     };
   }
 

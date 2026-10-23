@@ -1,6 +1,42 @@
-import type { CreateReviewInput } from '@velure/contracts';
+import type { CreateReviewInput, PublicReviewDto } from '@velure/contracts';
 import { prisma } from '@velure/database';
 import { requireCustomerProfile } from '../../lib/access.js';
+
+const publicReviewInclude = {
+  order: {
+    select: {
+      technicianId: true,
+      customer: {
+        include: { user: { select: { firstName: true, lastName: true } } },
+      },
+    },
+  },
+} as const;
+
+function publicCustomerName(firstName: string, lastName: string) {
+  const first = firstName.trim();
+  const initial = lastName.trim().charAt(0);
+  if (first && initial) return `${first} ${initial.toUpperCase()}.`;
+  return first;
+}
+
+function toPublicReview(row: {
+  id: string;
+  rating: number;
+  comment: string | null;
+  createdAt: Date;
+  order: {
+    customer: { user: { firstName: string; lastName: string } };
+  };
+}): PublicReviewDto {
+  return {
+    id: row.id,
+    rating: row.rating,
+    comment: row.comment?.trim() ? row.comment.trim() : null,
+    createdAt: row.createdAt.toISOString(),
+    customerName: publicCustomerName(row.order.customer.user.firstName, row.order.customer.user.lastName),
+  };
+}
 
 export class ReviewService {
   async createForOrder(orderId: string, userId: string, input: CreateReviewInput) {
@@ -136,5 +172,59 @@ export class ReviewService {
         customerName: `${r.order.customer.user.firstName} ${r.order.customer.user.lastName}`.trim(),
       })),
     };
+  }
+
+  async listPublicForTechnician(technicianId: string, page: number, limit: number) {
+    const profile = await prisma.technicianProfile.findFirst({
+      where: { id: technicianId, status: 'APPROVED' },
+      select: { id: true, ratingAvg: true, reviewCount: true },
+    });
+    if (!profile) {
+      throw Object.assign(new Error('Technician not found'), {
+        statusCode: 404,
+        code: 'TECHNICIAN_NOT_FOUND',
+      });
+    }
+
+    const where = { order: { technicianId: profile.id } };
+    const [total, reviews] = await Promise.all([
+      prisma.review.count({ where }),
+      prisma.review.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+        include: publicReviewInclude,
+      }),
+    ]);
+
+    return {
+      ratingAvg: profile.ratingAvg,
+      reviewCount: profile.reviewCount,
+      total,
+      reviews: reviews.map(toPublicReview),
+    };
+  }
+
+  async previewsForTechnicianIds(ids: string[]): Promise<Map<string, PublicReviewDto>> {
+    const map = new Map<string, PublicReviewDto>();
+    if (ids.length === 0) return map;
+
+    const rows = await prisma.review.findMany({
+      where: {
+        comment: { not: null },
+        order: { technicianId: { in: ids } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: ids.length * 8,
+      include: publicReviewInclude,
+    });
+
+    for (const row of rows) {
+      const technicianId = row.order.technicianId;
+      if (!technicianId || map.has(technicianId) || !row.comment?.trim()) continue;
+      map.set(technicianId, toPublicReview(row));
+    }
+    return map;
   }
 }

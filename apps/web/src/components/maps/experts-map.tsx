@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Marker, Popup, type MapRef } from 'react-map-gl/maplibre';
+import { StarRating } from '@/components/reviews/star-rating';
 import { MapPin, PealunaMap } from './pealuna-map';
 
 export type MapTechnician = {
@@ -11,6 +12,7 @@ export type MapTechnician = {
   latitude: number | null;
   longitude: number | null;
   ratingAvg: number;
+  reviewCount?: number;
   selected?: boolean;
 };
 
@@ -121,7 +123,12 @@ export function ExpertsMap({
         >
           <p className="font-medium text-ink">{popup.displayName}</p>
           {popup.headline ? <p className="text-xs text-muted">{popup.headline}</p> : null}
-          <p className="text-xs text-muted">★ {popup.ratingAvg.toFixed(1)}</p>
+          {popup.reviewCount ? (
+            <p className="mt-1 flex items-center gap-1.5 text-xs text-ink">
+              <StarRating value={popup.ratingAvg} />
+              <span className="tabular-nums">{popup.ratingAvg.toFixed(1)}</span>
+            </p>
+          ) : null}
         </Popup>
       ) : null}
     </PealunaMap>
